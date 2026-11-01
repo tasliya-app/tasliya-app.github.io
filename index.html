@@ -1619,6 +1619,11 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .snkc{width:calc(100% + 18px)!important;max-width:none!important;margin:4px -9px!important}
 
 .lchamp{margin:10px 0 6px;padding:12px;border-radius:18px;background:linear-gradient(160deg,#facc1540,#f59e0b1a);border:2px solid #facc15;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}.lcl{font-weight:900;color:#fde68a;font-size:14px}.lcn{font-weight:900;font-size:18px;color:#fff}.lcm{display:flex;align-items:center;gap:6px;font-weight:900;color:#fde68a;font-size:18px}
+
+.whstage{width:min(91vw,430px);height:min(91vw,430px)}
+.whc{width:min(96vw,480px);padding:12px 8px 16px}
+
+.vwbtn{display:inline-flex;align-items:center;background:#0008;color:#fff;border:1px solid #fff4;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:900;direction:ltr;margin-inline-end:6px;white-space:nowrap}
 </style>
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap">
 </head>
@@ -2908,7 +2913,7 @@ function whBuild(c){ const P2=whPrizes(), N=P2.length||1, step=360/N;
   c.append(el("div","whst"));
   const stage=el("div","whstage"), W=el("div","whl"); W.id="whWheel";
   W.style.background="conic-gradient("+P2.map((x,i)=>WH_COLS[i%WH_COLS.length]+" "+(i*step)+"deg "+((i+1)*step)+"deg").join(",")+")";
-  P2.forEach((x,i)=>{ const a=i*step+step/2, lb=el("div","whlb"); lb.style.transform="rotate("+a+"deg) translateY(-108px) rotate("+(-a)+"deg)"; lb.append(giftImg(x.g,40,x.emo), el("span","whn",x.name), el("span","whp",fmtc(x.price)+" 🪙")); W.append(lb); });
+  P2.forEach((x,i)=>{ const a=i*step+step/2, lb=el("div","whlb"); lb.style.transform="rotate("+a+"deg) translateY(-133px) rotate("+(-a)+"deg)"; lb.append(giftImg(x.g,40,x.emo), el("span","whn",x.name), el("span","whp",fmtc(x.price)+" 🪙")); W.append(lb); });
   stage.append(el("div","whptr","▼"), W, el("div","whhub")); c.append(stage);
   c.append(el("div","whlist"), el("div","whfoot")); }
 function whClose(){ const o=document.getElementById("whov"); if(o) o.remove(); }
@@ -2928,7 +2933,7 @@ function wheelRedraw(){ const o=document.getElementById("whov"); if(!o) return; 
   F.innerHTML="";
   if(mod){ const sp=el("button","btn full whspin", s.status==="spinning"?"🎡 تدور…":"🎡 تدوير العجلة"); sp.disabled=!s.current||s.status==="spinning"; sp.onclick=wheelSpin; F.append(sp);
   }
-  else { const applied=WH.apps.some(x=>x.uid===uid); const jb=el("button","btn full whjoin", applied?"✓ أنت مسجّل":"🎟️ التقديم — "+fmtc(WHEEL_FEE)+" 🪙"); jb.disabled=applied; jb.onclick=wheelApply; F.append(jb); } }
+  { const applied=WH.apps.some(x=>x.uid===uid); const jb=el("button","btn full whjoin", applied?"✓ أنت مسجّل":"🎟️ التقديم — "+fmtc(WHEEL_FEE)+" 🪙"); jb.disabled=applied; jb.onclick=wheelApply; F.append(jb); } }
 function whBtnIcon(){ return '<svg viewBox="-2 -4 52 54" aria-hidden="true">'+'<path d="M24 24L41 24L32.5 38.7Z" fill="#ef4444"/><path d="M24 24L32.5 38.7L15.5 38.7Z" fill="#facc15"/>'+'<path d="M24 24L15.5 38.7L7 24Z" fill="#22c55e"/><path d="M24 24L7 24L15.5 9.3Z" fill="#3b82f6"/>'+'<path d="M24 24L15.5 9.3L32.5 9.3Z" fill="#a855f7"/><path d="M24 24L32.5 9.3L41 24Z" fill="#f97316"/>'+'<circle cx="24" cy="24" r="21" fill="none" stroke="#facc15" stroke-width="3"/>'+'<circle cx="24" cy="24" r="4.5" fill="#fff" stroke="#7c3aed" stroke-width="2"/>'+'<polygon points="24,-3 19,4 29,4" fill="#ef4444" stroke="#fff" stroke-width="1.2"/></svg>'; }
 function rlPanel(){ wheelPanel(); }
 function rlPanelOld(){ if(document.getElementById("rlov")) return; const o=el("div","ov"); o.id="rlov"; const c=el("div","card sheet rlc"); o.append(c); document.body.append(o);
@@ -3030,6 +3035,9 @@ function rtMeter(u,stream){
     RT.an[u]=an; if(!RT.lvl) RT.lvl=setInterval(rtLevels,150);
   }catch(e){}
 }
+function rtUnlock(){ try{ if(!RT.ac) RT.ac=new (window.AudioContext||window.webkitAudioContext)(); if(RT.ac.state==="suspended") RT.ac.resume().catch(()=>{}); }catch(e){}
+  Object.values(RT.audio).forEach(a=>{ try{ if(a.paused&&a.srcObject) a.play().catch(()=>{}); }catch(e){} }); }
+document.addEventListener("pointerdown",rtUnlock,true); document.addEventListener("keydown",rtUnlock,true);
 function rtLevels(){
   const buf=new Uint8Array(512);
   Object.keys(RT.an).forEach(u=>{ const an=RT.an[u]; an.getByteTimeDomainData(buf); let s=0; for(let i=0;i<buf.length;i++){ const v=(buf[i]-128)/128; s+=v*v; }
@@ -3040,7 +3048,7 @@ function rtPc(o){
   pc.__o=o; pc.__role=role; pc.__ses=null; pc.__mic=!!RT.mic;
   if(RT.mic) RT.mic.getAudioTracks().forEach(t=>pc.addTrack(t,RT.mic)); else pc.addTransceiver("audio",{direction:"recvonly"});
   pc.onicecandidate=e=>{ if(e.candidate&&pc.__ses&&RT.rid) db.collection("rooms/"+RT.rid+"/rtcc").add({k:key,s:pc.__ses,r:role,c:JSON.stringify(e.candidate),t:Date.now()}).catch(()=>{}); };
-  pc.ontrack=e=>{ const st=e.streams[0]||new MediaStream([e.track]); let a=RT.audio[o]; if(!a){ a=new Audio(); a.autoplay=true; RT.audio[o]=a; } a.srcObject=st; try{ a.play().catch(()=>{}); }catch(_){} rtMeter(o,st); };
+  pc.ontrack=e=>{ const st=e.streams[0]||new MediaStream([e.track]); let a=RT.audio[o]; if(!a){ a=new Audio(); a.autoplay=true; RT.audio[o]=a; } a.srcObject=st; try{ a.play().catch(()=>{}); }catch(_){} rtMeter(o,st); if(RT.ac&&RT.ac.state==="suspended"&&!RT.hint){ RT.hint=1; toast("اضغط على الشاشة مرة لتفعيل صوت الغرفة 🔊"); } };
   pc.onconnectionstatechange=()=>{ if((pc.connectionState==="failed"||pc.connectionState==="closed")&&RT.pcs[o]===pc){ rtDrop(o); if(role==="callee") RT.acc[o]=null; setTimeout(()=>{ if(RT.rid) rtSync(); },2000); } };
   return pc;
 }
@@ -4610,12 +4618,12 @@ const meP=()=>({uid,name:prof.name,emoji:prof.emoji});
 const clone=o=>JSON.parse(JSON.stringify(o));
 function chatNote(t){}
 let gameRedraw=null;
-function closeGame(){ if(unsubGame){ unsubGame(); unsubGame=null; } clearTimeout(botT); rndStop(); domClear(); if(gameOv){ gameOv.remove(); gameOv=null; } cur=null; gameRedraw=null; autoStop(); crReset(); bilReset(); l3Dispose(); gcStop(); }
+function closeGame(){ if(unsubGame){ unsubGame(); unsubGame=null; } clearTimeout(botT); rndStop(); domClear(); if(gameOv){ gameOv.remove(); gameOv=null; } cur=null; gameRedraw=null; autoStop(); crReset(); bilReset(); l3Dispose(); gcStop(); vwStop(); }
 function openTable(id,kind){
-  closeGame(); gtid=id; gkind=kind; lastRollN=null; LASTV={}; LB=null; domReset(); let lastSig=""; const o=el("div","ov"), p=el("div","gpanel gbox"); o.append(p); document.body.append(o); gameOv=o;
+  closeGame(); gtid=id; gkind=kind; lastRollN=null; LASTV={}; LB=null; domReset(); let lastSig=""; const o=el("div","ov"), p=el("div","gpanel gbox"); o.append(p); document.body.append(o); gameOv=o; vwStart();
   const draw=()=>{ p.innerHTML=""; p.classList.toggle("lpurp",kind==="ludo"); p.classList.toggle("gdom",kind==="domino"); p.append(el("div","pgrab"));
     const h=el("div","gh"), x=el("button","rb","✕"); x.onclick=()=>{ if(cur&&cur.mode==="random"&&cur.status==="waiting"&&cur.host===uid) endTable(); else closeGame(); };
-    const ti=el("div","gh-t"); if(kind==="domino") ti.innerHTML=domMiniSvg()+" دومينو"; else ti.textContent=({ludo:"🎲 لودو",xo:"❌⭕ إكس أو",carrom:"🎯 كيرم",snk:"🐍 السلم والثعبان",bil:"🎱 البلياردو"})[kind]; h.append(ti,el("span","sp")); if(GC.key) h.append(gcBtn()); h.append(x); p.append(h); const atx=el("div"); atx.id="atimer"; atx.style.cssText="text-align:center;font-weight:900;color:#fde68a;min-height:18px;margin:2px 0"; p.append(atx);
+    const ti=el("div","gh-t"); if(kind==="domino") ti.innerHTML=domMiniSvg()+" دومينو"; else ti.textContent=({ludo:"🎲 لودو",xo:"❌⭕ إكس أو",carrom:"🎯 كيرم",snk:"🐍 السلم والثعبان",bil:"🎱 البلياردو"})[kind]; h.append(ti,el("span","sp")); h.append(vwBtn()); if(GC.key) h.append(gcBtn()); h.append(x); p.append(h); const atx=el("div"); atx.id="atimer"; atx.style.cssText="text-align:center;font-weight:900;color:#fde68a;min-height:18px;margin:2px 0"; p.append(atx);
     const b=el("div","gbody"); p.append(b); if(kind==="ludo") drawLudo(b); else if(kind==="carrom") drawCarrom(b); else if(kind==="domino") drawDomino(b); else if(kind==="snk") drawSnk(b); else if(kind==="bil") drawBil(b); else drawXO(b); };
   gameRedraw=draw; p.append(el("p","mut","جارٍ التحميل…"));
   unsubGame=db.doc(gpath()).onSnapshot(sn=>{ cur=sn.exists?sn.data():null; try{ gcSetup(cur); }catch(e){}
@@ -5264,10 +5272,20 @@ function gcSubscribe(){ if(GC.un) return; GC.cid="g"+gtid; GC.ids=null;
   try{ GC.un=db.collection("dms/"+GC.cid+"/msgs").orderBy("t","asc").limit(80).onSnapshot(sn=>{ const docs=sn.docs, fresh=[]; GC.msgs=docs.map(d=>d.data());
       if(GC.ids===null) GC.ids=new Set(docs.map(d=>d.id)); else docs.forEach(d=>{ if(!GC.ids.has(d.id)){ GC.ids.add(d.id); const m=d.data(); if(m.from!==uid) fresh.push(m); } });
       if(fresh.length) gcIncoming(fresh[fresh.length-1],fresh.length); if(GC.open) gcRenderList(); }); }catch(e){} }
+let VW={un:null,hb:null,n:0,rid:""};
+function vwStart(){ vwStop(); if(!gtid||!db||!uid) return; const id=gtid; VW.rid=id;
+  const beat=()=>{ try{ db.doc("tables/"+id+"/viewers/"+uid).set({t:Date.now()}).catch(()=>{}); }catch(e){} };
+  beat(); VW.hb=setInterval(beat,30000);
+  try{ VW.un=db.collection("tables/"+id+"/viewers").onSnapshot(sn=>{ if(VW.rid!==id) return; const now=Date.now(), pl=new Set(gcPlayers(cur).map(q=>q.uid));
+      VW.n=sn.docs.filter(d=>{ const v=d.data(); return v&&v.t&&now-v.t<90000&&!pl.has(d.id); }).length; vwPaint(); }); }catch(e){} }
+function vwStop(){ try{ if(VW.un) VW.un(); }catch(e){} if(VW.hb) clearInterval(VW.hb); if(VW.rid&&uid){ try{ db.doc("tables/"+VW.rid+"/viewers/"+uid).delete().catch(()=>{}); }catch(e){} } VW={un:null,hb:null,n:0,rid:""}; }
+function vwPaint(){ document.querySelectorAll(".vwbtn").forEach(x=>{ x.textContent="👁 "+VW.n; }); }
+function vwBtn(){ const b=el("span","vwbtn","👁 "+VW.n); b.title="عدد المشاهدين"; return b; }
 function gcSetup(st){
   if(!st||st.status==="waiting"||!gameOv){ if(GC.key) gcStop(); return; }
-  const pls=gcPlayers(st); if(!pls.some(q=>q&&q.uid===uid)){ if(GC.key) gcStop(); return; }
+  const pls=gcPlayers(st), isP=pls.some(q=>q&&q.uid===uid);
   const hum=[...new Set(pls.map(q=>q.uid).filter(u=>u&&u!=="bot"))], key="g"+gtid, bot=hum.length<2;
+  if(!isP&&bot){ if(GC.key) gcStop(); return; }
   if(GC.key!==key){ gcStop(); GC.key=key; }
   GC.bot=bot;
   if(!bot) gcSubscribe();
