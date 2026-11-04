@@ -1640,6 +1640,11 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .entryb2{background:linear-gradient(90deg,#f59e0b,#ec4899 55%,#8b5cf6);border:1.5px solid #fde68a;color:#fff;box-shadow:0 6px 18px #ec489966;text-shadow:0 1px 2px #0006}
 
 .toast.tvz{background:linear-gradient(90deg,#f59e0b,#ec4899 55%,#8b5cf6)!important;color:#fff;border:1.5px solid #fde68a;font-weight:700;box-shadow:0 6px 18px #ec489966;text-shadow:0 1px 2px #0006}
+
+.top,.hdr,.gh{background:linear-gradient(90deg,#f9a8d4,#a5f3fc 50%,#d8b4fe)!important;color:#1e1b4b!important}
+.bkb:not(.bkv),.bkp{background:linear-gradient(135deg,#f9a8d4,#ec4899)!important;border-color:#fbcfe8!important;color:#fff!important}
+.bkp{border:0!important;color:#fff!important;font-weight:900}
+input[placeholder^="اكتب رسال"]{font-weight:800!important;font-size:16px!important;color:#1e1b4b!important}
 </style>
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap">
 </head>
@@ -2426,7 +2431,7 @@ function agentInfo(a){ sheet(a.name||"وكيل",(c,close)=>{
   const pp=PROFS[a.uid]||{}, av=el("div","av"); av.style.cssText="width:84px;height:84px;font-size:42px;margin:6px auto"; setAv(av,pp.emoji||"🧑‍💼",pp.photo); const w=el("div"); w.style.textAlign="center"; w.append(frameWrap(av,AF(pp),3)); c.append(w);
   c.append(agRow("اسم الوكيل",a.name),agRow("رمز الإحالة",String(a.ref||a.pid||""),"",true),agRow("العنوان",a.address),agRow("معرّف تليگرام",a.tg,tgLink(a.tg),true),agRow("واتساب",a.wa,waLink(a.wa),true));
   c.append(el("p","mut","💡 دفع المبلغ للوكيل يتم خارج التطبيق مباشرةً بينك وبينه، والتطبيق ليس طرفاً فيه. داخل التطبيق فقط تُسدَّد نقاط الوكيل للإدارة."));
-  const bk=el("button","btn alt full","رجوع إلى قائمة الوكلاء"); bk.style.marginTop="12px"; bk.onclick=()=>{ close(); sheetAgents(); }; c.append(bk); }); }
+  const bk=el("button","btn alt full bkp","رجوع إلى قائمة الوكلاء"); bk.style.marginTop="12px"; bk.onclick=()=>{ close(); sheetAgents(); }; c.append(bk); }); }
 function sheetBuyAgency(){
   if(OWNER) return;
   sheet("🪪 شراء وكالة",(c,close)=>{
@@ -2761,7 +2766,7 @@ function openChat(o){
   render();
 }
 function renderChat(a){
-  const top=el("div","top"); const back=el("button","btn alt","→ رجوع"); back.onclick=()=>{ if(unsubChat) unsubChat(); dm=null; render(); };
+  const top=el("div","top"); const back=el("button","btn alt bkp","→ رجوع"); back.onclick=()=>{ if(unsubChat) unsubChat(); dm=null; render(); };
   const fb=el("button","rb","➕"); fb.onclick=()=>addFriend({uid:dm.uid,name:dm.name,emoji:(PROFS[dm.uid]||{}).emoji}); top.append(back,el("b",null,dm.name),el("span","sp"),fb); a.append(top);
   const cc=el("div","card"); const chat=el("div","chat"); chat.id="dmchat"; chat.style.height="55vh"; cc.append(chat);
   const row=el("div","row"); row.style.marginTop="8px"; const inp=el("input"); inp.placeholder="اكتب رسالة…"; inp.maxLength=500;
@@ -3493,7 +3498,7 @@ async function toggleFav(rid,btn){ const cur=favList().slice(), on=cur.includes(
   try{ await saveProf({favRooms:nx}); }catch(e){ prof.favRooms=cur; if(btn) btn.classList.toggle("on",on); toast("تعذر حفظ المفضلة"); } }
 function renderRoom(a){
   const h=hueOf(room.id), s=el("div","room-screen");
-  const rt=room.bg!=null?THEMES[room.bg]:null; if(room.bgImg){ s.style.background="linear-gradient(180deg,#0000004d,#0000008c),url(\""+room.bgImg+"\") center/cover no-repeat"; } else s.style.background=rt?"radial-gradient(circle at 50% 42%,"+rt[1]+"77,transparent 62%),linear-gradient(180deg,"+rt[0]+"dd,#07040f)":"radial-gradient(circle at 50% 42%,hsla("+h+",65%,32%,.55),transparent 62%),linear-gradient(180deg,#0a0618,#120b2a 55%,#07040f)";
+  const rt=room.bg!=null?THEMES[room.bg]:null; if(room.bgImg){ s.style.background="linear-gradient(180deg,#0000001a,#00000040),url(\""+room.bgImg+"\") center/cover no-repeat"; } else s.style.background=rt?"radial-gradient(circle at 50% 42%,"+rt[1]+"77,transparent 62%),linear-gradient(180deg,"+rt[0]+"dd,#07040f)":"radial-gradient(circle at 50% 42%,hsla("+h+",65%,32%,.55),transparent 62%),linear-gradient(180deg,#0a0618,#120b2a 55%,#07040f)";
   const t=el("div","rs-top"), host=el("div","host"), hav=el("div","av",room.emoji||"🎙️");
   hav.style.cssText="width:46px;height:46px;font-size:24px;border:2px solid #7dd3fc"; setAv(hav,room.emoji||"🎙️",room.photo);
   const hi=el("div","hin"), oP=PROFS[room.owner]||{}, nb0=el("b","rnm",room.name||room.ownerName), l1=el("div","rnl"); l1.append(favHeart(room.id),nb0); hi.append(l1,el("div","mut","ID #"+(room.num||""))); host.append(frameWrap(hav,AF(oP),3),hi);
