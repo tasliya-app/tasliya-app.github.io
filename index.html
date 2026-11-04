@@ -1659,7 +1659,7 @@ const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=nu
 const walletRef=()=>db.doc("data/users/"+uid+"/wallet");
 
 async function main(){
-  $("#splash img").src=SPLASH; try{ applyTheme(localStorage.getItem("thmC")); }catch(_){}
+  $("#splash img").src=SPLASH; try{ applyTheme(localStorage.getItem("thmC"),localStorage.getItem("thmB")); }catch(_){}
   loadAsset("gifts.js",()=>GIFT_ART,()=>{ try{ if(!room&&!dm) render(); }catch(_){} });
   setTimeout(()=>{const s=$("#splash");if(s){s.style.opacity=0;setTimeout(()=>s.remove(),500)}},2000);
   try{ user=await claude.use("user"); db=await claude.use("db"); }catch(e){}
@@ -1715,7 +1715,7 @@ let unsubGrant=null;
 let unsubFeed=null;
 function start(){
   if(OWNER){ try{ db.doc("app/owner").set({uid:uid,pid:prof.pid,name:prof.name,t:Date.now()}); }catch(e){} }
-  try{ db.doc("app/theme").onSnapshot(sn=>{ const col=sn.exists?sn.data().c:null; applyTheme(col); try{ if(col) localStorage.setItem("thmC",col); else localStorage.removeItem("thmC"); }catch(_){} }); }catch(e){}
+  try{ db.doc("app/theme").onSnapshot(sn=>{ const d=sn.exists?sn.data():{}; const cc=d.c||null, bb=d.bg||null; applyTheme(cc,bb); try{ if(cc) localStorage.setItem("thmC",cc); else localStorage.removeItem("thmC"); if(bb) localStorage.setItem("thmB",bb); else localStorage.removeItem("thmB"); }catch(_){} }); }catch(e){}
   try{ db.doc("agents/"+uid).onSnapshot(sn=>{ const was=!!window.IS_AGENT; window.IS_AGENT=!!sn.exists; if(was!==window.IS_AGENT&&!room&&!dm&&(tab==="me"||tab==="wallet")) render(); }); }catch(e){}
   try{ db.doc("bans/"+uid).onSnapshot(sn=>{ window.__banned=!!sn.exists; if(window.__banned) showBanned(); else if(!room&&!dm) render(); }); }catch(e){}
   db.doc("app/staff").get().then(s=>{ window.IS_ADMIN=!!(s.exists&&(s.data().uids||[]).includes(uid)); }).catch(()=>{}); loadFriends(); watchTop(); watchNews(); watchCredits(); watchGiftAssets(); watchMusic(); loadThree().catch(()=>{}); if(!unsubProfs) unsubProfs=db.collection("profiles").onSnapshot(sn=>{ PROFS={}; sn.docs.forEach(d=>PROFS[d.id]=d.data()); const me0=PROFS[uid]; if(me0){ prof.topWeeks=me0.topWeeks||[]; checkTopWin(); } if(room) drawChat(); });
@@ -2651,25 +2651,34 @@ function thTx(s){ return TH.on?thText(s):s; }
 function thInl(e,bg){ e.dataset.bg0=bg; e.style.background=thTx(bg); }
 window.__thRefresh=()=>{ document.querySelectorAll("[data-bg0]").forEach(e=>{ e.style.background=thTx(e.dataset.bg0); }); };
 function thFull(){ const out=[]; for(const sh of Array.from(document.styleSheets)){ const nd=sh.ownerNode; if(nd&&nd.id&&nd.id.indexOf("thm")===0) continue; let rs; try{ rs=sh.cssRules; }catch(e){ continue; } thRules(rs,out); } return out.join("\n"); }
-function applyTheme(c){ let st=document.getElementById("thm"), s2=document.getElementById("thm2"); const q=hexHSL(c); if(!q){ TH.on=false; if(st) st.remove(); if(s2) s2.remove(); try{ const mt=document.querySelector('meta[name="theme-color"]'); if(mt&&TH.mt0) mt.content=TH.mt0; }catch(_){} return; }
-  TH.on=true; TH.gray=q.s<.12; TH.d=q.h-240;
-  const h=q.h, h2=(h+40)%360, gray=q.s<.12, sb=gray?8:62, sc=gray?8:52, sl=gray?10:45;
-  const S1=gray?8:80, S2=gray?8:75, tl=(off,i)=>"linear-gradient(145deg,hsl("+((h+off+360)%360)+","+S1+"%,58%),hsl("+((h+off+30+360)%360)+","+S2+"%,40%))";
-  const css=":root{--bg:hsl("+h+","+sb+"%,16%);--card:hsl("+h+","+sc+"%,27%);--pri:"+c+";--line:hsl("+h+","+sl+"%,42%)}body{background:radial-gradient(circle at 75% 22%,hsla("+h+","+(gray?8:80)+"%,52%,.55),transparent 45%),radial-gradient(circle at 12% 78%,hsla("+h2+","+(gray?8:80)+"%,52%,.45),transparent 50%),var(--bg)!important}.hdr{background:linear-gradient(90deg,hsl("+h+","+(gray?8:75)+"%,46%),hsl("+h2+","+(gray?8:80)+"%,54%))!important}.ht-rooms{background:"+tl(0)+"!important}.ht-games{background:"+tl(28)+"!important}.ht-wallet{background:"+tl(-28)+"!important}.ht-counter{background:"+tl(56)+"!important}.ht-msgs{background:"+tl(-56)+"!important}.nav{border-top:2px solid "+c+"!important}";
-  if(!st){ st=document.createElement("style"); st.id="thm"; document.head.append(st); } st.textContent=css;
-  if(!s2){ s2=document.createElement("style"); s2.id="thm2"; document.head.append(s2); } else s2.textContent="";
-  try{ s2.textContent=thFull()+"\n"+css.slice(0,css.indexOf("}")+1); }catch(e){}
+function applyTheme(c,bg){ const st0=document.getElementById("thm"), s20=document.getElementById("thm2"); const P0=hexHSL(c)?c:null, B0=hexHSL(bg)?bg:null;
+  if(!P0 && !B0){ TH.on=false; if(st0) st0.remove(); if(s20) s20.remove(); try{ const mt=document.querySelector('meta[name="theme-color"]'); if(mt&&TH.mt0) mt.content=TH.mt0; }catch(_){} return; }
+  TH.on=true; const PRI=P0||"#8b5cf6", BG=B0||"#d8b4fe", dark=false;
+  const bgCss = dark
+    ? ":root{--bg:#070b24;--card:#12183a;--tx:#eef0ff;--mut:#9aa3d6;--line:#3b4a9a}body{background:radial-gradient(circle at 75% 22%,#1f5fbf55,transparent 45%),radial-gradient(circle at 12% 78%,#7c3aed44,transparent 50%),#070b24!important}"
+    : ":root{--bg:"+BG+";--card:#ffffffd9;--tx:#1e1b4b;--mut:#475569;--line:"+BG+"}body{background:linear-gradient(160deg,"+BG+",#ffffff)!important}";
+  const css=bgCss+":root{--pri:"+PRI+"}.nav{border-top:2px solid "+PRI+"!important}";
+  let st=st0; if(!st){ st=document.createElement("style"); st.id="thm"; document.head.append(st); } st.textContent=css;
+  let s2=s20; if(!s2){ s2=document.createElement("style"); s2.id="thm2"; document.head.append(s2); }
+  try{ s2.textContent=thFull()+"\n"+css; }catch(e){ s2.textContent=css; }
   try{ const mt=document.querySelector('meta[name="theme-color"]'); if(mt){ if(!TH.mt0) TH.mt0=mt.content; mt.content=thHex(TH.mt0); } }catch(_){}
   try{ if(window.__thRefresh) window.__thRefresh(); }catch(_){} }
-function sheetAppTheme(){ sheet("🎨 لون واجهة التطبيق",(c,close)=>{
-  c.append(el("p","mut","اللون الذي تختاره يتغير عند جميع المستخدمين فوراً."));
-  const COLS=[["#8b5cf6","بنفسجي"],["#3b82f6","أزرق"],["#06b6d4","تركوازي"],["#10b981","أخضر"],["#f59e0b","ذهبي"],["#ef4444","أحمر"],["#ec4899","وردي"],["#94a3b8","رمادي"]];
-  const save=async col=>{ applyTheme(col); try{ localStorage.setItem("thmC",col); }catch(_){} try{ await db.doc("app/theme").set({c:col,t:Date.now(),by:uid}); toast("تم تغيير لون الواجهة للجميع ✓"); }catch(e){ toast("تغيّر عندك فقط — تعذر الحفظ للجميع، انشر قواعد Firebase المحدّثة"); } };
-  const g=el("div","thsw"); COLS.forEach(([col,nm])=>{ const b=el("button","thb",nm); b.style.background=col; b.onclick=()=>save(col); g.append(b); }); c.append(g);
-  let cur="#8b5cf6"; try{ cur=localStorage.getItem("thmC")||cur; }catch(_){}
-  c.append(el("b",null,"لون مخصص")); const pk=el("input"); pk.type="color"; pk.value=cur; pk.style.cssText="width:100%;height:46px;margin:8px 0;padding:2px;border-radius:12px"; c.append(pk);
-  const sv=el("button","btn full","💾 حفظ اللون المخصص"); sv.onclick=()=>save(pk.value); c.append(sv);
-  const rs=el("button","btn alt full","↩️ إعادة الألوان الافتراضية"); rs.style.marginTop="8px"; rs.onclick=async()=>{ try{ await db.doc("app/theme").delete(); applyTheme(null); try{ localStorage.removeItem("thmC"); }catch(_){} toast("عادت الألوان الافتراضية للجميع ✓"); }catch(e){ toast("تعذر التنفيذ"); } }; c.append(rs); }); }
+function sheetAppTheme(){ sheet("🎨 ألوان الواجهة",(c,close)=>{
+  c.append(el("p","mut","الألوان التي تختارها تتغير عند جميع المستخدمين فوراً."));
+  let curC="#8b5cf6", curB="#d8b4fe"; try{ curC=localStorage.getItem("thmC")||curC; curB=localStorage.getItem("thmB")||curB; }catch(_){}
+  const save=async(nc,nb)=>{ applyTheme(nc,nb); try{ localStorage.setItem("thmC",nc); localStorage.setItem("thmB",nb); }catch(_){} try{ await db.doc("app/theme").set({c:nc,bg:nb,t:Date.now(),by:uid}); toast("تم تغيير الألوان للجميع ✓"); }catch(e){ toast("تغيّر عندك فقط — تعذر الحفظ للجميع، انشر قواعد Firebase المحدّثة"); } };
+  const ICONS=[["#8b5cf6","بنفسجي"],["#3b82f6","أزرق"],["#06b6d4","تركوازي"],["#10b981","أخضر"],["#f59e0b","ذهبي"],["#ef4444","أحمر"],["#ec4899","وردي"],["#94a3b8","رمادي"]];
+  const BGS=[["#f9a8d4","وردي فاتح"],["#67e8f9","تركوازي"],["#7dd3fc","سمائي"],["#d8b4fe","بنفسجي فاتح"],["#d8b4fe","الأصلي"]];
+  c.append(el("b",null,"🔹 لون الأيقونات"));
+  const g1=el("div","thsw"); ICONS.forEach(([col,nm])=>{ const b=el("button","thb",nm); b.style.background=col; b.onclick=()=>save(col,curB); g1.append(b); }); c.append(g1);
+  const pk1=el("input"); pk1.type="color"; pk1.value=curC; pk1.style.cssText="width:100%;height:46px;margin:8px 0;padding:2px;border-radius:12px"; c.append(pk1);
+  const sv1=el("button","btn full","💾 حفظ لون الأيقونات المخصص"); sv1.onclick=()=>save(pk1.value,curB); c.append(sv1);
+  c.append(el("b",null,"🖼️ لون الخلفية"));
+  const g2=el("div","thsw"); BGS.forEach(([col,nm])=>{ const b=el("button","thb",nm); b.style.background=col; b.onclick=()=>save(curC,col); g2.append(b); }); c.append(g2);
+  const pk2=el("input"); pk2.type="color"; pk2.value=curB; pk2.style.cssText="width:100%;height:46px;margin:8px 0;padding:2px;border-radius:12px"; c.append(pk2);
+  const sv2=el("button","btn full","💾 حفظ لون الخلفية المخصص"); sv2.onclick=()=>save(curC,pk2.value); c.append(sv2);
+  const rs=el("button","btn alt full","↩️ إعادة الألوان الافتراضية"); rs.style.marginTop="8px";
+  rs.onclick=()=>save("#8b5cf6","#d8b4fe"); c.append(rs); }); }
 function sCirc(emoji,label,fn){ const r=el("button","scirc"), ic=el("span","sci",emoji), t=el("span","sct",label); r.append(ic,t); r.onclick=fn; return r; }
 function ownerPanel(){ sheet("🛠️ ضبط التطبيق",(c,close)=>{ const g=el("div","sgrid");
   [["👑","لوحة المالك",()=>{ close(); sheetOwner(); }],["👤","ضبط المستخدمين",()=>{ close(); usersMgr(); }],["🏠","ضبط الغرف",()=>{ close(); roomsMgr(); }],["🚩","البلاغات",()=>{ close(); reportsList(); }],["🛡️","الأدمن",()=>{ close(); staffMgr(); }],["🎨","لون الواجهة",()=>{ close(); sheetAppTheme(); }],["🆘","الدعم الفني",()=>{ close(); supportMgr(); }]]
