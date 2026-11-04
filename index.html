@@ -3711,6 +3711,7 @@ const isMod=()=>!!room&&(OWNER||room.owner===uid||(room.admins||[]).includes(uid
 function logAct(text){ try{ db.collection("rooms/"+room.id+"/log").add({t:Date.now(),by:prof.name,text}); }catch(e){} }
 async function roomUpdate(patch,log){ await db.doc("rooms/"+room.id).update(patch); if(log) logAct(log); }
 function enterRoom(r){
+  try{ if(!adoptAssets.f&&!(navigator.connection&&navigator.connection.saveData)) loadAsset("fx.js",()=>(adoptAssets.f?{x:1}:{})); }catch(_){}
   if((r.banned||[]).includes(uid)) return toast("🚫 أنت محظور من هذه الغرفة");
   if(r.pin&&r.owner!==uid&&!(r.admins||[]).includes(uid)){
     sheet("🔒 الغرفة مقفلة",(c,close)=>{ const i=el("input"); i.placeholder="رمز الدخول"; i.inputMode="numeric"; const ok=el("button","btn full","دخول");
@@ -4480,7 +4481,7 @@ function mp4Fx(w,url,art,img,fxk,tier,dur,OPEN,qty){
   let GW=innerWidth, GH=g.avail; if(o.soft){ const cw=(o.fit==="contain")?Math.min(innerWidth,Math.round(g.avail*o.r*(o.ex||1))):innerWidth, ch=(o.fit==="contain")?Math.min(g.avail,Math.round(cw/o.r)):g.avail; v.style.width=cw+"px"; v.style.height=ch+"px"; GW=cw; GH=ch; if(o.blend) bl.style.mixBlendMode=o.blend; if(o.fit==="contain") bl.classList.add("gfx-hm"); if(o.fx!=null||o.fy!=null){ bl.classList.add("gfx-sf"); bl.style.setProperty("--fx",(o.fx||0)+"%"); bl.style.setProperty("--fy",(o.fy||10)+"%"); } if(o.push){ bl.classList.add("gfx-push"); bl.style.setProperty("--pz",o.push); bl.style.setProperty("--pd",(o.d||6)+"s"); } v.style.maxWidth="none"; v.style.maxHeight="none"; v.style.objectFit="cover"; if(o.pos!=null) v.style.objectPosition="50% "+o.pos+"%"; w.style.setProperty("--ay",(g.top+(g.avail-ch)/2)+"px"); w.style.setProperty("--as",ch+"px"); }
   else if(o.r){ const vw=Math.min(innerWidth*.94,g.avail*o.r), vh=vw/o.r; w.style.setProperty("--ay",(g.top+(g.avail-vh)/2)+"px"); w.style.setProperty("--as",vh+"px"); v.style.width=vw+"px"; v.style.height=vh+"px"; }
   v.muted=true; v.defaultMuted=true; v.playsInline=true; v.autoplay=true; v.preload="auto"; v.controls=false; v.disablePictureInPicture=true;
-  v.setAttribute("playsinline",""); v.setAttribute("webkit-playsinline",""); v.setAttribute("muted",""); if(o.flt) v.style.filter=o.flt;
+  v.setAttribute("playsinline",""); v.setAttribute("webkit-playsinline",""); v.setAttribute("muted",""); if(o.flt && !(o.fit==="contain" && o.ex===0.9)) v.style.filter=o.flt;
   let dim=null; if(o.soft&&!o.nodim){ dim=document.createElement("div"); dim.className="gfx-dim"+(o.dim3?" gfx-dim3":(o.dim2?" gfx-dim2":"")); dim.style.top=g.top+"px"; dim.style.bottom=(innerHeight-g.bottom)+"px"; document.body.append(dim); }
   let done=false, shown=false;
   const snd=()=>{ const f=w.__snd; if(f){ w.__snd=null; f(); } };
