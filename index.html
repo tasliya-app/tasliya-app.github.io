@@ -1636,6 +1636,10 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .btn:disabled{opacity:.5;box-shadow:none}
 .btn.alt{background:linear-gradient(135deg,#ffffff1f,#ffffff0d);color:#fde68a;border:1px solid #facc15aa;box-shadow:0 4px 12px #0005;text-shadow:0 1px 2px #0008}
 #dmchat .msg{font-family:Amiri,Cairo,serif;font-weight:700;font-size:18px;line-height:1.5;border:2px solid #ffffff;border-radius:50px;padding:8px 18px;box-shadow:0 3px 10px #0004}
+
+.entryb2{background:linear-gradient(90deg,#f59e0b,#ec4899 55%,#8b5cf6);border:1.5px solid #fde68a;color:#fff;box-shadow:0 6px 18px #ec489966;text-shadow:0 1px 2px #0006}
+
+.toast.tvz{background:linear-gradient(90deg,#f59e0b,#ec4899 55%,#8b5cf6)!important;color:#fff;border:1.5px solid #fde68a;font-weight:700;box-shadow:0 6px 18px #ec489966;text-shadow:0 1px 2px #0006}
 </style>
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap">
 </head>
@@ -1692,7 +1696,7 @@ async function claimCredits(){
     all.forEach(d=>{ const x=d.data(); sum+=x.amt; earn[x.kind]=r2((earn[x.kind]||0)+x.amt); logTx(x.kind,x.amt,x.from,x.amt); seenCred.add(d.id); });
     coins=Math.max(0,r2(coins+sum)); try{ const g0=document.getElementById("gtot"); if(g0) g0.textContent=fmt(coins); }catch(_){} EARN=earn; await walletRef().update({coins,earn});
     for(const d of all){ try{ await db.doc("credits/"+d.id).delete(); }catch(e){} }
-    if(sum>=.01 && !all.every(d=>d.data().kind==="roomshare")) toast("🪙 وصلك "+fmtc(sum)+" نقطة"); if(!room&&!dm) render();
+    if(sum>=.01 && !all.every(d=>d.data().kind==="roomshare")) if(OWNER) toastV("🪙 وصلك "+fmtc(sum)+" نقطة"); if(!room&&!dm) render();
   } finally{ claimingC=false; if([].concat(...Object.values(CRD)).some(d=>!seenCred.has(d.id))) claimCredits(); }
 }
 async function withdrawMain(n){ await setCoins(coins+n); logTx("main",n,null,n); EARN.main=r2((EARN.main||0)+n); try{ await walletRef().update({earn:EARN}); }catch(e){} }
@@ -2914,7 +2918,7 @@ async function wheelSpin(){ if(!isMod()) return; const cur=WH.state||{}; if(!cur
 function wheelOnState(){ const s=WH.state||{};
   if(!WH.init){ WH.init=1; WH.seen=(s.spin&&s.spin.id)||""; WH.winSeen=(s.last&&s.last.id)||""; wheelRedraw(); return; }
   if(s.spin&&s.spin.id&&s.spin.id!==WH.seen){ WH.seen=s.spin.id; wheelPanel(); whAnimate(s.spin); }
-  if(s.last&&s.last.id&&s.last.id!==WH.winSeen){ WH.winSeen=s.last.id; if(s.last.uid===uid) toast("🎉 مبروك! ستصلك جائزة "+s.last.prize); else toast("🎡 فاز "+s.last.name+" بـ "+s.last.prize); }
+  if(s.last&&s.last.id&&s.last.id!==WH.winSeen){ WH.winSeen=s.last.id; if(s.last.uid===uid) toastV("🎉 مبروك! ستصلك جائزة "+s.last.prize); else toastV("🎡 فاز "+s.last.name+" بـ "+s.last.prize); }
   wheelRedraw(); }
 function whAC(){ try{ if(!WH.ac) WH.ac=new (window.AudioContext||window.webkitAudioContext)(); if(WH.ac.state==="suspended") WH.ac.resume(); return WH.ac; }catch(e){ return null; } }
 function whBeep(f,d,type,vol){ const c=whAC(); if(!c) return; try{ const o=c.createOscillator(), g=c.createGain(); o.type=type; o.frequency.value=f; g.gain.setValueAtTime(vol,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d); o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+d); }catch(e){} }
@@ -3701,6 +3705,7 @@ function openBoard(){ loadLastChamp();
 }
 let unsubRoomDoc=null;
 function toast(m){ const t=el("div","toast",m); document.body.append(t); setTimeout(()=>t.remove(),2400); }
+function toastV(m){ const t=el("div","toast tvz",m); document.body.append(t); setTimeout(()=>t.remove(),3200); }
 window.alert=toast;
 const isMod=()=>!!room&&(OWNER||room.owner===uid||(room.admins||[]).includes(uid));
 function logAct(text){ try{ db.collection("rooms/"+room.id+"/log").add({t:Date.now(),by:prof.name,text}); }catch(e){} }
