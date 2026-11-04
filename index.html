@@ -1624,6 +1624,18 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .whc{width:min(96vw,480px);padding:12px 8px 16px}
 
 .vwbtn{display:inline-flex;align-items:center;background:#0008;color:#fff;border:1px solid #fff4;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:900;direction:ltr;margin-inline-end:6px;white-space:nowrap}
+
+.board{background:radial-gradient(circle at 50% 14%,#fbbf2455,transparent 45%),linear-gradient(180deg,#4c1d95,#86198f 48%,#1e1b4b);border:1px solid #f0abfc88}
+.bn{border:1px solid #f0abfc66;background:#ffffff14}
+.trow.t2{background:linear-gradient(90deg,#f472b6,#db2777);color:#fff;box-shadow:0 0 14px #f472b688;border-color:#fbcfe8}
+.trow.tx{background:linear-gradient(90deg,#c084fc99,#7c3aed99)}
+
+.npin{display:inline-block;font-weight:900;color:#fde68a;background:#f59e0b33;border:1px solid #facc15;border-radius:999px;padding:2px 10px;font-size:12px;margin-bottom:6px}
+
+.btn{font-family:Amiri,Cairo,serif;font-weight:700;font-size:18px;letter-spacing:.2px;background:linear-gradient(135deg,#f97316,#ec4899 55%,#7c3aed);color:#fff;border:1px solid #ffffff44;box-shadow:0 6px 16px #ec489940,inset 0 1px 0 #ffffff40;text-shadow:0 1px 2px #0006}
+.btn:disabled{opacity:.5;box-shadow:none}
+.btn.alt{background:linear-gradient(135deg,#ffffff1f,#ffffff0d);color:#fde68a;border:1px solid #facc15aa;box-shadow:0 4px 12px #0005;text-shadow:0 1px 2px #0008}
+#dmchat .msg{font-family:Amiri,Cairo,serif;font-weight:700;font-size:18px;line-height:1.5;border:2px solid #ffffff;border-radius:50px;padding:8px 18px;box-shadow:0 3px 10px #0004}
 </style>
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap">
 </head>
@@ -2793,16 +2805,19 @@ function redNotice(msg){ const d=el("div","rednotice",msg); document.body.append
 const newsSeen=()=>{ try{ return +localStorage.getItem("newsSeen")||0; }catch(e){ return 0; } };
 function updateNewsDot(){ const b=document.getElementById("newsb"); if(b) b.classList.toggle("dot",newsLatest>newsSeen()); }
 function watchNews(){ if(unsubNews||!db) return;
-  unsubNews=db.collection("news").orderBy("t","desc").limit(30).onSnapshot(sn=>{ NEWS=sn.docs.map(d=>Object.assign({id:d.id},d.data())); const lt=NEWS[0]?NEWS[0].t:0;
-    if(lt>newsLatest){ if(newsLatest!==0||lt>0)if(NEWS[0].by!==uid&&Date.now()-lt<60000) redNotice("📰 خبر جديد من تسلية"); newsLatest=lt; }
-    updateNewsDot(); if(NEWSUI) NEWSUI(); }); }
+  if(!unsubNewsP) unsubNewsP=db.collection("news").where("pin","==",true).onSnapshot(sn=>{ NEWS_P=sn.docs.map(d=>Object.assign({id:d.id},d.data())); newsMerge(); });
+  unsubNews=db.collection("news").orderBy("t","desc").limit(15).onSnapshot(sn=>{ NEWS_L=sn.docs.map(d=>Object.assign({id:d.id},d.data())); const lt=NEWS_L[0]?NEWS_L[0].t:0;
+    if(lt>newsLatest){ if(newsLatest!==0||lt>0)if(NEWS_L[0].by!==uid&&Date.now()-lt<60000) redNotice("📰 خبر جديد من تسلية"); newsLatest=lt; }
+    newsMerge(); }); }
+let NEWS_L=[], NEWS_P=[], unsubNewsP=null;
+function newsMerge(){ const ids=new Set(NEWS_P.map(x=>x.id)); NEWS=[...NEWS_P, ...NEWS_L.filter(x=>!ids.has(x.id))]; updateNewsDot(); if(NEWSUI) NEWSUI(); }
 function newsSheet(){
   try{ localStorage.setItem("newsSeen",String(Date.now())); }catch(e){} updateNewsDot();
   const o=el("div","ov"), c=el("div","card sheet newsc"); o.append(c); document.body.append(o);
   let ncOpen=null, ncUn=null, ncDocs=[], ncDraft="", ncFocus=false;
   const shut=()=>{ if(ncUn){ ncUn(); ncUn=null; } NEWSUI=null; o.remove(); }; o.onclick=e=>{ if(e.target===o) shut(); };
   const h=el("div","dmh"), x=el("button","rb","✕"); x.onclick=shut; h.append((()=>{ const t=el("b"); t.append("📰 أخبار ",el("span","brin","تسلية")); return t; })(),x); c.append(h);
-  if(OWNER){ const w=el("div","ncomp"), ta=el("textarea"); ta.rows=3; ta.maxLength=800; ta.placeholder="اكتب خبراً جديداً…"; let img="";
+  { const w=el("div","ncomp"), ta=el("textarea"); ta.rows=3; ta.maxLength=800; ta.placeholder="اكتب خبراً جديداً…"; let img="";
     const pv=el("img","ncimg"); pv.style.display="none"; const pick=el("label","btn alt","🖼️ إضافة صورة"), fi=el("input"); fi.type="file"; fi.accept="image/*"; fi.style.cssText="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer"; pick.style.cssText="position:relative;overflow:hidden"; pick.append(fi);
     fi.onchange=async()=>{ const f=fi.files[0]; if(!f) return; try{ img=await photoFrom(f,720,405); pv.src=img; pv.style.display="block"; }catch(e){ toast("تعذر قراءة الصورة"); } };
     const go=el("button","btn","نشر الخبر"); go.onclick=async()=>{ const t=ta.value.trim(); if(!t&&!img) return toast("اكتب نص الخبر"); go.disabled=true;
@@ -2811,9 +2826,11 @@ function newsSheet(){
   const L=el("div"); c.append(L);
   const recount=async id=>{ const q=await db.collection("news_comments").where("nid","==",id).get(); await db.doc("news/"+id).update({nc:q.docs.length}); };
   const draw=()=>{ L.innerHTML=""; if(!NEWS.length) L.append(el("p","mut","لا توجد أخبار بعد."));
-    NEWS.forEach(n=>{ const d=el("div","ncard"); d.append(el("div","mut","🕘 "+new Date(n.t).toLocaleString("ar")));
+    NEWS.forEach(n=>{ const d=el("div","ncard"); if(n.pin) d.append(el("div","npin","📌 خبر مثبّت")); d.append(el("div","mut","🕘 "+new Date(n.t).toLocaleString("ar")));
       if(n.text) d.append(el("div","nct",n.text)); if(n.img){ const im=el("img","ncimg"); im.src=n.img; d.append(im); }
       const act=el("div","nact"), likes=n.likes||[], has=likes.includes(uid);
+      if(OWNER){ const pb=el("button","nbtn",n.pin?"📌 إلغاء التثبيت":"📌 تثبيت"); pb.onclick=async()=>{ try{ if(!n.pin){ for(const o of NEWS_P){ if(o.id!==n.id) await db.doc("news/"+o.id).update({pin:false}); } }
+        await db.doc("news/"+n.id).update({pin:!n.pin}); toast(n.pin?"تم إلغاء التثبيت":"تم تثبيت الخبر ✓"); }catch(e){ toast("تعذر التثبيت"); } }; act.append(pb); }
       const lk=el("button","nbtn"+(has?" on":""),(has?"❤️ ":"🤍 ")+likes.length); lk.onclick=async()=>{ const cur=n.likes||[], nv=cur.includes(uid)?cur.filter(z=>z!==uid):[...cur,uid]; n.likes=nv; draw(); try{ await db.doc("news/"+n.id).update({likes:nv}); }catch(e){} };
       const cm=el("button","nbtn"+(ncOpen===n.id?" on":""),"💬 "+(n.nc||0)); cm.onclick=()=>{ if(ncUn){ ncUn(); ncUn=null; } if(ncOpen===n.id){ ncOpen=null; draw(); return; } ncOpen=n.id; ncDocs=[]; ncDraft="";
         ncUn=db.collection("news_comments").where("nid","==",n.id).orderBy("t","asc").limit(100).onSnapshot(sn=>{ ncDocs=sn.docs.map(z=>Object.assign({id:z.id},z.data())); draw(); }); draw(); };
@@ -3020,7 +3037,7 @@ function rtMic(){
   if(RT.mic) return Promise.resolve(RT.mic);
   if(RT.micDenied||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return Promise.resolve(null);
   if(!RT.micP) RT.micP=(async()=>{ try{ RT.mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false}); rtMeter(uid,RT.mic); return RT.mic; }
-    catch(e){ RT.micDenied=true; toast("اسمح للمتصفح باستخدام المايك ثم أعد الجلوس على المقعد"); return null; }
+    catch(e){ RT.micDenied=true; toast("تعذّر المايك ("+((e&&e.name)||"خطأ")+") — اسمح للمتصفح باستخدام المايك ثم أعد الجلوس على المقعد"); return null; }
     finally{ RT.micP=null; } })();
   return RT.micP;
 }
@@ -3049,7 +3066,7 @@ function rtPc(o){
   if(RT.mic) RT.mic.getAudioTracks().forEach(t=>pc.addTrack(t,RT.mic)); else pc.addTransceiver("audio",{direction:"recvonly"});
   pc.onicecandidate=e=>{ if(e.candidate&&pc.__ses&&RT.rid) db.collection("rooms/"+RT.rid+"/rtcc").add({k:key,s:pc.__ses,r:role,c:JSON.stringify(e.candidate),t:Date.now()}).catch(()=>{}); };
   pc.ontrack=e=>{ const st=e.streams[0]||new MediaStream([e.track]); let a=RT.audio[o]; if(!a){ a=new Audio(); a.autoplay=true; RT.audio[o]=a; } a.srcObject=st; try{ a.play().catch(()=>{}); }catch(_){} rtMeter(o,st); if(RT.ac&&RT.ac.state==="suspended"&&!RT.hint){ RT.hint=1; toast("اضغط على الشاشة مرة لتفعيل صوت الغرفة 🔊"); } };
-  pc.onconnectionstatechange=()=>{ if((pc.connectionState==="failed"||pc.connectionState==="closed")&&RT.pcs[o]===pc){ rtDrop(o); if(role==="callee") RT.acc[o]=null; setTimeout(()=>{ if(RT.rid) rtSync(); },2000); } };
+  pc.onconnectionstatechange=()=>{ if(pc.connectionState==="failed"&&RT.pcs[o]===pc){ const w=(RT.warn=RT.warn||{}); if(!w[o]||Date.now()-w[o]>60000){ w[o]=Date.now(); toast("تعذّر الاتصال الصوتي مع "+((PROFS[o]||{}).name||"لاعب")+" — قد تمنع الشبكة الاتصال المباشر"); } } if((pc.connectionState==="failed"||pc.connectionState==="closed")&&RT.pcs[o]===pc){ rtDrop(o); if(role==="callee") RT.acc[o]=null; setTimeout(()=>{ if(RT.rid) rtSync(); },2000); } };
   return pc;
 }
 function rtDrop(o){ const pc=RT.pcs[o]; if(pc){ try{ pc.close(); }catch(_){} } delete RT.pcs[o]; const a=RT.audio[o]; if(a){ try{ a.pause(); a.srcObject=null; }catch(_){} delete RT.audio[o]; } if(RT.an[o]){ try{ RT.an[o].disconnect(); }catch(_){} delete RT.an[o]; } }
@@ -3663,7 +3680,7 @@ async function loadLastChamp(){ const w=wkAgo(1); if(LASTCH_WK===w||LASTCH_BUSY)
     LASTCH_WK=w; }catch(e){}
   LASTCH_BUSY=false; if(BOARD) BOARD(); }
 function lchampCard(ch){ const cc=el("div","lchamp"); const av=el("div","av"); av.style.cssText="width:58px;height:58px;font-size:30px"; setAv(av,ch.emoji,ch.photo);
-  const m=el("div","lcm"); m.append(medalSvg("gold",34), " × "+ch.wins);
+  const m=el("div","lcm"); m.append(medalSvg("gold",34), " بطل التوب "+ch.wins+" مرات");
   cc.append(el("div","lcl","🏆 بطل الأسبوع الماضي"), frameWrap(av,AF(ch.pp||{}),3), el("div","lcn",ch.name), m); return cc; }
 function openBoard(){ loadLastChamp();
   const o=el("div","ov"), c=el("div","board"); o.append(c); document.body.append(o);
