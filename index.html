@@ -6069,7 +6069,7 @@ const err=document.getElementById("gateErr"), gate=document.getElementById("gate
 const msg=e=>{ const c=(e&&e.code)||""; if(c==="auth/unauthorized-domain") return "هذا الموقع غير مضاف في Firebase. أضف النطاق ("+location.hostname+") من Authentication ← Settings ← Authorized domains.";
   if(c==="auth/popup-closed-by-user"||c==="auth/cancelled-popup-request") return "أُغلقت نافذة الدخول. حاول مرة أخرى.";
   if(c==="auth/network-request-failed") return "تعذّر الاتصال بالإنترنت."; return "تعذّر الدخول: "+(c||e); };
-async function login(provider){ err.textContent=""; try{ await signInWithPopup(auth,provider); }catch(e){ if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment")){ try{ await signInWithRedirect(auth,provider); return; }catch(e2){ err.textContent=msg(e2); } } else err.textContent=msg(e); } }
+async function login(provider){ err.textContent=""; try{ await signInWithPopup(auth,provider); }catch(e){ if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment")){ err.textContent="تعذّر فتح نافذة Google من هذا الوضع. افتح الموقع من متصفح Chrome مباشرة (ليس من الأيقونة) وسجّل الدخول هناك، أو استخدم البريد وكلمة المرور."; } else err.textContent=msg(e); } }
 document.getElementById("gGoogle").onclick=()=>{ const p=new GoogleAuthProvider(); p.setCustomParameters({prompt:"select_account"}); login(p); };
 document.getElementById("gFacebook").onclick=()=>{ if(!FB_ENABLED){ err.textContent="الدخول بفيسبوك قيد الإعداد وسيُفعَّل لاحقاً. استخدم Google الآن."; return; } login(new FacebookAuthProvider()); };
 let booted=false;
