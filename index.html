@@ -3233,9 +3233,10 @@ function seatPop(i,anchor){
   const sd=seats[i], mine=mySeat(), mod=isMod(), lk=(room.lockedSeats||[]).includes(i);
   const p=el("div","mpop");
   const add=(t,dis,fn)=>{ const b=el("button","mpb",t); if(dis) b.disabled=true; b.onclick=async(e)=>{ e.stopPropagation(); p.remove(); try{ await fn(); }catch(err){ toast("تعذر تنفيذ الأمر"); } }; p.append(b); };
-  add("🎤 أخذ المايك", !!sd || (lk&&!mod), async()=>{ RT.want=true; if(mine&&mine!==String(i)) await seatRef(mine).delete(); await seatRef(i).set({uid,name:prof.name,emoji:prof.emoji,photo:prof.photo||"",frame:AF(prof)||"",verify:AV(prof)||"",muted:false}); });
+  if(sd&&sd.uid===uid){ add("🎤 ترك المايك", false, async()=>{ RT.want=false; if(RT.mic) rtStopMic(); await seatRef(i).delete(); }); }
+  else add("🎤 أخذ المايك", !!sd || (lk&&!mod), async()=>{ RT.want=true; if(mine&&mine!==String(i)) await seatRef(mine).delete(); await seatRef(i).set({uid,name:prof.name,emoji:prof.emoji,photo:prof.photo||"",frame:AF(prof)||"",verify:AV(prof)||"",muted:false}); });
   add(sd&&sd.muted?"🔊 فتح المايك":"🔇 كتم المايك", !(sd&&(sd.uid===uid||mod)), async()=>{ if(sd.uid===uid){ micMuted=!sd.muted; await seatRef(i).update({muted:micMuted}); } else { await seatRef(i).update({muted:!sd.muted}); } });
-  add(lk?"🔓 فتح المايك":"🔒 قفل المايك", !mod, async()=>{ const cur2=room.lockedSeats||[]; await roomUpdate({lockedSeats:lk?cur2.filter(x=>x!==i):[...cur2,i]},(lk?"فتح":"قفل")+" المقعد "+i); });
+  if(mod && !sd) add(lk?"🔓 فتح المايك":"🔒 قفل المايك", false, async()=>{ const cur2=room.lockedSeats||[]; await roomUpdate({lockedSeats:lk?cur2.filter(x=>x!==i):[...cur2,i]},(lk?"فتح":"قفل")+" المقعد "+i); });
   document.body.append(p);
   const r=anchor.getBoundingClientRect(), w=p.offsetWidth||160;
   p.style.top=(r.bottom+6)+"px";
