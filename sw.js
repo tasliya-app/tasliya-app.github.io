@@ -8,7 +8,7 @@ self.addEventListener('activate',e=>e.waitUntil((async()=>{
 })()));
 self.addEventListener('fetch',e=>{
   const r=e.request, u=new URL(r.url);
-  if(r.method==='GET'&&u.origin===location.origin&&/\/(gifts|fx)\.js$/.test(u.pathname)){
+  if(r.method==='GET'&&u.origin===location.origin&&(/\/(gifts|fx)\.js$/.test(u.pathname)||/^\/(lamp|gpanda|glowbfly)_[a-z]+\.(webp|webm|mp3)$/.test(u.pathname))){
     e.respondWith((async()=>{
       const c=await caches.open(AC);
       try{ const x=await fetch(r); if(x&&x.ok){ c.put(r,x.clone()); return x; } }catch(err){}
