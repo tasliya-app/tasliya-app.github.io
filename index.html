@@ -3861,7 +3861,7 @@ function sheetMicMgr(){ sheet("إدارة المايك",(c,close)=>{ const ks=Ob
     const m=el("button",null,u.muted?"فك الكتم":"كتم"); m.onclick=async()=>{ await seatRef(k).update({muted:!u.muted}); logAct((u.muted?"فك كتم ":"كتم ")+u.name); close(); };
     const d=el("button",null,"إنزال"); d.onclick=async()=>{ await seatRef(k).delete(); logAct("إنزال "+u.name+" من المايك"); close(); }; r.append(m,d); c.append(r); }); }); }
 async function toggleMicsView(){ window.__micHide=!window.__micHide; const g=document.getElementById("seatsg"); if(g) g.classList.toggle("hid",!!window.__micHide); toast(window.__micHide?"تم إخفاء المايكات":"تم إظهار المايكات"); }
-function toggleAllMics(){ const ks=Object.keys(seats); if(!ks.length) return toast("لا أحد على المايك");
+async function toggleAllMics(){ const ks=Object.keys(seats); if(!ks.length) return toast("لا أحد على المايك");
   const mute=ks.some(k=>!seats[k].muted); for(const k of ks) await seatRef(k).update({muted:mute}); logAct(mute?"كتم كل المايكات":"فك كتم كل المايكات"); toast(mute?"تم كتم الجميع":"تم فك الكتم"); }
 function sheetMods(){
   const o=el("div","ov"), c=el("div","card sheet"); o.append(c); document.body.append(o);
