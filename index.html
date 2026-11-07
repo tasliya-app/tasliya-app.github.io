@@ -1483,7 +1483,7 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .gfx-em{will-change:transform,opacity;contain:layout paint}
 
 
-/* نسبة الحب: الشريط والقلوب */
+/* جولة الأبطال: الشريط والقلوب */
 .chbar{position:fixed;left:10px;right:10px;top:calc(8px + env(safe-area-inset-top,0px));z-index:60;display:none;align-items:center;gap:8px;padding:10px 12px;border-radius:20px;background:linear-gradient(90deg,#fff7d6,#ffe9f3);border:2px solid #d4af37;box-shadow:0 8px 22px #7c2d1233;color:#0b2540;font-weight:800;direction:rtl}
 .chbar{left:4px!important;right:4px!important;padding:12px 14px!important;min-height:64px}
 .chbar.live,.chbar.ann,.chbar.done{display:flex!important}
@@ -1497,6 +1497,29 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .chvs{font-weight:900;font-size:20px;color:#7c3aed}
 .cht{font-size:16px;font-weight:900;color:#be185d;direction:ltr;font-variant-numeric:tabular-nums}
 .chl{font-size:14px;color:#6d28d9}
+.chb2{flex-direction:column!important;align-items:stretch!important;gap:6px!important;direction:rtl}
+.chtop2{display:flex;align-items:center;justify-content:space-between;gap:8px;direction:ltr}
+.chside{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0}
+.chside .chname{max-width:120px}
+.chscore{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;color:#0b2540}
+.chb2 .chmid{min-width:64px}
+.chbt{position:relative;height:28px;border-radius:14px;background:#1e293b26;overflow:hidden;direction:ltr;box-shadow:inset 0 2px 5px #0003}
+.chfa,.chfb{position:absolute;top:0;bottom:0;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.chfa{left:0;background:linear-gradient(90deg,#9f1239,#f43f5e)}
+.chfb{right:0;background:linear-gradient(270deg,#1e3a8a,#38bdf8)}
+.chshine{position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,#ffffff66 50%,transparent 70%);animation:chshine 1.6s linear infinite;pointer-events:none}
+.chfire{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:20px;transition:left .7s cubic-bezier(.2,.8,.2,1);animation:chbob .5s ease-in-out infinite alternate;pointer-events:none}
+.chlab{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;font-weight:900;color:#fff;text-shadow:0 1px 2px #0009;font-variant-numeric:tabular-nums}
+.chlab.l{left:10px}.chlab.r{right:10px}
+.chhype{text-align:center;font-size:13px;font-weight:900;color:#be185d}
+.chb2.urgent .chbt{animation:chpulse .8s ease-in-out infinite}
+.chb2.urgent .cht{color:#e11d48}
+.chb2.flash .chbt{box-shadow:0 0 0 4px #fbbf2499,inset 0 2px 5px #0003}
+.chb2.flash .chscore{animation:chpop .6s ease-out}
+@keyframes chshine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+@keyframes chbob{to{transform:translate(-50%,-50%) scale(1.25)}}
+@keyframes chpulse{50%{transform:scale(1.02)}}
+@keyframes chpop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
 .chtx{flex:1;font-size:13px;min-width:0}
 .chgo{border:0;border-radius:14px;padding:8px 12px;font-weight:900;color:#fff;background:linear-gradient(90deg,#8b5cf6,#ec4899);cursor:pointer;white-space:nowrap}
 .chx{border:0;background:#0000000f;border-radius:50%;width:26px;height:26px;cursor:pointer;color:#0b2540}
@@ -1668,6 +1691,10 @@ input[placeholder^="اكتب رسال"]{font-weight:800!important;font-size:16px
 .gfx-chip.gfx-chip2{bottom:auto!important;height:auto!important;max-height:none!important;align-items:center!important;align-self:auto!important;flex-direction:row!important}
 .gb2g.gb2lamp{width:66px!important;height:66px!important;filter:drop-shadow(0 0 6px #fde68aee) brightness(1.18) saturate(1.1)!important}
 .gb2g.gb2lamp .gimg2{width:100%!important;height:100%!important;object-fit:contain!important}
+.mpop{position:fixed;z-index:9000;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:14px;min-width:150px;background:linear-gradient(160deg,#f9a8d4,#c4b5fd 55%,#67e8f9);border:2px solid #f5c542;box-shadow:0 8px 20px #0008}
+.mpb{background:linear-gradient(90deg,#8b5cf6,#ec4899);color:#fff;border:0;border-radius:10px;padding:8px 12px;font-weight:800;font-size:14px;cursor:pointer}
+.mpb:disabled{opacity:.4;cursor:default}
+.seatsg.hid{display:none!important}
 </style>
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap">
 </head>
@@ -2537,12 +2564,11 @@ async function resolveRecipient(v){
   const d=sn.docs[0], pr=d.data(); if(d.id===uid) return {err:"لا يمكنك الإرسال إلى نفسك"};
   let role=null; try{ const ow=await db.doc("app/owner").get(); if(ow.exists&&ow.data().uid===d.id) role="owner"; }catch(e){}
   if(!role){ try{ const ag=await db.doc("agents/"+d.id).get(); if(ag.exists) role="agent"; }catch(e){} }
-  if(!role&&!OWNER) return {err:"يمكنك الإهداء إلى المالك فقط"};
   return {id:d.id,p:pr,role:role}; }
 function sheetSendPoints(){
   sheet("📤 إرسال نقاط",(c,close)=>{
     const bal=el("div","mut"), setBal=()=>{ bal.textContent="رصيدك: 🪙 "+fmtc(coins); }; setBal(); c.append(bal);
-    c.append(el("p","mut",OWNER?"أهدِ النقاط إلى أي مستخدم برقم الـ ID أو من أصدقائك.":"يمكنك الإهداء إلى المالك فقط."));
+    c.append(el("p","mut",OWNER?"أهدِ النقاط إلى أي مستخدم برقم الـ ID أو من أصدقائك.":"يمكنك الإهداء إلى أي مستخدم (حد يومي 10,000 نقطة) أو إلى الوكيل بلا حد."));
     const chips=el("div","chips"); c.append(chips);
     let target=null; const found=el("div");
     const run=async v=>{ target=null; found.innerHTML=""; found.append(el("p","mut","جارٍ البحث…")); let r; try{ r=await resolveRecipient(v); }catch(e){ r={err:"تعذر البحث"}; } found.innerHTML="";
@@ -2563,18 +2589,19 @@ const DAILY_SEND=10000;
 const sendDay=()=>{ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); };
 async function sendUsedToday(){ try{ const s=await db.doc("data/users/"+uid+"/limits/send").get(); const d=s.exists?s.data():{}; return d.day===sendDay()?(+d.amt||0):0; }catch(e){ return 0; } }
 async function sendAddToday(n){ try{ const used=await sendUsedToday(); await db.doc("data/users/"+uid+"/limits/send").set({day:sendDay(),amt:used+n}); }catch(e){} }
-async function userSend(t,n){ if(!OWNER&&t.role!=="owner") { toast("يمكنك الإهداء إلى المالك فقط"); return false; } if(n>coins){ toast("رصيدك لا يكفي"); return false; }
-  if(!OWNER){ const used=await sendUsedToday(); const left=DAILY_SEND-used; if(n>left){ toast(left>0?"المتبقي من حد اليوم "+fmtc(left)+" نقطة فقط":"وصلت إلى حد التحويل اليومي "+fmtc(DAILY_SEND)+" نقطة"); return false; } }
+async function userSend(t,n){ if(n>coins){ toast("رصيدك لا يكفي"); return false; }
+  const limited=!OWNER&&t.role!=="agent";
+  if(limited){ const used=await sendUsedToday(); const left=DAILY_SEND-used; if(n>left){ toast(left>0?"المتبقي من حد اليوم "+fmtc(left)+" نقطة فقط":"وصلت إلى حد التحويل اليومي "+fmtc(DAILY_SEND)+" نقطة"); return false; } }
   await setCoins(coins-n);
   try{ await db.collection("credits").add({to:t.id,amt:n,kind:"recv",from:uid,t:Date.now()}); }catch(e){ await setCoins(coins+n); throw e; }
-  if(!OWNER) await sendAddToday(n);
+  if(limited) await sendAddToday(n);
   logTx("sendOut",-n,t.id); try{ await notify(t.id,"info","🪙 وصلتك "+fmtc(n)+" نقطة من "+prof.name+" (ID "+prof.pid+")"); }catch(_){} return true; }
 async function agentSend(t,n){ if(n>coins){ toast("رصيدك لا يكفي"); return false; }
   await setCoins(coins-n);
   try{ await db.collection("credits").add({to:t.id,amt:n,kind:"agent",from:uid,t:Date.now()}); }catch(e){ await setCoins(coins+n); throw e; }
   logTx("sendOut",-n,t.id); try{ await notify(t.id,"info","🪙 وصلتك "+fmtc(n)+" نقطة من الوكيل "+prof.name); }catch(_){} return true; }
 function sheetAgentPanel(){
-  if(OWNER) return sheetOwner(); return toast("الوكلاء لم يعودوا متاحين");
+  if(OWNER) return sheetOwner(); 
   sheet("🧑‍💼 لوحة الوكيل",(c,close)=>{
     const bal=el("div","mut"), setBal=()=>{ bal.textContent="رصيدك: 🪙 "+fmtc(coins); }; setBal(); c.append(bal);
     c.append(el("div","mut","ابحث عن المستخدم برقم الـ ID"));
@@ -2767,7 +2794,7 @@ function ownerSetPid(u){ const P0=PROFS[u]||{}; sheet("🆔 تغيير الـ ID
 async function userAdmin(u){ const P=PROFS[u]||{}; let bal=0, banned=false;
   try{ const w=await db.doc("data/users/"+u+"/wallet").get(); bal=w.exists?(w.data().coins||0):0; }catch(e){}
   try{ banned=(await db.doc("bans/"+u).get()).exists; }catch(e){}
-  sheet(P.name||"مستخدم",(c,close)=>{ c.append(el("div","mut","ID #"+(P.pid||"")+" • رصيده: "+fmtc(bal)+" 🪙"));
+  sheet(P.name||"مستخدم",(c,close)=>{ c.append(el("div","mut","ID #"+(P.pid||"")+" • رصيده: "+fmtc(bal)+" 🪙")); const srcL=el("div","mut","مصدر النقاط: جارٍ التحميل…"); c.append(srcL); (async()=>{ try{ const q=await db.collection("data/users/"+u).orderBy("t","desc").limit(40).get(); const inc=q.docs.map(d=>d.data()).filter(x=>x.w&&x.a>0).slice(0,3); const kn={agent:"وكيل",roomshare:"حصة غرفة",adjust:"تعديل"}; srcL.textContent=inc.length?"مصدر النقاط: "+inc.map(x=>{ const pn=(PROFS[x.w]&&PROFS[x.w].name)||("ID "+String(x.w).slice(0,6)); return (kn[x.k]||x.k)+" من "+pn+" (+"+fmtc(x.a)+")"; }).join(" • "):"مصدر النقاط: لا توجد تحويلات واردة"; }catch(e){ srcL.textContent="مصدر النقاط: تعذر التحميل"; } })();
     const row=(t,f,alt)=>{ const b=el("button","btn full"+(alt?" alt":""),t); b.style.marginTop="8px"; b.onclick=f; c.append(b); };
     row(banned?"✅ رفع الحظر":"🚫 حظر من التطبيق",async()=>{ try{ if(banned) await db.doc("bans/"+u).delete(); else await db.doc("bans/"+u).set({t:Date.now(),by:uid}); toast(banned?"رُفع الحظر":"تم الحظر"); close(); }catch(e){ toast("تعذر التنفيذ"); } },!banned);
     if(OWNER){ row("✏️ تغيير الاسم",()=>{ close(); ownerRename(u); },true); row("🆔 تغيير الـ ID",()=>{ close(); ownerSetPid(u); },true); }
@@ -2899,7 +2926,7 @@ function newsSheet(){
           const acts=el("div","ncacts"); const zl_b=el("button","nbtn"+(zh?" on":""),(zh?"❤️ ":"🤍 ")+zl.length); zl_b.onclick=async()=>{ const nv=zh?zl.filter(q=>q!==uid):[...zl,uid]; z.likes=nv; draw(); try{ await db.doc("news_comments/"+z.id).update({likes:nv}); }catch(e){ toast("تعذر الإعجاب"); } };
           const rb=el("button","nbtn","↩️ رد"); rb.onclick=()=>{ NCRT={nid:n.id,id:z.id,n:z.name||"مستخدم",t:(z.text||"").slice(0,70)}; draw(); };
           acts.append(rb); if(OWNER||z.uid===uid){ const dd=el("button","nbtn","✕"); dd.onclick=async()=>{ try{ await db.doc("news_comments/"+z.id).delete(); await recount(n.id); }catch(e){} }; acts.append(dd); }
-          r.append(body,acts); cb.append(r); });
+          const zp=PROFS[z.uid]||{}, zav=el("div","av"); zav.style.cssText="width:28px;height:28px;font-size:15px;flex:none"; setAv(zav,zp.emoji||"👤",zp.photo); r.append(zav,body,acts); cb.append(r); });
         if(NCRT&&NCRT.nid===n.id){ const rc=el("div","ncrt"); rc.append(el("span",null,"↩️ ردّ على "+NCRT.n),(()=>{ const x=el("button","nbtn","✕"); x.onclick=()=>{ NCRT=null; draw(); }; return x; })()); cb.append(rc); }
         const row=el("div","row"), inp=el("input"), sd=el("button","btn","إرسال"); inp.placeholder="اكتب تعليقاً…"; inp.maxLength=300; inp.value=ncDraft; inp.oninput=()=>{ ncDraft=inp.value; }; inp.onfocus=()=>{ ncFocus=true; }; inp.onblur=()=>{ ncFocus=false; };
         const go=async()=>{ const t=inp.value.trim(); if(!t) return; const rt=(NCRT&&NCRT.nid===n.id)?{rt:{n:NCRT.n,t:NCRT.t}}:{}; inp.value=""; ncDraft=""; NCRT=null; try{ await db.collection("news_comments").add(Object.assign({nid:n.id,uid:uid,name:prof.name,text:t,t:Date.now(),likes:[]},rt)); await recount(n.id); }catch(e){ toast("تعذر إرسال التعليق"); } };
@@ -3185,17 +3212,32 @@ function rtStart(rid){
   }catch(e){ console.warn("voice",e); }
 }
 function drawSeats(){
-  const g=document.getElementById("seatsg"); if(!g) return; g.innerHTML="";
+  const g=document.getElementById("seatsg"); if(!g) return; g.innerHTML=""; g.classList.toggle("hid",!!window.__micHide);
   const mine=mySeat();
   const N=micN(room); g.style.gridTemplateColumns="repeat(4,1fr)";
   for(let i=1;i<=N;i++){
     const sd=seats[i], d=el("div","seat2"), c=el("div","sc"+(sd?" on":""),sd?sd.emoji:""); if(sd&&sd.uid) c.dataset.u=sd.uid; if(!sd) c.innerHTML=icH((room.lockedSeats||[]).includes(i)?"lock":"mic"); if(sd&&sd.photo) setAv(c,"",sd.photo);
     if(sd&&sd.muted){ const mmx=el("span","mm"); mmx.innerHTML=icH("micoff"); c.append(mmx); }
     const nm=el("div","sn",sd?sd.name:String(i)); const sp=sd?(PROFS[sd.uid]||{}):{}; if(sd&&AV(sp)) nm.append(" ",vbadge(AV(sp),11)); d.append(frameWrap(c,sd?AF(sp):"",3),nm);
-    d.onclick=()=>seatMenu(i);
+    d.onclick=(ev)=>{ ev.stopPropagation(); seatPop(i,d); };
     g.append(d);
   }
   const m=document.getElementById("micb"); if(m) m.innerHTML=icH((mine&&micMuted)?"micoff":"mic");
+}
+
+function seatPop(i,anchor){
+  document.querySelectorAll(".mpop").forEach(x=>x.remove());
+  const sd=seats[i], mine=mySeat(), mod=isMod(), lk=(room.lockedSeats||[]).includes(i);
+  const p=el("div","mpop");
+  const add=(t,dis,fn)=>{ const b=el("button","mpb",t); if(dis) b.disabled=true; b.onclick=async(e)=>{ e.stopPropagation(); p.remove(); try{ await fn(); }catch(err){ toast("تعذر تنفيذ الأمر"); } }; p.append(b); };
+  add("🎤 أخذ المايك", !!sd || (lk&&!mod), async()=>{ RT.want=true; if(mine&&mine!==String(i)) await seatRef(mine).delete(); await seatRef(i).set({uid,name:prof.name,emoji:prof.emoji,photo:prof.photo||"",frame:AF(prof)||"",verify:AV(prof)||"",muted:false}); });
+  add(sd&&sd.muted?"🔊 فتح المايك":"🔇 كتم المايك", !(sd&&(sd.uid===uid||mod)), async()=>{ if(sd.uid===uid){ micMuted=!sd.muted; await seatRef(i).update({muted:micMuted}); } else { await seatRef(i).update({muted:!sd.muted}); } });
+  add(lk?"🔓 فتح المايك":"🔒 قفل المايك", !mod, async()=>{ const cur2=room.lockedSeats||[]; await roomUpdate({lockedSeats:lk?cur2.filter(x=>x!==i):[...cur2,i]},(lk?"فتح":"قفل")+" المقعد "+i); });
+  document.body.append(p);
+  const r=anchor.getBoundingClientRect(), w=p.offsetWidth||160;
+  p.style.top=(r.bottom+6)+"px";
+  p.style.left=Math.max(8,Math.min(innerWidth-w-8, r.left+r.width/2-w/2))+"px";
+  setTimeout(()=>document.addEventListener("click",()=>p.remove(),{once:true}),0);
 }
 function seatMenu(i){
   const sd=seats[i], mine=mySeat(), mod=isMod(), lk=(room.lockedSeats||[]).includes(i);
@@ -3549,12 +3591,12 @@ function renderRoom(a){
   const sb=el("button","rb"); sb.innerHTML=icH("users"); sb.title="الموجودون"; sb.style.position="relative"; sb.onclick=presSheet; const pcb=el("span","pcb",String(presIn(room.id).length)); pcb.id="pcnt"; sb.append(pcb);
   t.append(host,el("span","sp"),crown,sb,gear,back);
   const sg=el("div","seatsg"); sg.id="seatsg";
-  const mid=el("div","mid"); mid.append(el("div","wm",room.name));
+  const mid=el("div","mid"); 
   const chat=el("div","rs-chat"); chat.id="chat";
   const fl=el("div","fl"), chb=el("button","fb"); chb.innerHTML=icH("chat"); chb.onclick=()=>dmOverlay(); chb.append(nbd("dm"));
   const disc=el("button","fb disc"+((MUS.on&&!musMuted)?" spin":"")); disc.id="discb"; { const ds=el("span","dsc"); ds.innerHTML=icH("disc"); disc.append(ds); } disc.onclick=sheetMusic;
   const mic2=el("button","fb"); mic2.innerHTML=icH((mySeat()&&micMuted)?"micoff":"mic"); mic2.id="micb"; mic2.onclick=toggleMic;
-  const mm=el("button","fb chg"); mm.id="chgb"; mm.innerHTML="<span style='font-size:26px;line-height:1'>💞</span>"; mm.title="نسبة حب"; mm.onclick=sheetChallenge;
+  const mm=el("button","fb chg"); mm.id="chgb"; mm.innerHTML="<img alt='' src='data:image/webp;base64,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' style='width:40px;height:40px;border-radius:50%;display:block;object-fit:cover'>"; mm.title="جولة الأبطال"; mm.onclick=sheetChallenge;
   const gb=el("button","gbtn"); { const gi2=el("div","gico"); gi2.innerHTML=icH("gift"); gb.append(gi2,el("small",null,"0")); } gb.querySelector("small").id="gtot"; gb.onclick=openGifts;
   const gmb=el("button","fb chg"); gmb.id="gamesb"; gmb.innerHTML="<span style='font-size:26px;line-height:1'>🎮</span>"; gmb.title="الألعاب والتسلية"; gmb.onclick=()=>{ closeRoom(); tab="games"; render(); };
   fl.append(chb,disc,mic2,mm,gmb,gb);
@@ -3624,7 +3666,7 @@ async function reportMsg(){ if(!replyTo||!room) return; if(!confirm("إبلاغ 
   catch(e){ toast("تعذر إرسال البلاغ"); } }
 const SUP_FAQ=[
  {q:"كيف أشحن الرصيد؟", k:["شحن","اشحن","رصيد","ايداع","دفع"], a:"الشحن يتم عن طريق أحد الوكلاء المعتمدين. افتح المحفظة، واختر الوكلاء، وراسل الوكيل ليحوّل لك الرصيد."},
- {q:"كيف أحوّل نقاطاً لمستخدم آخر؟", k:["تحويل","حول","ارسل","نقاط","هدية"], a:"من المحفظة اختر التحويل وأدخل ID المستخدم والمبلغ. الحد اليومي للتحويل 10,000 نقطة لكل حساب."},
+ {q:"كيف أحوّل نقاطاً لمستخدم آخر؟", k:["تحويل","حول","ارسل","نقاط","هدية"], a:"من المحفظة اختر التحويل وأدخل ID المستخدم والمبلغ. الحد اليومي للتحويل بين المستخدمين 10,000 نقطة. التحويل إلى الوكيل بلا حد."},
  {q:"كيف أصبح وكيلاً؟", k:["وكيل","وكالة","وكاله","اصبح"], a:"قدّم طلب وكالة من المحفظة. لا تتم الموافقة إلا من المالك بعد مراجعة معلوماتك."},
  {q:"كيف أعمل عجلة الحظ؟", k:["عجلة","عجله","حظ","دوران"], a:"تقدّم للعجلة برسوم 10,000 نقطة، ثم يوافق المالك على طلبك، ويتم الدوران داخل الغرفة."},
  {q:"كيف تُحسب رسوم الألعاب؟", k:["لعبة","العاب","ألعاب","رسوم","فوز","لعب"], a:"اللعب ضد الكمبيوتر مجاني. اللعب العشوائي أو ضد صديق يكلّف 2000 نقطة لكل لاعب، والفائز يحصل على 60% من المجموع."},
@@ -3700,8 +3742,8 @@ function drawChatNow(){
   const c=document.getElementById("chat"); if(!c||!room) return; recalcTop();
   const had=c.children.length>0, near=!had||(c.scrollHeight-c.scrollTop-c.clientHeight<90);
   const gs=(room.welcome||"")+"|"+(room.desc||"");
-  if(!chatGd||chatGdSig!==gs){ chatGdSig=gs; const gd=el("div","guide mini"); gd.append(el("span",null,"🛡️ إرشادات "),el("span","brin","تسلية"),el("span",null,": احترم الجميع • لا سب ولا تحرش • المخالفة = حظر فوري"));
-    if(room.welcome||room.desc) gd.append(el("div","gmini2","📌 "+[room.welcome,room.desc].filter(Boolean).join(" • "))); chatGd=gd; }
+  if(!chatGd||chatGdSig!==gs){ chatGdSig=gs; const gd=el("div","guide mini"); gd.append(el("span",null,"🛡️ "),el("span","brin",room.name||"تسلية"),el("span",null," : أي مخالفة = حظر"));
+     chatGd=gd; }
   const want=[chatGd], keep=new Set();
   msgs.forEach(m=>{ const k=(m.type||"t")+"|"+(m.uid||"")+"|"+m.t+"|"+(m.gid||"")+"|"+((m.text||"").length), sg=chatSig(m); let e=CHN.get(k);
     if(!e||e.s!==sg){ e={s:sg,n:chatNode(m)}; CHN.set(k,e); } keep.add(k); want.push(e.n); });
@@ -3753,7 +3795,7 @@ function openBoard(){ loadLastChamp();
       if(!u){ r.append(el("div","trk",String(i+1)),el("div","tnm","— فارغ —")); c.append(r); continue; }
       const up=PROFS[u.uid]||{}, av=el("div","av"); av.style.cssText="width:44px;height:44px;font-size:22px"; setAv(av,up.emoji||u.emoji||"👤",up.photo);
       const nm=el("div","tnm"); nm.append(up.name||u.name); if(AV(up)&&VCOL[AV(up)]) nm.append(" ",vbadge(AV(up),13));
-      const am=el("div","tam"); am.append(fmt(u.tot)+" "); if(i<3) am.append(medalSvg(["gold","bronze","silver"][i],32)); r.append(el("div","trk",String(i+1)),frameWrap(av,AF(up),3),nm,am); c.append(r); }
+      const am=el("div","tam"); am.append(fmt(u.tot)+" "); const wbw=new Set(up.topWeeks||[]).size; if(i<3&&wbw>0) am.append(medalSvg(["gold","bronze","silver"][i],32,String(wbw))); r.append(el("div","trk",String(i+1)),frameWrap(av,AF(up),3),nm,am); c.append(r); }
   c.append(bn);
   };
   BOARD=draw; draw(); const iv=setInterval(()=>{ if(!document.body.contains(o)){ clearInterval(iv); if(BOARD===draw) BOARD=null; } else draw(); },30000);
@@ -3818,7 +3860,8 @@ function sheetMicMgr(){ sheet("إدارة المايك",(c,close)=>{ const ks=Ob
   ks.forEach(k=>{ const u=seats[k], r=el("div","lrow"); r.append(el("span",null,u.emoji+" "+u.name+" (مقعد "+k+")"));
     const m=el("button",null,u.muted?"فك الكتم":"كتم"); m.onclick=async()=>{ await seatRef(k).update({muted:!u.muted}); logAct((u.muted?"فك كتم ":"كتم ")+u.name); close(); };
     const d=el("button",null,"إنزال"); d.onclick=async()=>{ await seatRef(k).delete(); logAct("إنزال "+u.name+" من المايك"); close(); }; r.append(m,d); c.append(r); }); }); }
-async function toggleAllMics(){ const ks=Object.keys(seats); if(!ks.length) return toast("لا أحد على المايك");
+async function toggleMicsView(){ window.__micHide=!window.__micHide; const g=document.getElementById("seatsg"); if(g) g.classList.toggle("hid",!!window.__micHide); toast(window.__micHide?"تم إخفاء المايكات":"تم إظهار المايكات"); }
+function toggleAllMics(){ const ks=Object.keys(seats); if(!ks.length) return toast("لا أحد على المايك");
   const mute=ks.some(k=>!seats[k].muted); for(const k of ks) await seatRef(k).update({muted:mute}); logAct(mute?"كتم كل المايكات":"فك كتم كل المايكات"); toast(mute?"تم كتم الجميع":"تم فك الكتم"); }
 function sheetMods(){
   const o=el("div","ov"), c=el("div","card sheet"); o.append(c); document.body.append(o);
@@ -3863,7 +3906,7 @@ function openSettings(){
     const br=b.getBoundingClientRect(), dg=dr.getBoundingClientRect(); dr.style.setProperty("--ax",(br.left+br.width/2-dg.left)+"px"); try{ dr.scrollIntoView({block:"nearest",behavior:"smooth"}); }catch(_){} };
   const sec=(title,tiles)=>{ const s2=el("div","psec"), g=el("div","tiles"), dr=el("div","sdrop"); s2.append(el("div","pst2",title));
     tiles.forEach(([i,t,col,fn])=>{ const b=el("button","tile"); b.style.borderColor=col; b.append(el("div","ti",i),el("div","tt",t)); b.onclick=fn.inl?()=>openDrop(b,g,dr,fn):fn; g.append(b); }); s2.append(g); p.append(s2); };
-  sec("🎙️ المايك",[["🎙️","إدارة المايك","#818cf8",IN(sheetMicMgr)],["🧩","المايكات (+4)","#22d3ee",INO(sheetLayout)],["🔇","تفعيل/إلغاء المايكات","#f87171",()=>{close();toggleAllMics();}]]);
+  sec("🎙️ المايك",[["🎙️","إدارة المايك","#818cf8",IN(sheetMicMgr)],["🧩","المايكات (+4)","#22d3ee",INO(sheetLayout)],["🔇","تفعيل/إلغاء المايكات","#f87171",()=>{close();toggleMicsView();}]]);
   sec("🛡️ الإشراف",[["🛡️","لوحة الإشراف","#818cf8",ownOnly(sheetMods)],["🔰","حماية الغرفة","#f59e0b",()=>toast("حماية الغرفة قريباً")],["🕘","سجل النشاط","#38bdf8",IN(sheetLog)]]);
   sec("⚙️ الإعدادات الثانوية",[["✏️","تغيير الاسم","#818cf8",INO(sheetRename)],["📝","وصف الغرفة","#818cf8",INO(()=>txtSheet("وصف الغرفة","desc","اكتب وصفاً للغرفة…","تعديل وصف الغرفة"))],["🖼️","صورة الغرفة","#818cf8",INO(sheetRoomPhoto)],
     ["🖼️","مقتنيات الغرفة (الخلفيات)","#34d399",()=>{ close(); sheetRoomBg(); }],
@@ -5873,29 +5916,32 @@ main();
 /* Google-only accounts are offered a one-tap link to a password (same account, same balance) */
 
 
-/* ===== نسبة الحب ===== */
-const CH_DUR=[1,2,3];
+/* ===== جولة الأبطال ===== */
+const CH_DUR=[1,2,3,5,10]; const CH_FEE=50000;
 function chPlayers(){ return room? presIn(room.id).map(q=>{ const P=PROFS[q.uid]||{}; return {uid:q.uid,name:q.name||P.name||"مستخدم",emoji:P.emoji||"👤"}; }) : []; }
 function sheetChallenge(){
   if(!room) return;
   if(!isMod()) return toast("للمالك والمشرفين فقط");
-  sheet("💞 نسبة حب",(c,close)=>{
+  sheet("⚔️ جولة الأبطال",(c,close)=>{
     const pl=chPlayers();
-    if(pl.length<2){ c.append(el("p","mut","يجب أن يكون في الغرفة لاعبان على الأقل لبدء نسبة الحب.")); return; }
+    if(pl.length<2){ c.append(el("p","mut","يجب أن يكون في الغرفة لاعبان على الأقل لبدء جولة الأبطال.")); return; }
     let dur=1;
     c.append(el("div","mut","مدة الجولة"));
-    const drow=el("div","chdur"); CH_DUR.forEach(m=>{ const b=el("button","chip"+(m===dur?" on":""),m+" دقيقة"); b.onclick=()=>{ dur=m; [...drow.children].forEach(x=>x.classList.remove("on")); b.classList.add("on"); }; drow.append(b); });
+    const drow=el("div","chdur"); CH_DUR.forEach(m=>{ const b=el("button","chip"+(m===dur?" on":""),m+" دقيقة"+(m>=5?" • "+fmtc(CH_FEE)+" 🪙":"")); b.onclick=()=>{ dur=m; [...drow.children].forEach(x=>x.classList.remove("on")); b.classList.add("on"); }; drow.append(b); });
     c.append(drow);
     const mk=(lbl)=>{ const w=el("div"); w.append(el("div","mut",lbl)); const s=el("select"); s.style.cssText="width:100%;padding:10px;border-radius:12px;margin-top:4px"; pl.forEach(x=>{ const o=el("option",null,(x.emoji||"👤")+" "+x.name); o.value=x.uid; s.append(o); }); w.append(s); c.append(w); return s; };
     const sa=mk("اللاعب الأول"), sb=mk("اللاعب الثاني"); sb.selectedIndex=Math.min(1,pl.length-1);
-    const go=el("button","btn full","💞 ابدأ نسبة الحب"); go.style.marginTop="12px";
+    const go=el("button","btn full","⚔️ ابدأ جولة الأبطال"); go.style.marginTop="12px";
     go.onclick=async()=>{
       if(sa.value===sb.value) return toast("اختر لاعبين مختلفين");
       const A=pl.find(x=>x.uid===sa.value), B=pl.find(x=>x.uid===sb.value);
+      const fee=dur>=5?CH_FEE:0;
+      if(fee && coins<fee) return toast("رصيدك لا يكفي — تكلفة هذه المدة "+fmtc(fee)+" نقطة");
       const now=Date.now();
-      try{ await roomUpdate({chal:{id:String(now),rid:room.id,rname:room.name||"الغرفة",mins:dur,start:now,end:now+dur*60000,a:{uid:A.uid,name:A.name,emoji:A.emoji||"👤"},b:{uid:B.uid,name:B.name,emoji:B.emoji||"👤"}}},"بدء نسبة الحب ("+dur+" د)");
-        close(); toast("💞 بدأت نسبة الحب"); }
-      catch(e){ toast("تعذر بدء الجولة"); }
+      if(fee) await setCoins(coins-fee);
+      try{ await roomUpdate({chal:{id:String(now),rid:room.id,rname:room.name||"الغرفة",mins:dur,start:now,end:now+dur*60000,a:{uid:A.uid,name:A.name,emoji:A.emoji||"👤"},b:{uid:B.uid,name:B.name,emoji:B.emoji||"👤"}}},"بدء جولة الأبطال ("+dur+" د)");
+        if(fee) logTx("chalFee",-fee); close(); toast("⚔️ بدأت جولة الأبطال"); }
+      catch(e){ if(fee) await setCoins(coins+fee); toast("تعذر بدء الجولة"); }
     };
     c.append(go);
   });
@@ -5935,21 +5981,40 @@ function chCol(p,score,fill,color){
   col.append(chHeart(fill,color), el("div","chamt",score+" ♥"));
   return col;
 }
+function chSide(p,score,side){
+  const d=el("div","chside "+side), nm=el("div","chname"); const cav=chAv(p.uid,p.emoji); cav.style.cursor="pointer"; cav.onclick=()=>{ try{ userMenu(p.uid,p.name); }catch(e){} };
+  nm.append(cav, el("span",null,p.name)); const sc=el("span","chscore",String(score)); d.append(nm,sc); d._sc=sc; return d;
+}
 function chRender(b,cc,v){
-  const A=(v&&v.sc[cc.a.uid])||0, B=(v&&v.sc[cc.b.uid])||0, mx=Math.max(A,B,1);
-  const s=Math.max(0,Math.floor((cc.end-Date.now())/1000)), t=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
-  b.className="chbar live"; b.innerHTML="";
-  const mid=el("div","chmid"); mid.append(el("div","chvs","VS"), el("div","cht",t));
-  const pct=(x)=>Math.round(100*(1-Math.exp(-x/50000)));
-  b.append(chCol(cc.a,A,pct(A),"#e11d48"), mid, chCol(cc.b,B,pct(B),"#2563eb"));
+  const A=(v&&v.sc[cc.a.uid])||0, B=(v&&v.sc[cc.b.uid])||0, tot=A+B;
+  const left=Math.max(0,cc.end-Date.now()), s=Math.floor(left/1000), t=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+  const pA=Math.round((tot?A/tot:.5)*100);
+  const lead=A>B?"a":B>A?"b":"t", prev=b.dataset.lead; const changed=!!prev&&prev!=="t"&&prev!==lead; b.dataset.lead=lead;
+  if(!b._r||!b.contains(b._r.top)){
+    b.className="chbar live chb2"; b.innerHTML="";
+    const top=el("div","chtop2"), mid=el("div","chmid"), tm=el("div","cht",t), vs=el("div","chvs","VS"); mid.append(vs,tm);
+    const sa=chSide(cc.a,A,"l"), sb=chSide(cc.b,B,"r"); top.append(sa,mid,sb);
+    const bt=el("div","chbt"), fa=el("div","chfa"), fb=el("div","chfb"), sh=el("div","chshine"), la=el("span","chlab l",""), lb=el("span","chlab r",""), fire=el("div","chfire","🔥");
+    bt.append(fa,fb,sh,la,lb,fire);
+    const hype=el("div","chhype");
+    b.append(top,bt,hype); b._r={top,fa,fb,fire,la,lb,tm,hype,sa,sb};
+  }
+  const r=b._r;
+  b.className="chbar live chb2"+(left<=60000?" urgent":"")+(changed?" flash":"");
+  r.tm.textContent=t; r.sa._sc.textContent=String(A); r.sb._sc.textContent=String(B);
+  r.fa.style.width=pA+"%"; r.fb.style.width=(100-pA)+"%"; r.fire.style.left=pA+"%";
+  r.la.textContent=A?String(A):""; r.lb.textContent=B?String(B):"";
+  if(!tot) r.hype.textContent="🔥 ابدأوا الدعم الآن!";
+  else if(A===B) r.hype.textContent="⚔️ تعادل! من سيتقدّم الآن؟";
+  else { const w=A>B?cc.a:cc.b; r.hype.textContent="⚡ "+w.name+" يتقدّم بفارق "+Math.abs(A-B)+" ♥"; }
 }
 function chWinner(cc,v){
   if(document.getElementById("chWin")) return;
   const o=el("div","ov ovc"); o.id="chWin"; const c=el("div","card sheet chwin"); c.style.textAlign="center"; o.append(c); document.body.append(o);
   const A=(v.sc[cc.a.uid])||0, B=(v.sc[cc.b.uid])||0;
-  if(A===B){ c.append(el("h3",null,"🤝 تعادل في نسبة الحب")); c.append(el("p",null,"تساوت النقاط المدعومة، وعادت النقاط للداعمين.")); }
+  if(A===B){ c.append(el("h3",null,"🤝 تعادل في جولة الأبطال")); c.append(el("p",null,"تساوت النقاط المدعومة، وعادت النقاط للداعمين.")); }
   else{ const w=A>B?cc.a:cc.b; const wr=el("div","chwn"); wr.append(chAv(w.uid,w.emoji), el("span",null,(w.emoji||"")+" "+w.name));
-    c.append(el("div","chtro","🏆"), el("h3",null,"الفائز بنسبة الحب"), wr, el("p",null,Math.max(A,B)+" ♥  مقابل  "+Math.min(A,B)+" ♥")); }
+    c.append(el("div","chtro","🏆"), el("h3",null,"الفائز بجولة الأبطال"), wr, el("p",null,Math.max(A,B)+" ♥  مقابل  "+Math.min(A,B)+" ♥")); }
   const ls=Object.keys(v.sup).map(k=>Object.assign({uid:k},v.sup[k])).sort((x,y)=>y.amt-x.amt).slice(0,3);
   if(ls.length){ c.append(el("div","chtop","🏅 أعلى ثلاث داعمين")); ls.forEach((x,i)=>{ const r=el("div","chtr"); const lf=el("span","chtl"); lf.append(el("b",null,(i+1)+"."), chAv(x.uid,x.emoji), el("span",null,x.name)); r.append(lf, el("b",null,x.amt+" ♥")); c.append(r); }); }
   const cb=el("button","chgo","إغلاق"); cb.style.marginTop="12px"; cb.onclick=()=>o.remove(); c.append(cb);
@@ -5960,7 +6025,7 @@ async function chTick(){
   if(cc && cc.end>Date.now()){ CHLIVE[cc.id]=1; const v=await chGet(cc,false); const c2=room&&rooms.find(r=>r.id===room.id); if(c2&&c2.chal&&c2.chal.id===cc.id) chRender(b,cc,v); return; }
   if(cc && !CHSHOWN[cc.id]){
     CHSHOWN[cc.id]=1; if(isMod()) chPayout(cc); if(!CHLIVE[cc.id]) return; const v=await chGet(cc,true);
-    b.className="chbar done"; b.innerHTML=""; b.append(el("div","chl","🏁 انتهت نسبة الحب"));
+    b.className="chbar done"; b.innerHTML=""; b.append(el("div","chl","🏁 انتهت جولة الأبطال"));
     chWinner(cc,v); setTimeout(()=>{ if(b.className.indexOf("done")>=0){ b.className="chbar"; b.innerHTML=""; } },8000);
     return;
   }
@@ -5971,7 +6036,7 @@ async function chTick(){
     const x=el("button","chx","✕"); x.onclick=()=>{ CHSHOWN["ann"+ch.id]=1; b.className="chbar"; b.innerHTML=""; };
     const go=el("button","chgo","انضم الآن");
     go.onclick=()=>{ CHSHOWN["ann"+ch.id]=1; b.className="chbar"; b.innerHTML=""; enterRoom(other); };
-    b.append(x, el("div","chtx","💞 بدأت نسبة الحب في غرفة «"+(other.name||"")+"» — "+ch.mins+" دقيقة"), go);
+    b.append(x, el("div","chtx","⚔️ بدأت جولة الأبطال في غرفة «"+(other.name||"")+"» — "+ch.mins+" دقيقة"), go);
   } else if(!other && b.className.indexOf("ann")>=0){ b.className="chbar"; b.innerHTML=""; }
 }
 
@@ -5991,8 +6056,8 @@ async function chPayout(cc){
       const w=A>B?cc.a.uid:cc.b.uid, ws=r2(pot*0.4);
       ps.push(credit(w,ws,"challenge"), credit(owner,rs,"challenge"), credit("__app__",r2(pot-ws-rs),"challenge"));
     }
-    await Promise.all(ps); toast("🏆 تم توزيع جائزة نسبة الحب");
-  }catch(e){ toast("تعذر توزيع جائزة نسبة الحب: "+((e&&e.message)||e)); }
+    await Promise.all(ps); toast("🏆 تم توزيع جائزة جولة الأبطال");
+  }catch(e){ toast("تعذر توزيع جائزة جولة الأبطال: "+((e&&e.message)||e)); }
 }
 setInterval(chTick,1000);
 </script>
