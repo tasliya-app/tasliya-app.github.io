@@ -4062,35 +4062,22 @@ async function hbJoin(team){
   logAct(team==="A"?"انضم ممثل الفريق الأول":"انضم ممثل الفريق الثاني");
 }
 function hbSheet(){ sheet("💍 المحيبس",(c,close)=>{ const hb=room.hb;
-  if(hb&&hb.st==="on"){ c.append(el("p","mut","اللعبة جارية — الجولة "+hb.rnd+"/"+HB_ROUNDS+" • النقاط "+hb.sc.A+" : "+hb.sc.B)); return; }
+  const box=el("div"); box.style.cssText="max-height:68vh;overflow-y:auto;padding-bottom:28px";
+  const top=el("div"); top.style.cssText="display:flex;justify-content:flex-end;margin-bottom:4px"; const xb=el("button","rb","✕"); xb.title="إغلاق"; xb.onclick=close; top.append(xb); box.append(top);
+  c.append(box);
+  if(hb&&hb.st==="on"){ box.append(el("p","mut","اللعبة جارية — الجولة "+hb.rnd+"/"+HB_ROUNDS+" • النقاط "+hb.sc.A+" : "+hb.sc.B)); return; }
   const live=(hb&&hb.st==="wait")?hb:null;
-  c.append(el("p","mut","كل لاعب يدفع "+fmtc(HB_COST)+" 🪙 عند الانضمام، والجولات: "+HB_ROUNDS+"."));
-  if(hb&&hb.st==="end") c.append(el("div","mut","آخر نتيجة: "+hb.sc.A+" : "+hb.sc.B+" — ممثلا الفريقين: "+(hb.rAn||"—")+" و"+(hb.rBn||"—")));
-  c.append(el("div","card","🔵 الفريق الأول: "+(live&&live.rA?live.rAn:"بانتظار الممثل")));
-  c.append(el("div","card","🔴 الفريق الثاني: "+(live&&live.rB?live.rBn:"بانتظار الممثل")));
+  box.append(el("p","mut","كل لاعب يدفع "+fmtc(HB_COST)+" 🪙 عند الانضمام، والجولات: "+HB_ROUNDS+"."));
+  if(hb&&hb.st==="end") box.append(el("div","mut","آخر نتيجة: "+hb.sc.A+" : "+hb.sc.B+" — ممثلا الفريقين: "+(hb.rAn||"—")+" و"+(hb.rBn||"—")));
+  box.append(el("div","card","🔵 الفريق الأول: "+(live&&live.rA?live.rAn:"بانتظار الممثل")));
+  box.append(el("div","card","🔴 الفريق الثاني: "+(live&&live.rB?live.rBn:"بانتظار الممثل")));
+  if(live&&isMod()){ const cn=el("button","btn alt full","🗑️ إلغاء اللعبة واسترجاع المبالغ"); cn.style.marginTop="8px"; cn.onclick=async()=>{ if(!confirm("إلغاء اللعبة واسترجاع المبالغ للمسجّلين؟")) return; close(); await hbCancel(); }; box.append(cn); }
   const joined=!!live&&(live.rA===uid||live.rB===uid);
   const bA=el("button","btn full","🔵 انضم للفريق الأول — "+fmtc(HB_COST)+" 🪙"); bA.style.marginTop="8px"; bA.disabled=joined||!!(live&&live.rA);
   bA.onclick=()=>{ close(); hbJoin("A"); };
   const bB=el("button","btn full","🔴 انضم للفريق الثاني — "+fmtc(HB_COST)+" 🪙"); bB.style.marginTop="6px"; bB.disabled=joined||!!(live&&live.rB);
   bB.onclick=()=>{ close(); hbJoin("B"); };
-  c.append(bA,bB);
-  if(live&&isMod()){ const cn=el("button","btn alt full","🗑️ إلغاء اللعبة واسترجاع المبالغ"); cn.style.marginTop="8px"; cn.onclick=async()=>{ if(!confirm("إلغاء اللعبة واسترجاع المبالغ للمسجّلين؟")) return; close(); await hbCancel(); }; c.append(cn); }
-}); }
-async function hbCancel(){
-  if(!isMod()) return toast("صاحب الغرفة فقط");
-  const ref=db.doc("rooms/"+room.id); let payers=[];
-  try{
-    await db.runTransaction(async tx=>{
-      const sn=await tx.get(ref), cur=(sn.data()||{}).hb;
-      if(!cur||cur.st!=="wait") throw new Error("nochange");
-      payers=Object.keys(cur.pay||{});
-      tx.update(ref,{hb:null});
-    });
-  }catch(e){ return toast("لا توجد لعبة في الانتظار لإلغائها"); }
-  for(const u of payers) await credit(u,HB_COST,"hb");
-  logAct("ألغى صاحب الغرفة لعبة المحيبس واسترجع المبالغ");
-  toast("أُلغيت اللعبة واستُرجعت المبالغ ✓");
-}
+  box.append(bA,bB); }); }
 if(!window.__hbI) window.__hbI=setInterval(()=>{ try{ hbPaint(); }catch(e){} },1000);
 
 function sheetLayout(){ sheet("🎤 المايكات",(c,close)=>{ const pk=packsOf(room);
