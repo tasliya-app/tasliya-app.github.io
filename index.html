@@ -4073,7 +4073,24 @@ function hbSheet(){ sheet("💍 المحيبس",(c,close)=>{ const hb=room.hb;
   bA.onclick=()=>{ close(); hbJoin("A"); };
   const bB=el("button","btn full","🔴 انضم للفريق الثاني — "+fmtc(HB_COST)+" 🪙"); bB.style.marginTop="6px"; bB.disabled=joined||!!(live&&live.rB);
   bB.onclick=()=>{ close(); hbJoin("B"); };
-  c.append(bA,bB); }); }
+  c.append(bA,bB);
+  if(live&&isMod()){ const cn=el("button","btn alt full","🗑️ إلغاء اللعبة واسترجاع المبالغ"); cn.style.marginTop="8px"; cn.onclick=async()=>{ if(!confirm("إلغاء اللعبة واسترجاع المبالغ للمسجّلين؟")) return; close(); await hbCancel(); }; c.append(cn); }
+}); }
+async function hbCancel(){
+  if(!isMod()) return toast("صاحب الغرفة فقط");
+  const ref=db.doc("rooms/"+room.id); let payers=[];
+  try{
+    await db.runTransaction(async tx=>{
+      const sn=await tx.get(ref), cur=(sn.data()||{}).hb;
+      if(!cur||cur.st!=="wait") throw new Error("nochange");
+      payers=Object.keys(cur.pay||{});
+      tx.update(ref,{hb:null});
+    });
+  }catch(e){ return toast("لا توجد لعبة في الانتظار لإلغائها"); }
+  for(const u of payers) await credit(u,HB_COST,"hb");
+  logAct("ألغى صاحب الغرفة لعبة المحيبس واسترجع المبالغ");
+  toast("أُلغيت اللعبة واستُرجعت المبالغ ✓");
+}
 if(!window.__hbI) window.__hbI=setInterval(()=>{ try{ hbPaint(); }catch(e){} },1000);
 
 function sheetLayout(){ sheet("🎤 المايكات",(c,close)=>{ const pk=packsOf(room);
