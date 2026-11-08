@@ -584,6 +584,7 @@ textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line)
 
 .gfx-blend{position:fixed;inset:0;z-index:26;mix-blend-mode:screen;pointer-events:none;display:flex;align-items:center;justify-content:center}
 .gfx-blend video{max-width:94vw;max-height:72vh;object-fit:contain}
+.gfx-blend video,.gfx-sf video{will-change:transform,opacity}
 .rcn{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:50%;background:#22c55e;color:#fff;font-size:12px;font-weight:900;padding:0 4px;box-shadow:0 0 8px #22c55e88}
 .rcn.z{background:#475569;box-shadow:none}
 .pcb{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:#22c55e;color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px}
@@ -904,7 +905,7 @@ textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line)
 
 
 .gfx-ft video{filter:brightness(1.1) contrast(1.25) saturate(1.15);-webkit-mask-image:linear-gradient(to bottom,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(to bottom,transparent,#000 10%,#000 90%,transparent)}
-.gfx-dim{position:fixed;left:0;right:0;z-index:25;pointer-events:none;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse 70% 58% at 50% 50%,rgba(4,2,16,.62),rgba(4,2,16,.42) 55%,rgba(4,2,16,0) 100%)}
+.gfx-dim{position:fixed;left:0;right:0;z-index:25;pointer-events:none;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse 115% 80% at 50% 50%,rgba(4,2,16,.62),rgba(4,2,16,.42) 60%,rgba(4,2,16,0) 100%)}
 .gfx-dim.on{opacity:1}
 
 
@@ -1484,13 +1485,13 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 
 
 /* جولة الأبطال: الشريط والقلوب */
-.chbar{position:fixed;left:10px;right:10px;top:calc(26px + env(safe-area-inset-top,0px));z-index:60;display:none;align-items:center;gap:8px;padding:10px 12px;border-radius:20px;background:linear-gradient(90deg,#fff7d6,#ffe9f3);border:2px solid #d4af37;box-shadow:0 8px 22px #7c2d1233;color:#0b2540;font-weight:800;direction:rtl}
+.chbar{position:fixed;left:10px;right:10px;top:calc(44px + env(safe-area-inset-top,0px));z-index:60;display:none;align-items:center;gap:8px;padding:10px 12px;border-radius:20px;background:linear-gradient(90deg,#fff7d6,#ffe9f3);border:2px solid #d4af37;box-shadow:0 8px 22px #7c2d1233;color:#0b2540;font-weight:800;direction:rtl}
 .chbar{left:4px!important;right:4px!important;padding:12px 14px!important;min-height:64px}
 .chbar.live,.chbar.ann,.chbar.done{display:flex!important}
 .chbar.live,.chbar.ann,.chbar.done{display:flex!important}
 .chbar.live{background:linear-gradient(90deg,#fde2e4 0%,#e0e7ff 100%)!important;align-items:center;justify-content:space-between}
 .chcol{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0}
-.chname{font-size:15px;font-weight:900;max-width:120px;text-shadow:0 1px 0 #fff,0 0 6px #ffffffcc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0b2540}
+.chname{font-size:15px;font-weight:900;max-width:120px;color:#9d174d;text-shadow:0 1px 0 #fff,0 0 8px #f9a8d4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0b2540}
 .chheart{font-size:58px;line-height:1.05;-webkit-background-clip:text;background-clip:text;color:transparent;margin:2px 0}
 .chamt{font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;color:#0b2540}
 .chmid{display:flex;flex-direction:column;align-items:center;min-width:72px}
@@ -1503,13 +1504,13 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .chside .chname{max-width:120px}
 .chscore{font-size:18px;font-weight:900;text-shadow:0 1px 0 #fff,0 0 6px #ffffffcc;font-variant-numeric:tabular-nums;color:#0b2540}
 .chb2 .chmid{min-width:64px}
-.chbt{position:relative;height:28px;border-radius:14px;background:#1e293b26;overflow:hidden;direction:ltr;box-shadow:inset 0 2px 5px #0003}
-.chfa,.chfb{position:absolute;top:0;bottom:0;transition:width .7s cubic-bezier(.2,.8,.2,1)}
-.chfa{left:0;background:linear-gradient(90deg,#9f1239,#f43f5e)}
-.chfb{right:0;background:linear-gradient(270deg,#1e3a8a,#38bdf8)}
+.chbt{position:relative;height:40px;border-radius:14px;background:#1e293b26;overflow:hidden;direction:ltr;box-shadow:inset 0 2px 5px #0003}
+.chfa,.chfb{position:absolute;top:0;bottom:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+.chfa{left:0;background:repeating-linear-gradient(-45deg,#fff2 0 10px,transparent 10px 20px),linear-gradient(90deg,#9f1239,#f43f5e);animation:chstripe 1.2s linear infinite}
+.chfb{right:0;background:repeating-linear-gradient(-45deg,#fff2 0 10px,transparent 10px 20px),linear-gradient(270deg,#1e3a8a,#38bdf8);animation:chstripe 1.2s linear infinite}
 .chshine{position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,#ffffff66 50%,transparent 70%);animation:chshine 1.6s linear infinite;pointer-events:none}
 .chfire{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:20px;transition:left .7s cubic-bezier(.2,.8,.2,1);animation:chbob .5s ease-in-out infinite alternate;pointer-events:none}
-.chlab{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;font-weight:900;color:#fff;text-shadow:0 1px 2px #0009;font-variant-numeric:tabular-nums}
+.chlab{position:absolute;top:50%;transform:translateY(-50%);font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 2px #0009;font-variant-numeric:tabular-nums}
 .chlab.l{left:10px}.chlab.r{right:10px}
 .chhype{text-align:center;font-size:13px;font-weight:900;color:#be185d}
 .chb2.urgent .chbt{animation:chpulse .8s ease-in-out infinite}
@@ -1537,6 +1538,23 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .hblab .hbt{font-size:14px;background:#0009;border-radius:10px;padding:2px 8px}
 .hbgo{position:fixed;left:50%;top:45%;transform:translate(-50%,-50%);font-size:88px;font-weight:900;color:#ef4444;text-shadow:0 0 18px #000,0 0 6px #fff;z-index:9999;pointer-events:none;animation:hbgo 1.3s ease-out forwards}
 @keyframes hbgo{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}20%{transform:translate(-50%,-50%) scale(1.15);opacity:1}70%{opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+.rs-chat .cmc.big{max-width:calc(100% - 70px)}
+.hblab .hbn{font-size:17px}
+.hblab .hbs{font-size:46px}
+.hblab .hbt{font-size:24px;padding:3px 10px}
+.hbnum{position:absolute;top:-6px;left:-6px;background:#fbbf24;color:#000;border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-weight:900;font-size:13px;z-index:3;pointer-events:none}
+.seat2.hbh .sc{position:relative}
+.hbmark{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-size:130px;z-index:9999;pointer-events:none;animation:hbgo 1.4s ease-out forwards;text-shadow:0 0 20px #000}
+.hbwin{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(78vw,320px);aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-radius:24px;background:linear-gradient(145deg,#fde68a,#f59e0b 45%,#b45309);border:4px solid #fff8;box-shadow:0 0 40px #fbbf24cc,inset 0 0 30px #fff6;color:#3b1d05;font-weight:900;text-align:center;z-index:9998;cursor:pointer;animation:hbwin .7s cubic-bezier(.34,1.56,.64,1)}
+.hbwin .hbwtop{font-size:64px;animation:chbob .6s ease-in-out infinite alternate;line-height:1.1}
+.hbwin .hbwt{font-size:30px;text-shadow:0 2px 0 #fff8}
+.hbwin .hbwn{font-size:24px;background:#fff9;border-radius:14px;padding:6px 14px;box-shadow:0 2px 8px #0003}
+.hbwin .hbws{font-size:16px;opacity:.9}
+@keyframes hbwin{from{transform:translate(-50%,-50%) scale(.2) rotate(-8deg);opacity:0}to{transform:translate(-50%,-50%) scale(1) rotate(0);opacity:1}}
+.chb2{box-shadow:0 0 0 1px #f9a8d4,0 6px 18px #ec489966}
+.chside .av{box-shadow:0 0 0 2px #f472b6,0 0 10px #f472b6aa}
+.chb2 .chmid .chvs{font-size:30px;font-weight:900;color:#db2777;text-shadow:0 0 8px #fbcfe8}
+@keyframes chstripe{to{background-position:40px 0,0 0}}
 .chtx{flex:1;font-size:13px;min-width:0}
 .chgo{border:0;border-radius:14px;padding:8px 12px;font-weight:900;color:#fff;background:linear-gradient(90deg,#8b5cf6,#ec4899);cursor:pointer;white-space:nowrap}
 .chx{border:0;background:#0000000f;border-radius:50%;width:26px;height:26px;cursor:pointer;color:#0b2540}
@@ -1786,7 +1804,7 @@ function signup(){
 let unsubGrant=null;
 let unsubFeed=null;
 function start(){
-  if(OWNER){ try{ db.doc("app/owner").set({uid:uid,pid:prof.pid,name:prof.name,t:Date.now()}); }catch(e){} }
+  if(OWNER){ try{ db.doc("app/owner").set({uid:uid,pid:prof.pid,name:prof.name,t:Date.now()},{merge:true}); }catch(e){} }
   try{ db.doc("app/theme").onSnapshot(sn=>{ const d=sn.exists?sn.data():{}; const cc=d.c||null, bb=d.bg||null; applyTheme(cc,bb); try{ if(cc) localStorage.setItem("thmC",cc); else localStorage.removeItem("thmC"); if(bb) localStorage.setItem("thmB",bb); else localStorage.removeItem("thmB"); }catch(_){} }); }catch(e){}
   try{ db.doc("agents/"+uid).onSnapshot(sn=>{ const was=!!window.IS_AGENT; window.IS_AGENT=!!sn.exists; if(was!==window.IS_AGENT&&!room&&!dm&&(tab==="me"||tab==="wallet")) render(); }); }catch(e){}
   try{ db.doc("bans/"+uid).onSnapshot(sn=>{ window.__banned=!!sn.exists; if(window.__banned) showBanned(); else if(!room&&!dm) render(); }); }catch(e){}
@@ -1798,7 +1816,7 @@ function start(){
   render();
 }
 function showBanned(){ const a=$("#app"); a.innerHTML=""; const c=el("div","card"); c.style.cssText="text-align:center;margin-top:14vh"; c.append(el("div","brand","تسلية"),el("p",null,"🚫 تم حظر حسابك من التطبيق"),el("p","mut","للاستفسار تواصل مع الإدارة.")); const b=el("button","btn alt full","تسجيل الخروج"); b.onclick=()=>{ if(window.__signOut) window.__signOut(); }; c.append(b); a.append(c); }
-function render(){
+function render(){ document.querySelectorAll(".mpop").forEach(x=>x.remove());
   if(window.__banned) return showBanned();
   const a=$("#app"); a.innerHTML=""; { const rk=room?"r"+room.id:dm?"d"+(dm.id||dm):tab+"|"+(dmView||""); if(rk!==window.__lastRK){ window.__lastRK=rk; a.classList.remove("pgf"); void a.offsetWidth; a.classList.add("pgf"); } }
   if(room) return renderRoom(a);
@@ -2205,7 +2223,7 @@ function renderWalletPage(a){
   }
   const c=el("div","card wcard"); c.style.textAlign="center"; c.append(artEl("wallet",150),el("h1",null,fmtc(coins)),el("div","mut","رصيد نقاطك"),el("small","mut","الدعم الذي يصلك يُضاف إلى هذا الرصيد وتستطيع صرفه في الدعم والألعاب والمتجر"));
   { const sp=el("button","btn full wbtn wb-p","🎁 إهداء نقاط إلى صديق"); sp.style.marginTop="12px"; sp.onclick=sheetSendPoints; c.append(sp); }
-  { const cr=el("div"); cr.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"; const b1=el("button","btn full wbtn wb-b","💳 شحن من المالك"); b1.onclick=sheetChargeAdmin; const b2=el("button","btn full wbtn wb-gr","🧑‍💼 شحن من الوكيل"); b2.onclick=sheetAgents; cr.append(b1,b2); c.append(cr); }
+  { const cr=el("div"); cr.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"; const b1=el("button","btn full wbtn wb-b","💳 شحن من المالك"); b1.onclick=sheetOwnerContact; const b2=el("button","btn full wbtn wb-gr","🧑‍💼 شحن من الوكيل"); b2.onclick=sheetAgents; cr.append(b1,b2); c.append(cr); }
   ["gift","roomshare","roulette","agent","recv"].forEach(k=>{ if(EARN[k]){ const w=wfield(EARNI[k],EARNL[k],fmtc(EARN[k])); w.classList.add("tap"); w.onclick=()=>sheetLedger(k); c.append(w); } });
   { const sb=el("button","btn alt full","📊 كشف الحساب (الوارد والصادر)"); sb.style.marginTop="8px"; sb.onclick=sheetSummary; c.append(sb); } a.append(c);
 }
@@ -2475,6 +2493,28 @@ function sheetWallet(){ if(!OWNER) return sheetCharge(); sheet("المحفظة",
 function toggleMusMute(){ musMuted=!musMuted; try{ if(MG2) MG2.gain.value=musMuted?0:musVol; if(musAudio) musAudio.muted=musMuted; }catch(e){} const d=document.getElementById("discb"); if(d) d.classList.toggle("spin",MUS.on&&!musMuted); toast(musMuted?"تم كتم الموسيقى":"تم تشغيل صوت الموسيقى"); }
 const normNum=s=>Math.floor(Number(String(s||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^\d]/g,""))||0);
 function sheetCharge(){ return sheetSendPoints(); }
+function sheetOwnerContact(){
+  sheet("💳 شحن من المالك",(c,close)=>{
+    const L=el("div","mut","جارٍ التحميل…"); c.append(L);
+    db.doc("app/owner").get().then(sn=>{
+      const d=sn.exists?sn.data():{}; L.textContent="";
+      const wl=waLink(d.wa), tl=tgLink(d.tg);
+      if(!wl&&!tl) L.textContent="لم يُضف المالك وسائل التواصل بعد.";
+      else c.append(el("p","mut","تواصل مع المالك لشحن نقاطك."));
+      if(wl){ const b=el("a","btn full wbtn wb-b","📱 واتساب المالك"); b.href=wl; b.target="_blank"; b.rel="noopener"; b.style.marginTop="8px"; c.append(b); }
+      if(tl){ const b=el("a","btn full wbtn wb-b","✈️ تليغرام المالك"); b.href=tl; b.target="_blank"; b.rel="noopener"; b.style.marginTop="6px"; c.append(b); }
+      if(OWNER){
+        c.append(el("div","mut","إعداد وسائل تواصل المالك:"));
+        const iw=el("input"); iw.placeholder="رقم واتساب المالك (مع رمز الدولة)"; iw.value=d.wa||"";
+        const it=el("input"); it.placeholder="يوزر تليغرام المالك"; it.value=d.tg||"";
+        const sv=el("button","btn full","💾 حفظ"); sv.style.marginTop="8px";
+        sv.onclick=async()=>{ try{ await db.doc("app/owner").set({wa:iw.value.trim(),tg:it.value.trim()},{merge:true}); toast("تم الحفظ ✓"); }catch(e){ toast("تعذر الحفظ"); } };
+        const wb=el("button","btn alt full","💰 المحفظة"); wb.style.marginTop="6px"; wb.onclick=()=>{ close(); sheetWallet(); };
+        c.append(iw,it,sv,wb);
+      }
+    }).catch(()=>{ L.textContent="تعذر التحميل"; });
+  });
+}
 function sheetChargeAdmin(){
   if(OWNER) return sheetWallet();
   sheet("📨 طلب شحن من الإدارة",(c,close)=>{
@@ -3123,14 +3163,14 @@ function openRoom(r){
   render(); finalizeTops(r); startPres(); presOn(); startNotif(); rlWatch(); wheelWatch(); setTimeout(()=>{ try{ if(!adoptAssets.f&&!(navigator.connection&&navigator.connection.saveData)) loadAsset("fx.js",()=>(adoptAssets.f?{x:1}:{})); }catch(_){} },6000);
   if(unsubKick){ unsubKick(); } unsubKick=db.doc("rooms/"+r.id+"/kicks/"+uid).onSnapshot(sn=>{ if(sn.exists&&sn.data().t>=joinT-1000&&room&&room.id===r.id){ toast("تم طردك من الغرفة"); closeRoom(); } });
 }
-function closeRoom(){ replyTo=null; Object.keys(TRK_URL).forEach(k=>{ try{ URL.revokeObjectURL(TRK_URL[k]); }catch(_){} delete TRK_URL[k]; }); if(unsubKick){ unsubKick(); unsubKick=null; } presOff(); musStop(); MUS={id:null,t0:0,on:false}; if(unsubMsgs) unsubMsgs(); if(unsubSeats) unsubSeats(); if(unsubRoomDoc) unsubRoomDoc(); rlStop(); rtStop(); dmClose(); room=null; { const gp=document.getElementById("gpops"); if(gp) gp.remove(); } render(); }
+function closeRoom(){ replyTo=null; document.querySelectorAll(".mpop,.mpop2,.hbhelp").forEach(x=>x.remove()); Object.keys(TRK_URL).forEach(k=>{ try{ URL.revokeObjectURL(TRK_URL[k]); }catch(_){} delete TRK_URL[k]; }); if(unsubKick){ unsubKick(); unsubKick=null; } presOff(); musStop(); MUS={id:null,t0:0,on:false}; if(unsubMsgs) unsubMsgs(); if(unsubSeats) unsubSeats(); if(unsubRoomDoc) unsubRoomDoc(); rlStop(); rtStop(); dmClose(); room=null; { const gp=document.getElementById("gpops"); if(gp) gp.remove(); } render(); }
 const packsOf=r=>((r&&r.micPacks)||[]).filter(e=>e>Date.now());
 const micN=r=>Math.max(5,5+5*packsOf(r).length-5*((r&&r.hiddenRows)||0));
 function mySeat(){ const N=room?micN(room):99; return Object.keys(seats).find(k=>seats[k].uid===uid&&+k<=N); }
 
 /* ---------- VOICE: WebRTC mesh between seated players (STUN only) ----------
    signalling in Firestore: rooms/{id}/rtc/{lo_hi} (offer/answer) and rooms/{id}/rtcc (ICE candidates) */
-const RTC_CFG={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"turn:openrelay.metered.ca:80",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"}]};
+const RTC_CFG={iceTransportPolicy:"all",iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"turn:openrelay.metered.ca:80",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:80?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:5349",username:"openrelayproject",credential:"openrelayproject"}]};
 let RT={want:false,rid:null,un:[],pcs:{},acc:{},docs:{},cand:{},audio:{},an:{},mic:null,micP:null,micDenied:false,t0:0,lvl:null,ac:null};
 const rtKey=o=>[uid,o].sort().join("_");
 const rtSid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
@@ -3250,6 +3290,7 @@ function seatPop(i,anchor){
   if(sd&&sd.uid===uid){ add("🎤 ترك المايك", false, async()=>{ RT.want=false; if(RT.mic) rtStopMic(); await seatRef(i).delete(); }); }
   else add("🎤 أخذ المايك", !!sd || (lk&&!mod), async()=>{ RT.want=true; if(mine&&mine!==String(i)) await seatRef(mine).delete(); await seatRef(i).set({uid,name:prof.name,emoji:prof.emoji,photo:prof.photo||"",frame:AF(prof)||"",verify:AV(prof)||"",muted:false}); });
   add(sd&&sd.muted?"🔊 فتح المايك":"🔇 كتم المايك", !(sd&&(sd.uid===uid||mod)), async()=>{ if(sd.uid===uid){ micMuted=!sd.muted; await seatRef(i).update({muted:micMuted}); } else { await seatRef(i).update({muted:!sd.muted}); } });
+  if(mod && sd && sd.uid && sd.uid!==uid) add("🚫 إزالة من المايك", false, async()=>{ const nm=sd.name||""; await seatRef(i).delete(); logAct("أُزيل "+nm+" من المايك "+i); });
   if(mod && !sd) add(lk?"🔓 فتح المايك":"🔒 قفل المايك", false, async()=>{ const cur2=room.lockedSeats||[]; await roomUpdate({lockedSeats:lk?cur2.filter(x=>x!==i):[...cur2,i]},(lk?"فتح":"قفل")+" المقعد "+i); });
   document.body.append(p);
   const r=anchor.getBoundingClientRect(), w=p.offsetWidth||160;
@@ -3651,7 +3692,7 @@ function giftMsg(m){
   const hd=el("div","cmh"); hd.append(nb); if(rk0) hd.append(topPill(rk0));
   const card=el("div","gcb"), ln=el("div","gcl"); ln.append(document.createTextNode("أرسل "+gd[1]+(m.qty>1?" ×"+m.qty:"")+" إلى "),el("b",null,m.to));
   const tile=el("div","gct soft"); tile.append(giftImg(gd,tier>=2?116:tier?96:62,null,true)); card.classList.add("g2"); card.append(tile,ln);
-  const col=el("div","cmc"); col.append(hd,card);
+  const col=el("div","cmc"+(tier?" big":"")); col.append(hd,card);
   d.append(frameWrap(av,AF(pp),2),col); d.onclick=()=>userMenu(m.uid,m.name); d.style.cursor="pointer"; return d; }
 const GPK={}, GSEEN=new Set();
 function giftPop(m){
@@ -3880,10 +3921,10 @@ function hbSound(good){ try{ if(!soundOn) return; const c=ac(), t0=c.currentTime
     const s=c.createBufferSource(), g=c.createGain(); s.buffer=n; g.gain.value=.5; s.connect(g); g.connect(c.destination); s.start(); }
   else { const o=c.createOscillator(), g=c.createGain(); o.frequency.setValueAtTime(420,t0); o.frequency.exponentialRampToValueAtTime(180,t0+.9); g.gain.setValueAtTime(.25,t0); g.gain.exponentialRampToValueAtTime(.001,t0+1); o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0+1); }
  }catch(e){} }
-function hbNext(hb,winner){ const sc={A:(hb.sc&&hb.sc.A)||0,B:(hb.sc&&hb.sc.B)||0}; sc[winner]++; const rnd=hb.rnd+1;
-  if(rnd>HB_ROUNDS){ const win=sc.A>sc.B?"A":sc.B>sc.A?"B":"T"; return {...hb,sc,st:"end",win,rev:[],t:0}; }
+function hbNext(hb,winner,lh,lok){ const sc={A:(hb.sc&&hb.sc.A)||0,B:(hb.sc&&hb.sc.B)||0}; sc[winner]++; const rnd=hb.rnd+1;
+  if(rnd>HB_ROUNDS){ const win=sc.A>sc.B?"A":sc.B>sc.A?"B":"T"; return {...hb,sc,st:"end",win,rev:[],t:0,lastH:lh??null,lastOk:lok??null,lastT:Date.now()}; }
   const hider=hbOther(hb.hider), row=hbRowOf(hider);
-  return {...hb,sc,rnd,hider,ring:row[Math.floor(Math.random()*5)],rev:[],t:Date.now()}; }
+  return {...hb,sc,rnd,hider,ring:row[Math.floor(Math.random()*5)],rev:[],t:Date.now(),lastH:lh??null,lastOk:lok??null,lastT:Date.now()}; }
 async function hbStart(){
   if(!isMod()) return toast("صاحب الغرفة فقط يبدأ اللعبة");
   if(micN(room)<10) return toast("تحتاج الغرفة 10 مايكات على الأقل");
@@ -3900,47 +3941,21 @@ function hbPop(h,anchor){
   const add=(t,fn)=>{ const b=el("button","mpb",t); b.onclick=async(e)=>{ e.stopPropagation(); p.remove(); try{ await fn(); }catch(err){ toast("تعذر تنفيذ الأمر"); } }; p.append(b); };
   if(searching){
     add("🫳 فارغ", async()=>{ const cur=room.hb; if(!cur||cur.st!=="on"||cur.hider===team) return; if((cur.rev||[]).includes(h)) return toast("هذه اليد فارغة");
-      if(h===cur.ring){ hbSound(false); await roomUpdate({hb:hbNext(cur,cur.hider)},"المحيبس: خسر الفريق الجولة"); }
-      else { hbSound(true); await roomUpdate({hb:{...cur,rev:[...(cur.rev||[]),h],t:Date.now()}}); } });
+      if(h===cur.ring){ hbSound(false); await roomUpdate({hb:hbNext(cur,cur.hider,h,false)},"المحيبس: خسر الفريق الجولة"); }
+      else { hbSound(true); await roomUpdate({hb:{...cur,rev:[...(cur.rev||[]),h],t:Date.now(),lastH:h,lastOk:null,lastT:Date.now()}}); } });
     add("✋ أخذ المحبس", async()=>{ const cur=room.hb; if(!cur||cur.st!=="on"||cur.hider===team) return;
-      if(h===cur.ring){ hbSound(true); await roomUpdate({hb:hbNext(cur,team)},"المحيبس: وجده الفريق"); }
-      else { hbSound(false); await roomUpdate({hb:hbNext(cur,cur.hider)},"المحيبس: أخطأ الفريق"); } });
+      if(h===cur.ring){ hbSound(true); await roomUpdate({hb:hbNext(cur,team,h,true)},"المحيبس: وجده الفريق"); }
+      else { hbSound(false); await roomUpdate({hb:hbNext(cur,cur.hider,h,false)},"المحيبس: أخطأ الفريق"); } });
   }
-  if(isMod()) add("🔮 مساعدة", async()=>{ window.__hbHelp=true; toast(h===room.hb.ring?"💍 المحبس في هذه اليد":"هذه اليد فارغة"); setTimeout(()=>{ window.__hbHelp=false; },4000); });
+  if(OWNER) add("🔮 مساعدة", async()=>{ window.__hbHelp=true; toast(h===room.hb.ring?"💍 المحبس في هذه اليد":"هذه اليد فارغة"); setTimeout(()=>{ window.__hbHelp=false; },4000); });
   if(!p.children.length) return;
   document.body.append(p);
   const r=anchor.getBoundingClientRect(), w=p.offsetWidth||160;
   p.style.top=(r.bottom+6)+"px"; p.style.left=Math.max(8,Math.min(innerWidth-w-8, r.left+r.width/2-w/2))+"px";
   setTimeout(()=>document.addEventListener("click",()=>p.remove(),{once:true}),0);
 }
-function hbPaint(){
-  const g=document.getElementById("seatsg"); if(!g||!room) return;
-  let bar=document.getElementById("hbbar"); const hb=room.hb;
-  const labTop=document.getElementById("hbtop"), labBot=document.getElementById("hbbot");
-  if(!hb||!hb.st){ if(bar) bar.remove(); if(labTop) labTop.remove(); if(labBot) labBot.remove(); return; }
-  let top=labTop, bot=labBot;
-  if(!top){ top=el("div","hblab a"); top.id="hbtop"; g.parentNode.insertBefore(top,g); }
-  if(!bot){ bot=el("div","hblab b"); bot.id="hbbot"; g.parentNode.insertBefore(bot,g.nextSibling); }
-  if(hb.st==="on"&&window.__hbRnd!==hb.rnd+"-"+hb.hider){ window.__hbRnd=hb.rnd+"-"+hb.hider; const go=el("div","hbgo","GO"); document.body.append(go); setTimeout(()=>go.remove(),1300); }
-  const srch=hbOther(hb.hider), secs=hb.st==="on"?Math.max(0,Math.ceil((HB_TIME-(Date.now()-(hb.t||0)))/1000)):null;
-  const fill=(box,t,nm)=>{ box.textContent=""; box.append(el("span","hbn",(t==="A"?"🔵 ":"🔴 ")+(nm||"بانتظار الممثل")), el("b","hbs",String((hb.sc&&hb.sc[t])||0)));
-    if(secs!==null&&srch===t) box.append(el("span","hbt","⏳ "+secs+"ث")); };
-  fill(top,"A",hb.rAn); fill(bot,"B",hb.rBn);
-  if(!bar){ bar=el("div","hbbar"); bar.id="hbbar"; g.parentNode.insertBefore(bar,g); }
-  const tn=t=>t==="A"?"الفريق الأول":"الفريق الثاني";
-  if(hb.st==="end") bar.textContent="🏁 انتهت اللعبة — "+(hb.win==="T"?"تعادل":"فاز "+tn(hb.win))+" • "+hb.sc.A+" : "+hb.sc.B;
-  else if(hb.st==="wait") bar.textContent="💍 بانتظار اللاعبين — الفريق الأول: "+(hb.rAn||"—")+" • الفريق الثاني: "+(hb.rBn||"—");
-  else { const left=Math.max(0,Math.ceil((HB_TIME-(Date.now()-(hb.t||0)))/1000)); bar.textContent="💍 الجولة "+hb.rnd+"/"+HB_ROUNDS+" • يُخفي: "+tn(hb.hider)+" • "+hb.sc.A+" : "+hb.sc.B+" • ⏳ "+left+"ث"; }
-  const hrow=hb.st==="on"?hbRowOf(hb.hider):[], srow=hb.st==="on"?hbRowOf(hbOther(hb.hider)):[];
-  [...g.querySelectorAll(":scope > .seat2")].forEach((d,idx)=>{ const h=idx+1; d.classList.remove("hbh","hbe","hbfade","hbprom"); d.onclick=null;
-    d.querySelectorAll(".hbhand,.hbring2").forEach(x=>{ if(!(x.classList.contains("hbring2")&&hb.st==="on"&&h===hb.ring&&isMod()&&window.__hbHelp)) x.remove(); });
-    if(hrow.includes(h)){ d.classList.add("hbh","hbprom"); const sc=d.querySelector(".sc"); if(sc&&!sc.querySelector(".hbhand")) sc.append(el("span","hbhand","🤚"));
-      if((hb.rev||[]).includes(h)) d.classList.add("hbe");
-      if(isMod()&&window.__hbHelp&&h===hb.ring){ const sc2=d.querySelector(".sc"); if(sc2&&!sc2.querySelector(".hbring2")) sc2.append(el("span","hbring2","💍")); }
-      d.onclick=(ev)=>{ ev.stopPropagation(); hbPop(h,d); }; }
-    if(srow.includes(h)) d.classList.add("hbfade");
-  });
-  if(hb.st==="end"&&isMod()&&!hb.paid&&!window.__hbPaid){ window.__hbPaid=true;
+function hbPayout(hb){
+  if(isMod()&&!hb.paid&&!window.__hbPaid){ window.__hbPaid=true;
     const pay=Object.keys(hb.pay||{}), pot=pay.length*HB_COST;
     (async()=>{
       if(hb.win==="T"||!pay.length){ for(const u of pay) await credit(u,HB_COST,"hb"); }
@@ -3954,6 +3969,51 @@ function hbPaint(){
       await roomUpdate({"hb.paid":true},"توزيع جوائز المحيبس");
     })().catch(()=>{ window.__hbPaid=false; });
   }
+}
+function hbWinCard(hb){
+  const key=String(hb.lastT||hb.win||""); if(window.__hbWinKey===key||document.getElementById("hbwin")) return; window.__hbWinKey=key;
+  const tie=hb.win==="T", name=hb.win==="A"?(hb.rAn||"الفريق الأول"):(hb.rBn||"الفريق الثاني");
+  const card=el("div","hbwin"); card.id="hbwin";
+  card.append(el("div","hbwtop",tie?"🤝":"🏆"), el("div","hbwt",tie?"تعادل!":"مبروك!"));
+  if(!tie) card.append(el("div","hbwn","فريق "+name)); 
+  card.append(el("div","hbws",tie?"النتيجة "+hb.sc.A+" : "+hb.sc.B:"الفوز بالمحيبس • "+hb.sc.A+" : "+hb.sc.B), el("div","hbwtop","🎉 ✨ 🎊"));
+  card.onclick=()=>card.remove(); document.body.append(card);
+  if(!tie) hbSound(true);
+}
+function hbPaint(){
+  const g=document.getElementById("seatsg"); if(!g||!room) return;
+  let bar=document.getElementById("hbbar"); const hb=room.hb;
+  const labTop=document.getElementById("hbtop"), labBot=document.getElementById("hbbot");
+  if(!hb||!hb.st||hb.st==="end"){ if(bar) bar.remove(); if(labTop) labTop.remove(); if(labBot) labBot.remove(); if(hb&&hb.st==="end"){ hbPayout(hb); hbWinCard(hb); } else { const wc=document.getElementById("hbwin"); if(wc) wc.remove(); } return; }
+  let top=labTop, bot=labBot;
+  if(!top){ top=el("div","hblab a"); top.id="hbtop"; g.parentNode.insertBefore(top,g); }
+  if(!bot){ bot=el("div","hblab b"); bot.id="hbbot"; g.parentNode.insertBefore(bot,g.nextSibling); }
+  if(hb.st==="on"&&window.__hbRnd!==hb.rnd+"-"+hb.hider){ window.__hbRnd=hb.rnd+"-"+hb.hider; const go=el("div","hbgo","GO"); document.body.append(go); setTimeout(()=>go.remove(),1300); }
+  if(hb.st==="on"&&hb.lastT&&hb.lastOk!==null&&hb.lastOk!==undefined&&Date.now()-hb.lastT<3000&&window.__hbLT!==hb.lastT){ window.__hbLT=hb.lastT; const mk=el("div","hbmark",hb.lastOk?"✅":"❌"); document.body.append(mk); setTimeout(()=>mk.remove(),1500); }
+  if(hb.st==="end"&&hb.lastT&&hb.lastOk!==null&&hb.lastOk!==undefined&&Date.now()-hb.lastT<3000&&window.__hbLT!==hb.lastT){ window.__hbLT=hb.lastT; const mk=el("div","hbmark",hb.lastOk?"✅":"❌"); document.body.append(mk); setTimeout(()=>mk.remove(),1500); }
+  const srch=hbOther(hb.hider), secs=hb.st==="on"?Math.max(0,Math.ceil((HB_TIME-(Date.now()-(hb.t||0)))/1000)):null;
+  const fill=(box,t,nm)=>{ box.textContent=""; const rp=PROFS[t==="A"?hb.rA:hb.rB]||{}; const av=el("div","av"); av.style.cssText="width:34px;height:34px;font-size:18px;flex:none"; setAv(av,rp.emoji||"👤",rp.photo);
+    box.append(av, el("span","hbn",(nm?"فريق "+nm:"بانتظار الممثل")), el("b","hbs",String((hb.sc&&hb.sc[t])||0)));
+    if(secs!==null&&srch===t) box.append(el("span","hbt","⏳ "+secs+"ث")); };
+  fill(top,"A",hb.rAn); fill(bot,"B",hb.rBn);
+  if(!bar){ bar=el("div","hbbar"); bar.id="hbbar"; g.parentNode.insertBefore(bar,g); }
+  const tn=t=>t==="A"?"الفريق الأول":"الفريق الثاني";
+  if(hb.st==="end") bar.textContent="🏁 انتهت اللعبة — "+(hb.win==="T"?"تعادل":"فاز "+tn(hb.win))+" • "+hb.sc.A+" : "+hb.sc.B;
+  else if(hb.st==="wait") bar.textContent="💍 بانتظار اللاعبين — الفريق الأول: "+(hb.rAn||"—")+" • الفريق الثاني: "+(hb.rBn||"—");
+  else { const left=Math.max(0,Math.ceil((HB_TIME-(Date.now()-(hb.t||0)))/1000)); bar.textContent="💍 الجولة "+hb.rnd+"/"+HB_ROUNDS+" • يُخفي: "+tn(hb.hider)+" • "+hb.sc.A+" : "+hb.sc.B+" • ⏳ "+left+"ث"; }
+  const hrow=hb.st==="on"?hbRowOf(hb.hider):[], srow=hb.st==="on"?hbRowOf(hbOther(hb.hider)):[];
+  [...g.querySelectorAll(":scope > .seat2")].forEach((d,idx)=>{ const h=idx+1; d.classList.remove("hbh","hbe","hbfade","hbprom"); d.onclick=null;
+    d.querySelectorAll(".hbhand,.hbring2").forEach(x=>{ if(!(x.classList.contains("hbring2")&&hb.st==="on"&&h===hb.ring&&OWNER&&window.__hbHelp)) x.remove(); });
+    if(hrow.includes(h)){ d.classList.add("hbh","hbprom"); const sc=d.querySelector(".sc");
+      if(sc){ if(!sc.querySelector(".hbnum")) sc.append(el("span","hbnum",String(h))); let hd=sc.querySelector(".hbhand"); if(!hd){ hd=el("span","hbhand",""); sc.append(hd); }
+        const recent=hb.lastT&&Date.now()-hb.lastT<2500; let ic="✊";
+        if((hb.rev||[]).includes(h)) ic="🖐️"; else if(recent&&hb.lastH===h) ic=hb.lastOk?"💍":"🖐️";
+        if(hd.textContent!==ic) hd.textContent=ic; }
+      if((hb.rev||[]).includes(h)) d.classList.add("hbe");
+      if(OWNER&&window.__hbHelp&&h===hb.ring){ const sc2=d.querySelector(".sc"); if(sc2&&!sc2.querySelector(".hbring2")) sc2.append(el("span","hbring2","💍")); }
+      d.onclick=(ev)=>{ ev.stopPropagation(); hbPop(h,d); }; }
+    if(srow.includes(h)) d.classList.add("hbfade");
+  });
   if(hb.st==="on"&&isMod()&&Date.now()-(hb.t||0)>HB_TIME&&window.__hbTo!==hb.t){ window.__hbTo=hb.t; roomUpdate({hb:hbNext(hb,hb.hider)},"المحيبس: انتهى الوقت").catch(()=>{}); }
 }
 async function hbJoin(team){
