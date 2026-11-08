@@ -4038,26 +4038,23 @@ function hbPaint(){
   if(hb.st==="on"&&isMod()&&Date.now()-(hb.t||0)>HB_TIME&&window.__hbTo!==hb.t){ window.__hbTo=hb.t; roomUpdate({hb:hbNext(hb,hb.hider)},"المحيبس: انتهى الوقت").catch(()=>{}); }
 }
 async function hbJoin(team){
-  const rk=team==="A"?"rA":"rB";
-  const cur0=(room.hb&&room.hb.st!=="end")?room.hb:{};
-  if(cur0.st==="on") return toast("اللعبة جارية");
-  if(cur0[rk]) return toast("الفريق مكتمل");
-  if(cur0.rA===uid||cur0.rB===uid) return toast("أنت منضم بالفعل");
-  if(!(await spend(HB_COST,"hb"))) return toast("رصيدك لا يكفي للدخول");
-  let ok=false, why="";
-  try{
-    await db.runTransaction(async tx=>{
-      const ref=db.doc("rooms/"+room.id), sn=await tx.get(ref);
-      const cur=(sn.data()||{}).hb, h=(cur&&cur.st!=="end")?cur:{};
-      if(h.st==="on") throw new Error("playing");
-      if(h[rk]) throw new Error("full");
-      if(h.rA===uid||h.rB===uid) throw new Error("dup");
-      const next={...h, st:"wait", [rk]:uid, [rk+"n"]:prof.name, sc:h.sc||{A:0,B:0}, pay:{...(h.pay||{}), [uid]:true}};
-          tx.update(ref,{hb:next});
-    });
-    ok=true;
-  }catch(e){ why=e&&e.message; }
-  if(!ok){ await setCoins(coins+HB_COST); toast(why==="full"?"الفريق مكتمل، استُرجعت النقاط":why==="playing"?"اللعبة جارية، استُرجعت النقاط":"تعذر الانضمام، استُرجعت النقاط"); return; }
+  const rk=team==="A"?"rA":"rB", ref=db.doc("rooms/"+room.id);
+  let cur;
+  try{ cur=((await ref.get()).data()||{}).hb||{}; }catch(e){ return toast("تعذر الاتصال بالغرفة: "+((e&&e.code)||"خطأ")); }
+  const h=(cur.st&&cur.st!=="end")?cur:{};
+  if(h.st==="on") return toast("اللعبة جارية");
+  if(h[rk]) return toast("الفريق مكتمل");
+  if(h.rA===uid||h.rB===uid) return toast("أنت منضم بالفعل");
+  if(coins<HB_COST) return toast("رصيدك لا يكفي للدخول");
+  const next={...h, st:"wait", [rk]:uid, [rk+"n"]:prof.name, sc:h.sc||{A:0,B:0}, pay:{...(h.pay||{}), [uid]:true}};
+  try{ await ref.update({hb:next}); }catch(e){ return toast("تعذر الانضمام: "+((e&&e.code)||"خطأ في الحفظ")); }
+  let saved=false;
+  try{ const chk=((await ref.get()).data()||{}).hb||{}; saved=chk[rk]===uid; }catch(e){}
+  if(!saved) return toast("تعذر الانضمام: لم يُحفظ مقعدك، لم يُخصم شيء");
+  if(!(await spend(HB_COST,"hb"))){
+    try{ const c2=((await ref.get()).data()||{}).hb||{}; const p=({...(c2.pay||{})}); delete p[uid]; await ref.update({hb:{...c2,[rk]:null,[rk+"n"]:null,pay:p}}); }catch(e){}
+    return;
+  }
   logAct(team==="A"?"انضم ممثل الفريق الأول":"انضم ممثل الفريق الثاني");
 }
 function hbSheet(){ sheet("💍 المحيبس",(c,close)=>{ const hb=room.hb;
