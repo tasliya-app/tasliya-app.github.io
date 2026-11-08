@@ -3986,11 +3986,13 @@ function hbPayout(hb){
         try{ await db.collection("hbrev").add({room:room.id,pot,t:Date.now()}); }catch(e){}
       }
       await roomUpdate({"hb.paid":true},"توزيع جوائز المحيبس");
+      try{ await roomUpdate({hb:null}); }catch(e){}
     })().catch(()=>{ window.__hbPaid=false; });
   }
 }
 function hbWinCard(hb){
-  const key=String(hb.lastT||hb.win||""); if(window.__hbWinKey===key||document.getElementById("hbwin")) return; window.__hbWinKey=key;
+  const key=String(hb.lastT||hb.win||""); let seen=""; try{ seen=localStorage.getItem("hbSeen")||""; }catch(e){}
+  if(window.__hbWinKey===key||seen===key||document.getElementById("hbwin")) return; window.__hbWinKey=key; try{ localStorage.setItem("hbSeen",key); }catch(e){}
   const tie=hb.win==="T", name=hb.win==="A"?(hb.rAn||"الفريق الأول"):(hb.rBn||"الفريق الثاني");
   const card=el("div","hbwin"); card.id="hbwin";
   card.append(el("div","hbwtop",tie?"🤝":"🏆"), el("div","hbwt",tie?"تعادل!":"مبروك!"));
@@ -4036,15 +4038,28 @@ function hbPaint(){
   if(hb.st==="on"&&isMod()&&Date.now()-(hb.t||0)>HB_TIME&&window.__hbTo!==hb.t){ window.__hbTo=hb.t; roomUpdate({hb:hbNext(hb,hb.hider)},"المحيبس: انتهى الوقت").catch(()=>{}); }
 }
 async function hbJoin(team){
-  const cur=(room.hb&&room.hb.st!=="end")?room.hb:{}, rk=team==="A"?"rA":"rB";
-  if(cur.st==="on") return toast("اللعبة جارية");
-  if(cur[rk]) return toast("الفريق مكتمل");
-  if(cur.rA===uid||cur.rB===uid) return toast("أنت منضم بالفعل");
+  const rk=team==="A"?"rA":"rB";
+  const cur0=(room.hb&&room.hb.st!=="end")?room.hb:{};
+  if(cur0.st==="on") return toast("اللعبة جارية");
+  if(cur0[rk]) return toast("الفريق مكتمل");
+  if(cur0.rA===uid||cur0.rB===uid) return toast("أنت منضم بالفعل");
   if(!(await spend(HB_COST,"hb"))) return toast("رصيدك لا يكفي للدخول");
-  const next={...cur, st:"wait", [rk]:uid, [rk+"n"]:prof.name, sc:cur.sc||{A:0,B:0}, pay:{...(cur.pay||{}), [uid]:true}};
-  if(next.rA&&next.rB){ next.st="on"; next.rnd=1; next.hider="A"; next.ring=hbRowOf("A")[Math.floor(Math.random()*5)]; next.rev=[]; next.t=Date.now(); }
-  try{ await roomUpdate({hb:next}, team==="A"?"انضم ممثل الفريق الأول":"انضم ممثل الفريق الثاني"); }
-  catch(e){ await setCoins(coins+HB_COST); toast("تعذر الانضمام، استُرجعت النقاط"); }
+  let ok=false, why="";
+  try{
+    await db.runTransaction(async tx=>{
+      const ref=db.doc("rooms/"+room.id), sn=await tx.get(ref);
+      const cur=(sn.data()||{}).hb, h=(cur&&cur.st!=="end")?cur:{};
+      if(h.st==="on") throw new Error("playing");
+      if(h[rk]) throw new Error("full");
+      if(h.rA===uid||h.rB===uid) throw new Error("dup");
+      const next={...h, st:"wait", [rk]:uid, [rk+"n"]:prof.name, sc:h.sc||{A:0,B:0}, pay:{...(h.pay||{}), [uid]:true}};
+      if(next.rA&&next.rB){ next.st="on"; next.rnd=1; next.hider="A"; next.ring=hbRowOf("A")[Math.floor(Math.random()*5)]; next.rev=[]; next.t=Date.now(); }
+      tx.update(ref,{hb:next});
+    });
+    ok=true;
+  }catch(e){ why=e&&e.message; }
+  if(!ok){ await setCoins(coins+HB_COST); toast(why==="full"?"الفريق مكتمل، استُرجعت النقاط":why==="playing"?"اللعبة جارية، استُرجعت النقاط":"تعذر الانضمام، استُرجعت النقاط"); return; }
+  logAct(team==="A"?"انضم ممثل الفريق الأول":"انضم ممثل الفريق الثاني");
 }
 function hbSheet(){ sheet("💍 المحيبس",(c,close)=>{ const hb=room.hb;
   if(hb&&hb.st==="on"){ c.append(el("p","mut","اللعبة جارية — الجولة "+hb.rnd+"/"+HB_ROUNDS+" • النقاط "+hb.sc.A+" : "+hb.sc.B)); return; }
