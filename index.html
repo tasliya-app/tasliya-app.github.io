@@ -5661,13 +5661,18 @@ function gcSubscribe(){ if(GC.un) return; GC.cid="g"+gtid; GC.ids=null;
       if(fresh.length) gcIncoming(fresh[fresh.length-1],fresh.length); if(GC.open) gcRenderList(); }); }catch(e){} }
 let VW={un:null,hb:null,n:0,rid:""};
 function vwStart(){ vwStop(); if(!gtid||!db||!uid) return; const id=gtid; VW.rid=id;
-  const beat=()=>{ try{ db.doc("tables/"+id+"/viewers/"+uid).set({t:Date.now()}).catch(()=>{}); }catch(e){} };
+  const beat=()=>{ try{ const ph=(prof.photo&&String(prof.photo).length<400)?String(prof.photo):""; db.doc("tables/"+id+"/viewers/"+uid).set({t:Date.now(),name:prof.name||"",emoji:prof.emoji||"",photo:ph}).catch(()=>{}); }catch(e){} };
   beat(); VW.hb=setInterval(beat,30000);
   try{ VW.un=db.collection("tables/"+id+"/viewers").onSnapshot(sn=>{ if(VW.rid!==id) return; const now=Date.now(), pl=new Set(gcPlayers(cur).map(q=>q.uid));
-      VW.n=sn.docs.filter(d=>{ const v=d.data(); return v&&v.t&&now-v.t<90000&&!pl.has(d.id); }).length; vwPaint(); }); }catch(e){} }
+      VW.list=sn.docs.filter(d=>{ const v=d.data(); return v&&v.t&&now-v.t<90000&&!pl.has(d.id); }).map(d=>({uid:d.id,...d.data()})); VW.n=VW.list.length; vwPaint(); }); }catch(e){} }
 function vwStop(){ try{ if(VW.un) VW.un(); }catch(e){} if(VW.hb) clearInterval(VW.hb); if(VW.rid&&uid){ try{ db.doc("tables/"+VW.rid+"/viewers/"+uid).delete().catch(()=>{}); }catch(e){} } VW={un:null,hb:null,n:0,rid:""}; }
 function vwPaint(){ document.querySelectorAll(".vwbtn").forEach(x=>{ x.textContent="👁 "+VW.n; }); }
-function vwBtn(){ const b=el("span","vwbtn","👁 "+VW.n); b.title="عدد المشاهدين"; return b; }
+function vwBtn(){ const b=el("span","vwbtn","👁 "+VW.n); b.title="المشاهدون"; b.style.cursor="pointer"; b.onclick=()=>vwSheet(); return b; }
+function vwSheet(){ sheet("👁 المشاهدون ("+(VW.list||[]).length+")",(c,close)=>{
+  const list=VW.list||[];
+  if(!list.length){ c.append(el("p","mut","لا أحد يشاهد الطاولة الآن.")); return; }
+  list.forEach(v=>{ const row=el("div","card room"), av=el("div","av"); setAv(av,v.emoji||"👤",v.photo||""); const t=el("div"); t.style.flex="1"; t.append(el("b",null,v.name||"مستخدم")); row.append(av,t); c.append(row); });
+}); }
 function gcSetup(st){
   if(!st||st.status==="waiting"||!gameOv){ if(GC.key) gcStop(); return; }
   const pls=gcPlayers(st), isP=pls.some(q=>q&&q.uid===uid);
