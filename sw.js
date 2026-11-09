@@ -1,6 +1,6 @@
 // Tasliya service worker: installable. Gift/effect files are fetched fresh whenever online, so updates reach users at once;
 // the last good copy is kept for offline use. The page itself is always fetched fresh (network first).
-const AC='tasliya-assets-v2';
+const AC='tasliya-assets-v3';
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',e=>e.waitUntil((async()=>{
   const ks=await caches.keys(); await Promise.all(ks.filter(k=>k!==AC).map(k=>caches.delete(k)));
