@@ -1547,6 +1547,9 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .hblab .hbn{font-size:17px}
 .hblab .hbs{font-size:46px}
 .hblab .hbt{font-size:24px;padding:3px 10px}
+.hblab .av{width:60px!important;height:60px!important;font-size:30px!important;border:2px solid #fbbf24}
+.hblab .hbn{font-size:22px!important;font-weight:900}
+.hblab .hbs{font-size:58px!important;color:#fbbf24!important;text-shadow:0 0 12px #f59e0b,0 2px 4px #000!important;font-weight:900}
 .hbnum{position:absolute;top:-6px;left:-6px;background:#fbbf24;color:#000;border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-weight:900;font-size:13px;z-index:3;pointer-events:none}
 .seat2.hbh .sc{position:relative}
 .hbmark{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-size:130px;z-index:9999;pointer-events:none;animation:hbgo 1.4s ease-out forwards;text-shadow:0 0 20px #000}
@@ -1672,7 +1675,7 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 
 .bilc{width:100%!important;max-width:100%!important;height:auto!important}.bslots{display:flex;gap:3px;justify-content:center;margin-top:3px}.bsl{width:12px;height:12px;border-radius:50%;background:#1f2937;border:1px solid #64748b}.bsl.on{border-color:#fff}.lbar .lpl .pav2{width:44px!important;height:44px!important;font-size:24px!important}
 
-.bilc{width:auto!important;max-width:100%!important;height:min(74vh,520px)!important;display:block;margin:0 auto}
+.bilc{width:min(100%,calc(min(74vh,520px)*.555))!important;max-width:100%!important;height:auto!important;display:block!important;margin:6px auto!important;aspect-ratio:444/800}
 
 .tok{width:7.4%!important;height:7.4%!important;transition:left .24s ease-in-out,top .24s ease-in-out!important}
 .lbar .pav2{width:48px!important;height:48px!important;font-size:26px!important}.lbar .ptn{font-size:17px!important;font-weight:900}.lbar .lpl small{font-size:12px!important}
@@ -2488,7 +2491,8 @@ function sheetWallet(){ if(!OWNER) return sheetCharge(); sheet("المحفظة",
   if(OWNER){ c.append(el("p","mut","هذا رصيد محفظة الحساب. اسحب من المحفظة الرئيسية (غير المحدودة) من صفحة المحفظة."));
     const b=el("button","btn full","💰 صفحة المحفظة"); b.onclick=()=>{ close(); tab="wallet"; render(); };
     const gb=el("button","btn full","🎁 إهداء نقاط إلى صديق"); gb.style.marginTop="8px"; gb.onclick=()=>{ close(); sheetSendPoints(); };
-    const b2=el("button","btn alt full","👑 لوحة المالك"); b2.style.marginTop="8px"; b2.onclick=()=>{ close(); sheetOwner(); }; c.append(b,gb,b2); return; }
+    const ab=el("button","btn alt full","🪪 شراء وكالة"); ab.style.marginTop="8px"; ab.onclick=()=>{ close(); sheetBuyAgency(); };
+    const b2=el("button","btn alt full","👑 لوحة المالك"); b2.style.marginTop="8px"; b2.onclick=()=>{ close(); sheetOwner(); }; c.append(b,gb,ab,b2); return; }
   c.append(el("p","mut","اختر باقة ثم أرسل طلب الشراء. يؤكد المالك الدفع فتصلك العملات تلقائياً."));
   PKGS.forEach(n=>{ const b=el("button","btn alt full","🪙 "+n+" عملة — طلب شراء"); b.style.marginTop="8px";
     b.onclick=async()=>{ await db.collection("requests").add({uid,pid:prof.pid,name:prof.name,coins:n,t:Date.now()}); toast("تم إرسال طلبك إلى المالك ✓"); close(); }; c.append(b); });
@@ -2565,7 +2569,6 @@ function agentInfo(a){ sheet(a.name||"وكيل",(c,close)=>{
   c.append(el("p","mut","💡 دفع المبلغ للوكيل يتم خارج التطبيق مباشرةً بينك وبينه، والتطبيق ليس طرفاً فيه. داخل التطبيق فقط تُسدَّد نقاط الوكيل للإدارة."));
   const bk=el("button","btn alt full bkp","رجوع إلى قائمة الوكلاء"); bk.style.marginTop="12px"; bk.onclick=()=>{ close(); sheetAgents(); }; c.append(bk); }); }
 function sheetBuyAgency(){
-  if(OWNER) return;
   sheet("🪪 شراء وكالة",(c,close)=>{
     c.append(el("p","mut","تصبح وكيلاً معتمداً يظهر اسمك في قائمة الشحن. يُخصم المبلغ من رصيدك ويذهب إلى الإدارة، ثم تراجع الإدارة طلبك وتوافق عليه."));
     const f=(lbl,ph,val)=>{ const w=el("div"); w.append(el("div","mut",lbl)); const i=el("input"); i.placeholder=ph||""; if(val!==undefined) i.value=val; w.append(i); c.append(w); return i; };
@@ -5275,6 +5278,7 @@ function bilSim(balls,ang,pow){
       const dx=qb.x-qa.x, dy=qb.y-qa.y, d=Math.hypot(dx,dy); if(d<=0||d>=2*R) continue;
       const nx=dx/d, ny=dy/d, ov=(2*R-d)/2; qa.x-=nx*ov; qa.y-=ny*ov; qb.x+=nx*ov; qb.y+=ny*ov;
       const av=(qa.vx-qb.vx)*nx+(qa.vy-qb.vy)*ny; if(av>0){ const k=(1+.97)/2*av; qa.vx-=k*nx; qa.vy-=k*ny; qb.vx+=k*nx; qb.vy+=k*ny; } } }
+    for(const q of B){ if(!q.on||q.sk) continue; if(q.x<R){ q.x=R; q.vx=-q.vx*.85; } if(q.x>2-R){ q.x=2-R; q.vx=-q.vx*.85; } if(q.y<R){ q.y=R; q.vy=-q.vy*.85; } if(q.y>1-R){ q.y=1-R; q.vy=-q.vy*.85; } }
     let mv=false; for(const q of B){ if(q.on&&(q.sk||q.vx||q.vy)){ mv=true; break; } }
     if(s%4===3) frames.push(snap());
     if(!mv) break; }
@@ -5355,13 +5359,13 @@ function bilRender(){ if(!BLX.ctx) return; let src=null;
   if(BLX.drag) aim=BLX.aim;
   else if(!BLX.anim&&cur&&cur.kind==="bil"){ const ca=cur.aim;
     if(ca&&ca.by!==uid&&ca.t>Date.now()-4000) aim={ang:ca.ang,pow:ca.pow};
-    else if(cur.status==="playing"&&cur.lastAng!=null&&cur.players&&cur.players[cur.turn]) aim={ang:cur.lastAng,pow:.25}; }
+  }
   bilPaint(src,aim); }
 function bilSlots(gg,n){ const w=el("div","bslots"); for(let i=0;i<7;i++){ const s=el("span","bsl"); if(i<n&&gg){ s.classList.add("on"); s.style.background=gg==="r"?"radial-gradient(circle at 35% 30%,#fca5a5,#dc2626 60%,#7f1d1d)":"radial-gradient(circle at 35% 30%,#fef08a,#facc15 60%,#a16207)"; } w.append(s); } return w; }
 function bilCue(){ const st=cur, b=st&&st.b&&st.b.find(q=>q.i===0&&q.on); return b?{x:b.x,y:b.y}:null; }
 function bilEnsure(){ if(BLX.cv) return; const cv=document.createElement("canvas"); cv.width=444; cv.height=800; cv.className="bilc"; BLX.cv=cv; BLX.ctx=cv.getContext("2d");
   const pt=e=>{ const r=cv.getBoundingClientRect(), cx=(e.clientX-r.left)/r.width*444, cy=(e.clientY-r.top)/r.height*800; return {x:2-(cy-44)/356, y:(cx-44)/356}; };
-  cv.addEventListener("pointerdown",e=>{ if(!bilCanShoot()) return; BLX.drag=pt(e); const cbz=bilCue(); BLX.mode=(!cbz||Math.hypot(BLX.drag.x-cbz.x,BLX.drag.y-cbz.y)<.1)?"pull":"rot"; try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
+  cv.addEventListener("pointerdown",e=>{ if(!bilCanShoot()) return; BLX.drag=pt(e); const cbz=bilCue(); BLX.mode=(!cbz||Math.hypot(BLX.drag.x-cbz.x,BLX.drag.y-cbz.y)<.22)?"pull":"rot"; try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
   cv.addEventListener("pointermove",e=>{ if(!BLX.drag) return; const p=pt(e); if(BLX.mode==="rot"){ const cbz=bilCue(); if(cbz){ BLX.aim={ang:Math.atan2(cbz.y-p.y,cbz.x-p.x),pow:.25,rot:1}; bilAimSend(); bilRender(); } return; } const dx=BLX.drag.x-p.x, dy=BLX.drag.y-p.y, d=Math.hypot(dx,dy); BLX.aim={ang:Math.atan2(dy,dx),pow:Math.min(1,d/.35)}; bilAimSend(); bilRender(); });
   const end=()=>{ const a=BLX.aim; BLX.drag=null; BLX.aim=null; bilAimSend(true); bilRender(); if(a&&a.pow>.06&&!a.rot) bilShoot(a.ang,a.pow,false); };
   cv.addEventListener("pointerup",end); cv.addEventListener("pointercancel",()=>{ BLX.drag=null; BLX.aim=null; bilAimSend(true); bilRender(); }); }
@@ -5376,7 +5380,7 @@ function drawBil(b){
   bilEnsure();
   const bar=el("div","lbar"), LB2={r:"🔴 أحمر",y:"🟡 أصفر"};
   ["A","B"].forEach(k=>{ const pl=st.players[k]; if(!pl) return; const d=el("div","lpl"+(st.turn===k&&st.status==="playing"?" on":"")); const gg=(st.grp||{})[k]; const left=gg?st.b.filter(q=>q.on&&q.i!==0&&q.i!==8&&bgrp(q.i)===gg).length:7; d.append(ptag(pl,44),el("small",null,(LB2[gg]||"—")+(gg?" • دخل "+(7-left)+"/7":"")),bilSlots(gg,7-left)); bar.append(d); });
-  b.append(bar); if(BLX.cv.parentNode) BLX.cv.remove(); b.append(BLX.cv);
+  const bwrap=el("div"); bwrap.style.cssText="display:flex;justify-content:center;width:100%;overflow:hidden"; if(BLX.cv.parentNode) BLX.cv.remove(); bwrap.append(BLX.cv); b.append(bar,bwrap);
   bilRender();
   const pl=st.players[st.turn]||{};
   if(st.status==="done"){ const w=st.players[st.winner]||{}; b.append(el("p",null,"🏆 فاز "+(w.name||"")+"!")); }
