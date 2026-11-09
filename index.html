@@ -402,6 +402,9 @@ textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line)
 .crtag.bot{bottom:8px;left:62px}
 .crtag.top{top:8px;right:62px}
 .crwrap{display:flex;flex-direction:column;align-items:center;gap:6px}.crwrap .crtag{position:static!important;max-width:100%!important;margin:0!important}
+.crwrap{width:min(96vw,450px,calc(100vh - 330px))!important;max-height:calc(100vh - 330px)}
+.crwrap .crtag{background:none!important;border:none!important;box-shadow:none!important;padding:0!important}
+.crwrap .crtag .crtn{color:#fbbf24!important;font-size:20px!important;font-weight:900;max-width:150px!important;text-shadow:0 2px 3px #000}
 .crtag .crtn{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
 .crtag .crts{font-size:30px;color:#fde047;text-shadow:0 0 10px #f59e0b,0 2px 3px #000;font-variant-numeric:tabular-nums;min-width:28px;text-align:center}
 .crsl{width:min(92vw,420px);margin:0 auto;display:block}
@@ -2237,6 +2240,7 @@ function renderWalletPage(a){
     const c=el("div","card wcard"); c.style.textAlign="center"; c.append(el("div","mut","محفظة الحساب"),el("h1",null,"🪙 "+fmtc(coins)),el("small","mut","منها تُهدي وتستخدم، وإليها تصل الهدايا التطبيق والدعم المستلم — كله رصيد شخصي تصرفه في الدعم والألعاب والشراء"));
     ["support","gift","roomshare","roulette","rooms","roombg","counter","games","shop","main","sold","deduct","agency","recv"].forEach(k=>{ const w=wfield(EARNI[k],EARNL[k],fmtc(EARN[k]||0)); w.classList.add("tap"); w.onclick=()=>sheetLedger(k); c.append(w); });
     { const sb=el("button","btn full","📊 الخلاصة (الوارد والصادر)"); sb.style.marginTop="10px"; sb.onclick=sheetSummary; c.append(sb); } a.append(c);
+    const ab=el("button","btn alt full","🪪 شراء وكالة"); ab.style.marginTop="8px"; ab.onclick=sheetBuyAgency; a.append(ab);
     const o=el("button","btn alt full","👑 لوحة المالك (إهداء النقاط)"); o.onclick=sheetOwner; a.append(o); return;
   }
   const c=el("div","card wcard"); c.style.textAlign="center"; c.append(artEl("wallet",150),el("h1",null,fmtc(coins)),el("div","mut","رصيد نقاطك"),el("small","mut","الدعم الذي يصلك يُضاف إلى هذا الرصيد وتستطيع صرفه في الدعم والألعاب والمتجر"));
@@ -5560,7 +5564,7 @@ function carromStep(S){
       if(d2<rr*rr&&d2>1e-12){ const d=Math.sqrt(d2), nx=dx/d, ny=dy/d, ov=rr-d, tm=a.m+b.m;
         a.x-=nx*ov*b.m/tm; a.y-=ny*ov*b.m/tm; b.x+=nx*ov*a.m/tm; b.y+=ny*ov*a.m/tm;
         const rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
-        if(rv<0){ const jn=-1.9*rv/(1/a.m+1/b.m); a.vx-=jn*nx/a.m; a.vy-=jn*ny/a.m; b.vx+=jn*nx/b.m; b.vy+=jn*ny/b.m; moving=true; } } } }
+        if(rv<0){ if(rv<-.02) S.hits=(S.hits||0)+1; const jn=-1.9*rv/(1/a.m+1/b.m); a.vx-=jn*nx/a.m; a.vy-=jn*ny/a.m; b.vx+=jn*nx/b.m; b.vy+=jn*ny/b.m; moving=true; } } } }
   S.steps++; return moving;
 }
 function crFree(pieces,x,y){ return pieces.every(q=>Math.hypot(q.x-x,q.y-y)>=2*CR_R+.002); }
@@ -5735,7 +5739,7 @@ function crDisc(c,x,y,r,t,o){ o=o||{}; const sh=o.sh==null?1:o.sh; c.save(); c.g
 function crStartSim(st){ const a=st.anim; cr.sim=carromStart(st.pieces,a.sx,st.turn,a.ang,a.pow); cr.simSeq=a.seq; cr.last=performance.now(); cr.acc=0; cancelAnimationFrame(cr.raf);
   beep(260,520,.12,.12);
   const loop=now=>{ if(!cr.sim) return; cr.acc+=Math.min((now-cr.last)/1000,.1); cr.last=now; let moving=true, n=0;
-    while(cr.acc>=CR_DT&&n<40){ const ev0=cr.sim.ev.length; moving=carromStep(cr.sim); cr.acc-=CR_DT; n++; if(cr.sim.ev.length>ev0){ nz(.05,.5,"bandpass",2600,2.5,0,1500); nz(.02,.25,"highpass",5000,1,0,0); } if(!moving) break; }
+    let snd=false; while(cr.acc>=CR_DT&&n<40){ const ev0=cr.sim.ev.length, h0=cr.sim.hits||0; moving=carromStep(cr.sim); cr.acc-=CR_DT; n++; if(!snd&&(cr.sim.ev.length>ev0||(cr.sim.hits||0)>h0)){ snd=true; nz(.05,.5,"bandpass",2600,2.5,0,1500); nz(.02,.25,"highpass",5000,1,0,0); } if(!moving) break; }
     crRender(); if(!moving||cr.sim.steps>9000) crEndSim(); else cr.raf=requestAnimationFrame(loop); };
   cr.raf=requestAnimationFrame(loop); }
 function crEndSim(){ const S=cr.sim; cr.sim=null; const st=cr.st;
@@ -5807,7 +5811,7 @@ function drawCarrom(b){
   [["A","⚪","#fbbf24"],["B","⚫","#22d3ee"]].forEach(([k,ic,col])=>{ const pl=st.players[k], d=el("div","lpl crp"+(st.turn===k&&st.status==="playing"?" on":"")); d.style.borderColor=col;
     const nb=el("div","crsc",String((st.score||{})[k]||0)); nb.style.color=col; d.append(el("div",null,ic),ptag(pl,26),el("small","crl","النقاط"),nb,el("small",null,"القطع المتبقية: "+cnt(k==="A"?"w":"b"))); bar.append(d); });
   const wrap=el("div","crwrap"); wrap.append(cr.cv);
-  const tagFor=(k,pos)=>{ const pl=st.players[k]; if(!pl) return null; const t=el("div","crtag "+pos); t.style.borderColor=(k==="A"?"#fbbf24":"#22d3ee"); const pp=PROFS[pl.uid]||{}; const av=el("span","pav2"); av.style.width="40px"; av.style.height="40px"; av.style.fontSize="22px"; setAv(av,pl.emoji||pp.emoji||"👤",pp.photo); t.append(av, el("b","crtn",pl.name||""), el("span","crts",String((st.score||{})[k]||0))); return t; };
+  const tagFor=(k,pos)=>{ const pl=st.players[k]; if(!pl) return null; const t=el("div","crtag "+pos); t.style.borderColor=(k==="A"?"#fbbf24":"#22d3ee"); const pp=PROFS[pl.uid]||{}; const av=el("span","pav2"); av.style.width="64px"; av.style.height="64px"; av.style.fontSize="34px"; setAv(av,pl.emoji||pp.emoji||"👤",pp.photo); t.append(av, el("b","crtn",pl.name||""), el("span","crts",String((st.score||{})[k]||0))); return t; };
   const tb=tagFor(cr.flip?"B":"A","bot"), tt=tagFor(cr.flip?"A":"B","top"); if(tt) wrap.prepend(tt); if(tb) wrap.append(tb);
   b.append(bar,wrap);
   const mine=st.status==="playing"&&st.players[st.turn]&&st.players[st.turn].uid===uid;
@@ -5845,7 +5849,7 @@ Object.assign(FXI,{rheart:["hearts","fireworks","twinkle"],lips:["hearts","spark
 setTimeout(()=>{ try{ if(/^https?:/.test(location.protocol)) Object.values(GIFT_VID).forEach(u=>fetch(u).catch(()=>{})); }catch(e){} },6000);
 /* ===================== games v2: hub • modes • random matchmaking • friend invites ===================== */
 const GAME_NAME={ludo:"لودو",xo:"إكس أو",carrom:"كيرم",domino:"دومينو",snk:"السلم والثعبان",bil:"البلياردو"};
-const GAME_LIST=[["ludo","linear-gradient(135deg,#f97316,#ec4899)"],["xo","linear-gradient(135deg,#06b6d4,#6366f1)"],["carrom","linear-gradient(135deg,#16a34a,#ca8a04)"],["domino","linear-gradient(135deg,#d946ef,#6d28d9)"],["snk","linear-gradient(135deg,#84cc16,#059669)"],["bil","linear-gradient(135deg,#1e40af,#0f766e)"]];
+const GAME_LIST=[["ludo","linear-gradient(135deg,#f97316,#ec4899)"],["xo","linear-gradient(135deg,#06b6d4,#6366f1)"],["carrom","linear-gradient(135deg,#16a34a,#ca8a04)"],["domino","linear-gradient(135deg,#d946ef,#6d28d9)"],["snk","linear-gradient(135deg,#84cc16,#059669)"]];
 const BOT_PL={uid:"bot",name:"الكمبيوتر",emoji:"🤖"};
 const RND_WAIT=14000;
 const freshOf=k=>({ludo:freshLudo,xo:freshXO,carrom:freshCarrom,domino:freshDomino,snk:freshSnk,bil:freshBil})[k]();
