@@ -448,6 +448,7 @@ small{font-size:max(13px,1.08em)!important;font-weight:700!important;opacity:1!i
 .mut small,small.mut{font-size:max(13px,1.05em)!important}
 .lpl small{font-size:13px!important}
 .wfield small,.cinf small{font-size:13px!important}
+.gbtn small{font-size:12px!important;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;line-height:1.3;margin-inline:auto}
 .crwrap .crtag .crtn{color:#fbbf24!important;font-size:20px!important;font-weight:900;max-width:150px!important;text-shadow:0 2px 3px #000}
 .lpl,.dlab{border:none!important;background:none!important;box-shadow:none!important}
 .lpl.on,.dlab.on{box-shadow:none!important;background:none!important;transform:none!important}
@@ -3981,7 +3982,7 @@ async function roomUpdate(patch,log){ await db.doc("rooms/"+room.id).update(patc
 function enterRoom(r){
   try{ if(!adoptAssets.f&&!(navigator.connection&&navigator.connection.saveData)) loadAsset("fx.js",()=>(adoptAssets.f?{x:1}:{})); }catch(_){}
   if((r.banned||[]).includes(uid)) return toast("🚫 أنت محظور من هذه الغرفة");
-  if(r.pin&&r.owner!==uid&&!(r.admins||[]).includes(uid)){
+  if(r.pin&&r.owner!==uid&&!OWNER){
     sheet("🔒 الغرفة مقفلة",(c,close)=>{ const i=el("input"); i.placeholder="رمز الدخول"; i.inputMode="numeric"; const ok=el("button","btn full","دخول");
       ok.onclick=()=>{ if(i.value.trim()===String(r.pin)){close(); openRoom(r);} else toast("الرمز غير صحيح"); }; c.append(i,ok); });
   } else openRoom(r);
@@ -5097,7 +5098,12 @@ let gameRedraw=null;
 function xoCloseBtn(on){ let x=document.getElementById("xoCloseX"); if(!on){ if(x) x.remove(); return; } if(x) return;
   x=document.createElement("button"); x.id="xoCloseX"; x.textContent="✕ إلغاء البطاقة";
   x.setAttribute("style","position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:2147483647;padding:10px 22px;border-radius:14px;border:2px solid #facc15;background:#0f172a;color:#fff;font-weight:900;font-size:16px;box-shadow:0 6px 18px #000a;cursor:pointer");
-  x.onclick=()=>{ document.querySelectorAll("div.gfx,div.cine,div.win,.gfx-rays,.cn-rays,.win-card,.gfx-ico").forEach(n=>{ let t=n; while(t.parentElement&&t.parentElement!==document.body&&t.parentElement!==gameOv&&!t.parentElement.classList.contains("gpanel")) t=t.parentElement; if(t!==gameOv&&t!==x&&t!==document.body) t.remove(); }); x.remove(); };
+  x.onclick=()=>{ const W=innerWidth, H=innerHeight; const pts=[[W/2,H/2],[W/2,H*.35],[W/2,H*.65],[W/2,H*.25]];
+    pts.forEach(([px,py])=>{ const st=document.elementsFromPoint(px,py)||[]; for(const e of st){ if(e===x||e===document.body||e===document.documentElement) continue; if(e.closest&&(e.closest(".xog")||e.closest(".nav"))) continue; if(e.matches&&e.matches(".ov,.gpanel,.xoc,.lbar,.lpl,.xog")) continue;
+      let t=e; while(t.parentElement&&t.parentElement!==document.body&&!t.parentElement.matches(".gpanel,.ov")) t=t.parentElement;
+      if(t&&t!==document.body&&t!==x&&!t.matches(".ov,.gpanel")&&!(gameOv&&t===gameOv)){ t.remove(); return; } } });
+    document.querySelectorAll("div.gfx,div.cine,div.win,.gfx-rays,.cn-rays,.win-card,.gfx-ico").forEach(n=>{ let t=n; while(t.parentElement&&t.parentElement!==document.body&&!t.parentElement.matches(".gpanel,.ov")) t=t.parentElement; if(t&&t!==document.body&&!t.matches(".ov,.gpanel")&&!(gameOv&&t===gameOv)) t.remove(); });
+    x.remove(); };
   document.body.append(x); }
 function closeGame(){ if(unsubGame){ unsubGame(); unsubGame=null; } clearTimeout(botT); xoCloseBtn(false); rndStop(); domClear(); if(gameOv){ gameOv.remove(); gameOv=null; } cur=null; gameRedraw=null; autoStop(); crReset(); bilReset(); l3Dispose(); gcStop(); vwStop(); }
 function openTable(id,kind){
