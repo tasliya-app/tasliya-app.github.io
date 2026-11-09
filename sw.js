@@ -17,5 +17,5 @@ self.addEventListener('fetch',e=>{
     return;
   }
   if(r.mode!=='navigate') return;   // let the browser handle everything else (Firebase, scripts, images)
-  e.respondWith(fetch(r).catch(()=>new Response('لا يوجد اتصال بالإنترنت',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}})));
+  e.respondWith(fetch(r,{cache:'no-store'}).catch(()=>new Response('لا يوجد اتصال بالإنترنت',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}})));
 });

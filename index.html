@@ -408,8 +408,32 @@ textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line)
 .wcoin:active{transform:scale(.97)}
 .cntclock{width:150px;height:150px;margin:6px auto 10px;border-radius:50%;background:conic-gradient(#fde68a,#f59e0b,#fff7d6,#b45309,#fde68a);padding:8px;box-shadow:0 10px 30px #f59e0b55;display:flex}
 .cntclock span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,#312e81,#1e1b4b);font-size:64px}
+.ccard{margin:10px auto;max-width:420px;padding:18px 14px;border-radius:26px;background:linear-gradient(160deg,#1e1b4b,#0f172a);border:1px solid #fbbf2433;box-shadow:0 18px 40px #0008;text-align:center}
+.cclock{--p:0deg;width:230px;height:230px;margin:6px auto 14px;border-radius:50%;background:conic-gradient(#fbbf24 var(--p),#ffffff14 0);padding:10px;box-shadow:0 0 40px #f59e0b33}
+.cface{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 50% 35%,#312e81,#0b0a1f 75%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.clbl{color:#c7d2fe;font-size:12px;opacity:.85}
+.cdig{font-size:34px;font-weight:900;color:#fde68a;letter-spacing:1px;font-variant-numeric:tabular-nums;text-shadow:0 0 12px #f59e0b,0 0 24px #f59e0b66}
+.cinfo{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.cinf{background:#ffffff0d;border:1px solid #ffffff14;border-radius:16px;padding:10px 4px;display:flex;flex-direction:column;gap:4px}
+.cinf small{color:#a5b4fc;font-size:11px}
+.cinf b{color:#fbbf24;font-size:14px;font-weight:900}
+.cst{color:#c7d2fe;font-size:14px;margin:4px 0 12px}
+.cbtn{width:100%;height:56px;border:none;border-radius:18px;font-size:17px;font-weight:900;color:#422006;background:linear-gradient(135deg,#fde68a,#f59e0b 55%,#b45309);box-shadow:0 10px 26px #f59e0b55;cursor:pointer}
+.cbtn:disabled{background:#ffffff1a;color:#94a3b8;box-shadow:none}
 .cntprice{font-size:26px;font-weight:900;color:#fbbf24;margin:8px 0;text-shadow:0 2px 8px #000}
 .lcdbox .lcd{color:#fbbf24!important;text-shadow:0 0 10px #f59e0b}
+.agrow{display:flex;align-items:center;gap:12px;padding:16px 14px!important;margin:10px 0!important;border-radius:22px!important;background:linear-gradient(160deg,#1e1b4b,#0f172a)!important;border:1px solid #fbbf2440!important;box-shadow:0 12px 30px #0007!important;cursor:pointer}
+.agrow .av{width:62px!important;height:62px!important;font-size:30px!important}
+.agnm{display:block;font-size:17px;font-weight:900;color:#fff}
+.agbadge{display:inline-block;margin:4px 0;padding:3px 10px;border-radius:999px;background:linear-gradient(135deg,#fde68a,#f59e0b);color:#422006;font-size:12px;font-weight:900}
+.agid2{color:#fbbf24;font-weight:900;font-size:14px}
+.aggo{color:#93c5fd;font-size:13px;font-weight:800;white-space:nowrap}
+/* clearer, bolder small text across the app */
+small{font-size:max(13px,1.08em)!important;font-weight:700!important;opacity:1!important;letter-spacing:0}
+.mut{opacity:1!important;font-weight:600;color:#cbd5e1!important}
+.mut small,small.mut{font-size:max(13px,1.05em)!important}
+.lpl small{font-size:13px!important}
+.wfield small,.cinf small{font-size:13px!important}
 .crwrap .crtag .crtn{color:#fbbf24!important;font-size:20px!important;font-weight:900;max-width:150px!important;text-shadow:0 2px 3px #000}
 .lpl,.dlab{border:none!important;background:none!important;box-shadow:none!important}
 .lpl.on,.dlab.on{box-shadow:none!important;background:none!important;transform:none!important}
@@ -2263,42 +2287,42 @@ function renderWalletPage(a){
 const CNT_MS=24*3600*1000, CNT_REWARD=10;
 function cntFmt(ms){ const s=Math.floor(Math.max(0,ms)/1000), h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return [h,m,x].map(v=>String(v).padStart(2,"0")).join(":"); }
 const CNT_PRICE=15000000, CNT_DAYS=600, CNT_DAY_REWARD=5000;
+function cntInfo(l,v){ const x=el("div","cinf"); x.append(el("small",null,l), el("b",null,v)); return x; }
 function renderCounter(a){
-  const c=el("div","card"); c.style.textAlign="center";
-  const ring=el("div","cntclock"); ring.append(el("span",null,"⏱️")); c.append(ring,el("h2",null,"العداد"));
   const pd=prof.cntPaid||null, active=!!(pd&&pd.until>Date.now());
+  const c=el("div","ccard");
+  const clock=el("div","cclock"), face=el("div","cface"), lbl=el("small","clbl",active?"الاستلام القادم":"العداد المدفوع"), d=el("div","cdig");
+  face.append(lbl,d); clock.append(face); c.append(clock);
+  const info=el("div","cinfo");
+  const i1=cntInfo("النوع","مدفوع"), i2=cntInfo("يومياً",CNT_DAY_REWARD.toLocaleString("en")+" نقطة"), i3=cntInfo("المدة",active?"":"600 يوم");
+  info.append(i1,i2,i3); c.append(info);
+  const st=el("p","cst"); c.append(st);
+  const btn=el("button","cbtn"); c.append(btn);
+  a.append(c);
   if(active){
-    c.append(el("p","mut","عدادك المدفوع يعمل، ويعطيك "+CNT_DAY_REWARD+" نقطة كل 24 ساعة."));
-    const box=el("div","lcdbox"), d=el("div","lcd"); box.append(d); c.append(box);
-    const st=el("p","mut"); c.append(st);
-    const btn=el("button","btn full"); btn.style.marginTop="12px"; c.append(btn);
-    const paint=()=>{ const start=prof.cntCycle||0, rem=start+CNT_MS-Date.now(), days=Math.ceil((pd.until-Date.now())/86400000);
-      st.textContent="ينتهي عدادك بعد "+days+" يوم.";
-      if(rem>0){ d.textContent=cntFmt(rem); btn.textContent="⏳ الاستلام القادم بعد الوقت أعلاه"; btn.disabled=true; }
-      else { d.textContent="00:00:00"; btn.textContent="▶️ استلام "+CNT_DAY_REWARD.toLocaleString("en")+" نقطة"; btn.disabled=false; } };
+    const paint=()=>{ const start=prof.cntCycle||0, passed=Date.now()-start, rem=CNT_MS-passed, frac=Math.min(1,Math.max(0,passed/CNT_MS));
+      clock.style.setProperty("--p",(frac*360).toFixed(1)+"deg");
+      i3.lastChild.textContent=Math.ceil((pd.until-Date.now())/86400000)+" يوم متبقٍ";
+      st.textContent="عدادك المدفوع يعمل، ويعطيك "+CNT_DAY_REWARD.toLocaleString("en")+" نقطة كل 24 ساعة.";
+      if(rem>0){ d.textContent=cntFmt(rem); btn.textContent="بانتظار انتهاء الدورة"; btn.disabled=true; }
+      else { d.textContent="00:00:00"; btn.textContent="استلام "+CNT_DAY_REWARD.toLocaleString("en")+" نقطة"; btn.disabled=false; } };
     paint();
     const tm=setInterval(()=>{ if(!c.isConnected){ clearInterval(tm); return; } paint(); },1000);
     btn.onclick=async()=>{ btn.disabled=true; try{
         await setCoins(coins+CNT_DAY_REWARD); logTx("counter",CNT_DAY_REWARD); await saveProf({cntCycle:Date.now()});
         toast("🎉 حصلت على "+CNT_DAY_REWARD.toLocaleString("en")+" نقطة من العداد"); render();
       }catch(e){ toast("تعذر الاستلام"); btn.disabled=false; } };
-    a.append(c);
     return;
   }
-  c.append(el("p","mut","لا يوجد عداد مدفوع لديك حالياً. اشترِ عداداً من المتجر أدناه."));
-  a.append(c);
-  const sh=el("div","card"); sh.style.textAlign="center";
-  sh.append(el("h2",null,"🛒 متجر العدادات"));
-  sh.append(el("b",null,"عداد مدفوع"), el("p","mut","يعطيك "+CNT_DAY_REWARD.toLocaleString("en")+" نقطة كل 24 ساعة، ويظهر لك أنت فقط."));
-  sh.append(el("p","mut","المدة: 1 سنة و235 يوم (600 يوم)"));
-  sh.append(el("div","cntprice",CNT_PRICE.toLocaleString("en")+" نقطة"));
-  const buy=el("button","btn full"); buy.style.marginTop="12px"; buy.textContent="🛒 شراء العداد";
-  buy.onclick=async()=>{ buy.disabled=true; try{
-      if(!(await spend(CNT_PRICE,"counter"))){ buy.disabled=false; return; }
+  d.textContent=cntFmt(0).replace(/^00:00:00$/,"24:00:00");
+  clock.style.setProperty("--p","0deg");
+  st.textContent="لا يوجد عداد مدفوع لديك. اشترِ عداداً من المتجر أعلاه.";
+  btn.textContent="🛒 شراء العداد — "+CNT_PRICE.toLocaleString("en")+" نقطة";
+  btn.onclick=async()=>{ btn.disabled=true; try{
+      if(!(await spend(CNT_PRICE,"counter"))){ btn.disabled=false; return; }
       await saveProf({cntPaid:{until:Date.now()+CNT_DAYS*86400000}, cntCycle:Date.now()});
       toast("تم شراء العداد ✅"); render();
-    }catch(e){ toast("تعذر الشراء"); buy.disabled=false; } };
-  sh.append(buy); a.append(sh);
+    }catch(e){ toast("تعذر الشراء"); btn.disabled=false; } };
 }
 function renderGames_old(a){
   if(!unsubTables) unsubTables=db.collection("tables").orderBy("created","desc").limit(30).onSnapshot(sn=>{ TBL=sn.docs.map(d=>({id:d.id,...d.data()})); if(tab==="games"&&!room&&!dm) drawTables(); });
@@ -2604,8 +2628,8 @@ function sheetAgents(){
     const adm=el("button","btn alt full","📨 طلب شحن من الإدارة"); adm.style.marginTop="8px"; adm.onclick=()=>{ close(); sheetChargeAdmin(); }; c.append(buy,adm);
     db.collection("agents").get().then(sn=>{ L.className=""; L.textContent=""; const ow=el("div","card room agrow"), oav=el("div","av"); setAv(oav,"👑"); const ot=el("div"); ot.style.flex="1"; ot.append(el("b",null,"وكالة المالك"),el("div","mut","الوكيل الرسمي — اضغط لعرض وسائل التواصل")); ow.append(oav,ot); ow.style.cursor="pointer"; ow.onclick=()=>{ close(); sheetOwnerContact(); }; L.append(ow); const rows=sn.docs.map(d=>Object.assign({id:d.id},d.data())).sort((x,y)=>(x.t||0)-(y.t||0));
       if(!rows.length){ L.className="mut"; L.textContent="لا يوجد وكلاء حالياً."; return; }
-      rows.forEach(a=>{ const r=el("div","card room agrow"), av=el("div","av"), pp=PROFS[a.uid]||{}; setAv(av,pp.emoji||"🧑‍💼",pp.photo); const t=el("div"); t.style.flex="1"; t.append(el("b",null,a.name||"وكيل"),el("div","mut","رمز الإحالة: "+(a.ref||a.pid||"")));
-        r.append(frameWrap(av,AF(pp),2),t,el("span","mut","›")); r.onclick=()=>{ close(); agentInfo(a); }; L.append(r); });
+      rows.forEach(a=>{ const r=el("div","card room agrow"), av=el("div","av"), pp=PROFS[a.uid]||{}; setAv(av,pp.emoji||"🧑‍💼",pp.photo); const t=el("div"); t.style.flex="1"; t.append(el("b","agnm",a.name||"وكيل"),el("span","agbadge","✓ معتمد"),el("div","agid2","ID: "+(a.ref||a.pid||"")));
+        r.append(frameWrap(av,AF(pp),2),t,el("span","aggo","عرض التفاصيل ›")); r.onclick=()=>{ close(); agentInfo(a); }; L.append(r); });
     }).catch(()=>{ L.className="mut"; L.textContent="تعذر تحميل الوكلاء"; }); }); }
 function agentInfo(a){ sheet(a.name||"وكيل",(c,close)=>{
   const pp=PROFS[a.uid]||{}, av=el("div","av"); av.style.cssText="width:84px;height:84px;font-size:42px;margin:6px auto"; setAv(av,pp.emoji||"🧑‍💼",pp.photo); const w=el("div"); w.style.textAlign="center"; w.append(frameWrap(av,AF(pp),3)); c.append(w);
@@ -2865,7 +2889,7 @@ function sheetAppTheme(){ sheet("🎨 ألوان الواجهة",(c,close)=>{
   rs.onclick=()=>save("#8b5cf6","#d8b4fe"); c.append(rs); }); }
 function sCirc(emoji,label,fn){ const r=el("button","scirc"), ic=el("span","sci",emoji), t=el("span","sct",label); r.append(ic,t); r.onclick=fn; return r; }
 function ownerPanel(){ sheet("🛠️ ضبط التطبيق",(c,close)=>{ const g=el("div","sgrid");
-  [["👑","لوحة المالك",()=>{ close(); sheetOwner(); }],["👤","ضبط المستخدمين",()=>{ close(); usersMgr(); }],["🏠","ضبط الغرف",()=>{ close(); roomsMgr(); }],["🚩","البلاغات",()=>{ close(); reportsList(); }],["🛡️","الأدمن",()=>{ close(); staffMgr(); }],["🎨","لون الواجهة",()=>{ close(); sheetAppTheme(); }],["🆘","الدعم الفني",()=>{ close(); supportMgr(); }]]
+  [["👑","لوحة المالك",()=>{ close(); sheetOwner(); }],["👤","ضبط المستخدمين",()=>{ close(); usersMgr(); }],["🏠","ضبط الغرف",()=>{ close(); roomsMgr(); }],["🚩","البلاغات",()=>{ close(); reportsList(); }],["🛡️","الأدمن",()=>{ close(); staffMgr(); }],["🎨","لون الواجهة",()=>{ close(); sheetAppTheme(); }],["🧑‍💼","ضبط الوكلاء",()=>{ close(); agentsMgr(); }],["🆘","الدعم الفني",()=>{ close(); supportMgr(); }]]
     .forEach(([i,t,f])=>g.append(sCirc(i,t,f)));
   c.append(g); }); }
 function usersMgr(){ const US={bal:{},ban:{}}; sheet("👤 المستخدمون",(c,close)=>{ c.closest(".ov")?.classList.add("ovc"); const q=el("input"); q.placeholder="بحث بالاسم أو الـ ID"; const L=el("div"); L.style.cssText="max-height:55vh;overflow:auto;margin-top:8px";
