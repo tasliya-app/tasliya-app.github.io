@@ -401,6 +401,7 @@ textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line)
 .crtag{position:absolute;display:flex;align-items:center;gap:6px;background:#000b;border:2px solid #fbbf24;border-radius:14px;padding:3px 8px 3px 3px;color:#fff;font-weight:900;max-width:52%;z-index:2}
 .crtag.bot{bottom:8px;left:62px}
 .crtag.top{top:8px;right:62px}
+.crwrap{display:flex;flex-direction:column;align-items:center;gap:6px}.crwrap .crtag{position:static!important;max-width:100%!important;margin:0!important}
 .crtag .crtn{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
 .crtag .crts{font-size:30px;color:#fde047;text-shadow:0 0 10px #f59e0b,0 2px 3px #000;font-variant-numeric:tabular-nums;min-width:28px;text-align:center}
 .crsl{width:min(92vw,420px);margin:0 auto;display:block}
@@ -1559,6 +1560,7 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .hblab .hbs{font-size:58px!important;color:#fbbf24!important;text-shadow:0 0 12px #f59e0b,0 2px 4px #000!important;font-weight:900}
 .hbnum{position:absolute;top:-6px;left:-6px;background:#fbbf24;color:#000;border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-weight:900;font-size:13px;z-index:3;pointer-events:none}
 .seat2.hbh .sc{position:relative}
+.hbmark.hbok{animation:none;opacity:1;font-size:52px;font-weight:900;color:#22c55e;white-space:nowrap;text-shadow:0 0 14px #000,0 0 6px #fff}
 .hbmark{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-size:130px;z-index:9999;pointer-events:none;animation:hbgo 1.4s ease-out forwards;text-shadow:0 0 20px #000}
 .hbwin{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(78vw,320px);aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-radius:24px;background:linear-gradient(145deg,#fde68a,#f59e0b 45%,#b45309);border:4px solid #fff8;box-shadow:0 0 40px #fbbf24cc,inset 0 0 30px #fff6;color:#3b1d05;font-weight:900;text-align:center;z-index:9998;cursor:pointer;animation:hbwin .7s cubic-bezier(.34,1.56,.64,1)}
 .hbwin .hbwtop{font-size:64px;animation:chbob .6s ease-in-out infinite alternate;line-height:1.1}
@@ -1881,12 +1883,13 @@ function autoCheck(){ autoStop(); const st=cur; if(!st||st.status!=="playing"||!
   tick(); atI=setInterval(tick,300);
   if(st.host===uid) autoT=setTimeout(()=>autoTake(st),Math.max(0,end-Date.now())); }
 async function autoTake(st){ autoStop(); if(cur!==st||st.status!=="playing") return; const s2=clone(st), cont=seatCont(s2), pl=cont[s2.turn];
-  if(!pl||pl.uid==="bot") return; pl.auto=pl.uid; pl.uid="bot"; await saveGame(s2); }
+  if(!pl||pl.uid==="bot") return; const nt=autoNext(s2); if(nt==null||nt===s2.turn) return; s2.turn=nt; await saveGame(s2); toast("⏭ انتقل الدور للاعب الآخر"); }
+function autoNext(s){ const k=s.kind; if(k==="ludo"){ s.dice=0; s.phase="roll"; return nextColor(s,s.turn); } if(k==="xo") return s.turn==="X"?"O":"X"; if(k==="domino") return dOther(s.turn); if(k==="carrom"||k==="bil") return s.turn==="A"?"B":"A"; const ks=Object.keys(s.players||{}).filter(x=>s.players[x]); const i=ks.indexOf(s.turn); return ks.length>1?ks[(i+1)%ks.length]:null; }
 async function seatBack(){ const st=cur; if(!st) return; const s2=clone(st), cont=seatCont(s2)||{};
   const k=Object.keys(cont).find(x=>cont[x]&&cont[x].auto===uid); if(!k) return; cont[k].uid=uid; delete cont[k].auto; await saveGame(s2); toast("🎮 عدت للعب"); }
 function ptag(pl,sz){ const w=ptag0(pl,sz);
   if(pl&&pl.auto===uid){ w.style.cursor="pointer"; w.title="اضغط لاستعادة لعبك"; const n=el("small","mut","اضغط للعودة"); n.style.display="block"; w.append(n); w.onclick=e=>{ e.stopPropagation(); seatBack(); }; }
-  else if(pl&&pl.uid==="bot"&&cur&&cur.status==="playing"){ const n=el("small","mut","يلعب بدلاً عنه"); n.style.display="block"; w.append(n); }
+
   return w; }
 
 /* ===================== Premium ID shop ===================== */
@@ -3971,9 +3974,9 @@ function hbPop(h,anchor){
   if(searching){
     add("🫳 فارغ", async()=>{ const cur=room.hb; if(!cur||cur.st!=="on"||cur.hider===team) return; if((cur.rev||[]).includes(h)) return toast("هذه اليد فارغة");
       if(h===cur.ring){ hbSound(false); await roomUpdate({hb:hbNext(cur,cur.hider,h,false)},"المحيبس: خسر الفريق الجولة"); }
-      else { hbSound(true); await roomUpdate({hb:{...cur,rev:[...(cur.rev||[]),h],t:Date.now(),lastH:h,lastOk:null,lastT:Date.now()}}); } });
+      else { hbSound(true); await roomUpdate({hb:{...cur,rev:[...(cur.rev||[]),h],t:Date.now(),lastH:h,lastOk:null,lastT:Date.now(),msg:"أحسنت",msgT:Date.now()}}); } });
     add("✋ أخذ المحبس", async()=>{ const cur=room.hb; if(!cur||cur.st!=="on"||cur.hider===team) return;
-      if(h===cur.ring){ hbSound(true); await roomUpdate({hb:hbNext(cur,team,h,true)},"المحيبس: وجده الفريق"); }
+      if(h===cur.ring){ hbSound(true); await roomUpdate({hb:{...hbNext(cur,team,h,true),msg:"أنت بطل",msgT:Date.now()}},"المحيبس: وجده الفريق"); }
       else { hbSound(false); await roomUpdate({hb:hbNext(cur,cur.hider,h,false)},"المحيبس: أخطأ الفريق"); } });
   }
   if(OWNER) add("🔮 مساعدة", async()=>{ window.__hbHelp=true; toast(h===room.hb.ring?"💍 المحبس في هذه اليد":"هذه اليد فارغة"); setTimeout(()=>{ window.__hbHelp=false; },4000); });
@@ -4020,8 +4023,9 @@ function hbPaint(){
   if(!top){ top=el("div","hblab a"); top.id="hbtop"; g.parentNode.insertBefore(top,g); }
   if(!bot){ bot=el("div","hblab b"); bot.id="hbbot"; g.parentNode.insertBefore(bot,g.nextSibling); }
   if(hb.st==="on"&&window.__hbRnd!==hb.rnd+"-"+hb.hider){ window.__hbRnd=hb.rnd+"-"+hb.hider; const go=el("div","hbgo","GO"); document.body.append(go); setTimeout(()=>go.remove(),1300); }
-  if(hb.st==="on"&&hb.lastT&&hb.lastOk!==null&&hb.lastOk!==undefined&&Date.now()-hb.lastT<3000&&window.__hbLT!==hb.lastT){ window.__hbLT=hb.lastT; const mk=el("div","hbmark",hb.lastOk?"✅":"❌"); document.body.append(mk); setTimeout(()=>mk.remove(),1500); }
-  if(hb.st==="end"&&hb.lastT&&hb.lastOk!==null&&hb.lastOk!==undefined&&Date.now()-hb.lastT<3000&&window.__hbLT!==hb.lastT){ window.__hbLT=hb.lastT; const mk=el("div","hbmark",hb.lastOk?"✅":"❌"); document.body.append(mk); setTimeout(()=>mk.remove(),1500); }
+  if(hb.msg&&hb.msgT&&Date.now()-hb.msgT<2000&&window.__hbMT!==hb.msgT){ window.__hbMT=hb.msgT; const mk=el("div","hbmark hbok","✅ "+hb.msg); document.body.append(mk); setTimeout(()=>mk.remove(),2000); }
+  if(hb.st==="on"&&hb.lastT&&hb.lastOk===false&&Date.now()-hb.lastT<3000&&window.__hbLT!==hb.lastT){ window.__hbLT=hb.lastT; const mk=el("div","hbmark","❌"); document.body.append(mk); setTimeout(()=>mk.remove(),1500); }
+  if(hb.st==="end"&&hb.lastT&&hb.lastOk===false&&Date.now()-hb.lastT<3000&&window.__hbLT!==hb.lastT){ window.__hbLT=hb.lastT; const mk=el("div","hbmark","❌"); document.body.append(mk); setTimeout(()=>mk.remove(),1500); }
   const srch=hbOther(hb.hider), secs=hb.st==="on"?Math.max(0,Math.ceil((HB_TIME-(Date.now()-(hb.t||0)))/1000)):null;
   const fill=(box,t,nm)=>{ box.textContent=""; const rp=PROFS[t==="A"?hb.rA:hb.rB]||{}; const av=el("div","av"); av.style.cssText="width:34px;height:34px;font-size:18px;flex:none"; setAv(av,rp.emoji||"👤",rp.photo);
     box.append(av, el("span","hbn",(nm?"فريق "+nm:"بانتظار الممثل")), el("b","hbs",String((hb.sc&&hb.sc[t])||0)));
@@ -5803,8 +5807,8 @@ function drawCarrom(b){
   [["A","⚪","#fbbf24"],["B","⚫","#22d3ee"]].forEach(([k,ic,col])=>{ const pl=st.players[k], d=el("div","lpl crp"+(st.turn===k&&st.status==="playing"?" on":"")); d.style.borderColor=col;
     const nb=el("div","crsc",String((st.score||{})[k]||0)); nb.style.color=col; d.append(el("div",null,ic),ptag(pl,26),el("small","crl","النقاط"),nb,el("small",null,"القطع المتبقية: "+cnt(k==="A"?"w":"b"))); bar.append(d); });
   const wrap=el("div","crwrap"); wrap.append(cr.cv);
-  const tagFor=(k,pos)=>{ const pl=st.players[k]; if(!pl) return null; const t=el("div","crtag "+pos); t.style.borderColor=(k==="A"?"#fbbf24":"#22d3ee"); t.append(ptag(pl,30), el("b","crtn",pl.name||""), el("span","crts",String((st.score||{})[k]||0))); return t; };
-  const tb=tagFor(cr.flip?"B":"A","bot"), tt=tagFor(cr.flip?"A":"B","top"); if(tb) wrap.append(tb); if(tt) wrap.append(tt);
+  const tagFor=(k,pos)=>{ const pl=st.players[k]; if(!pl) return null; const t=el("div","crtag "+pos); t.style.borderColor=(k==="A"?"#fbbf24":"#22d3ee"); const pp=PROFS[pl.uid]||{}; const av=el("span","pav2"); av.style.width="40px"; av.style.height="40px"; av.style.fontSize="22px"; setAv(av,pl.emoji||pp.emoji||"👤",pp.photo); t.append(av, el("b","crtn",pl.name||""), el("span","crts",String((st.score||{})[k]||0))); return t; };
+  const tb=tagFor(cr.flip?"B":"A","bot"), tt=tagFor(cr.flip?"A":"B","top"); if(tt) wrap.prepend(tt); if(tb) wrap.append(tb);
   b.append(bar,wrap);
   const mine=st.status==="playing"&&st.players[st.turn]&&st.players[st.turn].uid===uid;
   if(mine&&!cr.sim&&!st.anim){ const sl=el("input","crsl"); sl.type="range"; sl.min="0.2"; sl.max="0.8"; sl.step="0.005"; sl.value=String(cr.sx); sl.oninput=()=>{ cr.sx=Number(sl.value); crRender(); }; b.append(sl); }
