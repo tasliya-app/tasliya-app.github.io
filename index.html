@@ -404,7 +404,18 @@ textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line)
 .crwrap{display:flex;flex-direction:column;align-items:center;gap:6px}.crwrap .crtag{position:static!important;max-width:100%!important;margin:0!important}
 .crwrap{width:min(96vw,450px,calc(100vh - 330px))!important;max-height:calc(100vh - 330px)}
 .crwrap .crtag{background:none!important;border:none!important;box-shadow:none!important;padding:0!important}
+.wcoin{display:block;width:100%;height:58px;border:none;border-radius:18px;font-size:18px;font-weight:900;color:#422006;background:linear-gradient(135deg,#fde68a,#f59e0b 55%,#b45309);box-shadow:0 10px 24px #f59e0b66,inset 0 1px 0 #fff8;cursor:pointer;transition:transform .15s}
+.wcoin:active{transform:scale(.97)}
+.cntclock{width:150px;height:150px;margin:6px auto 10px;border-radius:50%;background:conic-gradient(#fde68a,#f59e0b,#fff7d6,#b45309,#fde68a);padding:8px;box-shadow:0 10px 30px #f59e0b55;display:flex}
+.cntclock span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,#312e81,#1e1b4b);font-size:64px}
+.cntprice{font-size:26px;font-weight:900;color:#fbbf24;margin:8px 0;text-shadow:0 2px 8px #000}
+.lcdbox .lcd{color:#fbbf24!important;text-shadow:0 0 10px #f59e0b}
 .crwrap .crtag .crtn{color:#fbbf24!important;font-size:20px!important;font-weight:900;max-width:150px!important;text-shadow:0 2px 3px #000}
+.lpl,.dlab{border:none!important;background:none!important;box-shadow:none!important}
+.lpl.on,.dlab.on{box-shadow:none!important;background:none!important;transform:none!important}
+.lpl .pav2,.dlab .pav2,.crp .pav2,.crtag .pav2{width:64px!important;height:64px!important;font-size:32px!important}
+.lpl.on .pav2,.dlab.on .pav2,.crp.on .pav2{box-shadow:0 0 14px #fde68a}
+.lpl .ptn,.dlab .ptn,.crp .ptn,.crtag .ptn{color:#fbbf24!important;font-size:17px!important;font-weight:900;text-shadow:0 2px 3px #000}
 .crtag .crtn{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
 .crtag .crts{font-size:30px;color:#fde047;text-shadow:0 0 10px #f59e0b,0 2px 3px #000;font-variant-numeric:tabular-nums;min-width:28px;text-align:center}
 .crsl{width:min(92vw,420px);margin:0 auto;display:block}
@@ -2245,30 +2256,49 @@ function renderWalletPage(a){
   }
   const c=el("div","card wcard"); c.style.textAlign="center"; c.append(artEl("wallet",150),el("h1",null,fmtc(coins)),el("div","mut","رصيد نقاطك"),el("small","mut","الدعم الذي يصلك يُضاف إلى هذا الرصيد وتستطيع صرفه في الدعم والألعاب والمتجر"));
   { const sp=el("button","btn full wbtn wb-p","🎁 إهداء نقاط إلى صديق"); sp.style.marginTop="12px"; sp.onclick=sheetSendPoints; c.append(sp); }
-  { const cr=el("div"); cr.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"; const b1=el("button","btn full wbtn wb-b","💳 شحن من المالك"); b1.onclick=sheetOwnerContact; const b2=el("button","btn full wbtn wb-gr","🧑‍💼 شحن من الوكيل"); b2.onclick=sheetAgents; cr.append(b1,b2); c.append(cr); }
+  { const cr=el("div"); cr.style.cssText="margin:12px 0 8px"; const b2=el("button","wcoin","🪙 شحن من الوكيل"); b2.onclick=sheetAgents; cr.append(b2); c.append(cr); }
   ["gift","roomshare","roulette","agent","recv"].forEach(k=>{ if(EARN[k]){ const w=wfield(EARNI[k],EARNL[k],fmtc(EARN[k])); w.classList.add("tap"); w.onclick=()=>sheetLedger(k); c.append(w); } });
-  { const sb=el("button","btn alt full","📊 كشف الحساب (الوارد والصادر)"); sb.style.marginTop="8px"; sb.onclick=sheetSummary; c.append(sb); } a.append(c);
+  { const sb=el("button","btn alt full","🧾 آخر الحركات"); sb.style.marginTop="8px"; sb.onclick=sheetSummary; c.append(sb); } a.append(c);
 }
 const CNT_MS=24*3600*1000, CNT_REWARD=10;
 function cntFmt(ms){ const s=Math.floor(Math.max(0,ms)/1000), h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return [h,m,x].map(v=>String(v).padStart(2,"0")).join(":"); }
+const CNT_PRICE=15000000, CNT_DAYS=600, CNT_DAY_REWARD=5000;
 function renderCounter(a){
   const c=el("div","card"); c.style.textAlign="center";
-  c.append(artEl("counter",200),el("h2",null,"العداد"),el("p","mut","شغّل العداد لمدة 24 ساعة، وكل تشغيل مكتمل يعطيك "+CNT_REWARD+" نقاط."));
-  const box=el("div","lcdbox"), d=el("div","lcd"); box.append(d); c.append(box);
-  const st=el("p","mut"); c.append(st);
-  const btn=el("button","btn full"); btn.style.marginTop="12px"; c.append(btn);
-  const paint=()=>{ const cn=prof.cnt||null, l=cn?cn.s+CNT_MS-Date.now():0;
-    if(cn&&l>0){ d.textContent=cntFmt(l); d.classList.remove("off"); st.textContent="العداد يعمل، الوقت المتبقي أعلاه."; btn.textContent="⏳ العداد قيد التشغيل"; btn.disabled=true; }
-    else if(cn){ d.textContent="00:00:00"; d.classList.remove("off"); st.textContent="انتهى التشغيل. اضغط لتستلم "+CNT_REWARD+" نقاط وتبدأ تشغيلاً جديداً."; btn.textContent="▶️ استلام "+CNT_REWARD+" نقاط وبدء التشغيل"; btn.disabled=false; }
-    else { d.textContent="24:00:00"; d.classList.add("off"); st.textContent="لم تشغّل العداد بعد."; btn.textContent="▶️ ابدأ العداد (24 ساعة)"; btn.disabled=false; } };
-  paint();
-  const tm=setInterval(()=>{ if(!c.isConnected){ clearInterval(tm); return; } paint(); },1000);
-  btn.onclick=async()=>{ btn.disabled=true; try{
-      const cn=prof.cnt||null;
-      if(cn&&cn.s+CNT_MS<=Date.now()){ await setCoins(coins+CNT_REWARD); logTx("counter",CNT_REWARD); toast("🎉 حصلت على "+CNT_REWARD+" نقاط من العداد"); }
-      await saveProf({cnt:{s:Date.now()}}); toast("بدأ العداد لمدة 24 ساعة ⏱️"); render();
-    }catch(e){ toast("تعذر تشغيل العداد"); btn.disabled=false; } };
+  const ring=el("div","cntclock"); ring.append(el("span",null,"⏱️")); c.append(ring,el("h2",null,"العداد"));
+  const pd=prof.cntPaid||null, active=!!(pd&&pd.until>Date.now());
+  if(active){
+    c.append(el("p","mut","عدادك المدفوع يعمل، ويعطيك "+CNT_DAY_REWARD+" نقطة كل 24 ساعة."));
+    const box=el("div","lcdbox"), d=el("div","lcd"); box.append(d); c.append(box);
+    const st=el("p","mut"); c.append(st);
+    const btn=el("button","btn full"); btn.style.marginTop="12px"; c.append(btn);
+    const paint=()=>{ const start=prof.cntCycle||0, rem=start+CNT_MS-Date.now(), days=Math.ceil((pd.until-Date.now())/86400000);
+      st.textContent="ينتهي عدادك بعد "+days+" يوم.";
+      if(rem>0){ d.textContent=cntFmt(rem); btn.textContent="⏳ الاستلام القادم بعد الوقت أعلاه"; btn.disabled=true; }
+      else { d.textContent="00:00:00"; btn.textContent="▶️ استلام "+CNT_DAY_REWARD.toLocaleString("en")+" نقطة"; btn.disabled=false; } };
+    paint();
+    const tm=setInterval(()=>{ if(!c.isConnected){ clearInterval(tm); return; } paint(); },1000);
+    btn.onclick=async()=>{ btn.disabled=true; try{
+        await setCoins(coins+CNT_DAY_REWARD); logTx("counter",CNT_DAY_REWARD); await saveProf({cntCycle:Date.now()});
+        toast("🎉 حصلت على "+CNT_DAY_REWARD.toLocaleString("en")+" نقطة من العداد"); render();
+      }catch(e){ toast("تعذر الاستلام"); btn.disabled=false; } };
+    a.append(c);
+    return;
+  }
+  c.append(el("p","mut","لا يوجد عداد مدفوع لديك حالياً. اشترِ عداداً من المتجر أدناه."));
   a.append(c);
+  const sh=el("div","card"); sh.style.textAlign="center";
+  sh.append(el("h2",null,"🛒 متجر العدادات"));
+  sh.append(el("b",null,"عداد مدفوع"), el("p","mut","يعطيك "+CNT_DAY_REWARD.toLocaleString("en")+" نقطة كل 24 ساعة، ويظهر لك أنت فقط."));
+  sh.append(el("p","mut","المدة: 1 سنة و235 يوم (600 يوم)"));
+  sh.append(el("div","cntprice",CNT_PRICE.toLocaleString("en")+" نقطة"));
+  const buy=el("button","btn full"); buy.style.marginTop="12px"; buy.textContent="🛒 شراء العداد";
+  buy.onclick=async()=>{ buy.disabled=true; try{
+      if(!(await spend(CNT_PRICE,"counter"))){ buy.disabled=false; return; }
+      await saveProf({cntPaid:{until:Date.now()+CNT_DAYS*86400000}, cntCycle:Date.now()});
+      toast("تم شراء العداد ✅"); render();
+    }catch(e){ toast("تعذر الشراء"); buy.disabled=false; } };
+  sh.append(buy); a.append(sh);
 }
 function renderGames_old(a){
   if(!unsubTables) unsubTables=db.collection("tables").orderBy("created","desc").limit(30).onSnapshot(sn=>{ TBL=sn.docs.map(d=>({id:d.id,...d.data()})); if(tab==="games"&&!room&&!dm) drawTables(); });
@@ -2572,7 +2602,7 @@ function sheetAgents(){
     const L=el("div","mut","جارٍ التحميل…"); c.append(L);
     const buy=el("button","btn full wbtn wb-o","🪪 شراء وكالة"); buy.style.marginTop="10px"; buy.onclick=()=>{ close(); sheetBuyAgency(); };
     const adm=el("button","btn alt full","📨 طلب شحن من الإدارة"); adm.style.marginTop="8px"; adm.onclick=()=>{ close(); sheetChargeAdmin(); }; c.append(buy,adm);
-    db.collection("agents").get().then(sn=>{ L.className=""; L.textContent=""; const rows=sn.docs.map(d=>Object.assign({id:d.id},d.data())).sort((x,y)=>(x.t||0)-(y.t||0));
+    db.collection("agents").get().then(sn=>{ L.className=""; L.textContent=""; const ow=el("div","card room agrow"), oav=el("div","av"); setAv(oav,"👑"); const ot=el("div"); ot.style.flex="1"; ot.append(el("b",null,"وكالة المالك"),el("div","mut","الوكيل الرسمي — اضغط لعرض وسائل التواصل")); ow.append(oav,ot); ow.style.cursor="pointer"; ow.onclick=()=>{ close(); sheetOwnerContact(); }; L.append(ow); const rows=sn.docs.map(d=>Object.assign({id:d.id},d.data())).sort((x,y)=>(x.t||0)-(y.t||0));
       if(!rows.length){ L.className="mut"; L.textContent="لا يوجد وكلاء حالياً."; return; }
       rows.forEach(a=>{ const r=el("div","card room agrow"), av=el("div","av"), pp=PROFS[a.uid]||{}; setAv(av,pp.emoji||"🧑‍💼",pp.photo); const t=el("div"); t.style.flex="1"; t.append(el("b",null,a.name||"وكيل"),el("div","mut","رمز الإحالة: "+(a.ref||a.pid||"")));
         r.append(frameWrap(av,AF(pp),2),t,el("span","mut","›")); r.onclick=()=>{ close(); agentInfo(a); }; L.append(r); });
