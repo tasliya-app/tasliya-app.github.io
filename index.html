@@ -396,6 +396,13 @@ textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line)
 .topm small{display:block;opacity:.85}
 .ghub .gcardhub:nth-child(3){grid-column:1/-1}
 .crc{width:min(92vw,420px);aspect-ratio:1;border-radius:14px;touch-action:none;display:block;margin:8px auto;box-shadow:0 8px 24px #0008}
+.crwrap{position:relative;width:min(96vw,450px);margin:0 auto}
+.crwrap .crc{width:100%!important;margin:0!important}
+.crtag{position:absolute;display:flex;align-items:center;gap:6px;background:#000b;border:2px solid #fbbf24;border-radius:14px;padding:3px 8px 3px 3px;color:#fff;font-weight:900;max-width:52%;z-index:2}
+.crtag.bot{bottom:8px;left:62px}
+.crtag.top{top:8px;right:62px}
+.crtag .crtn{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
+.crtag .crts{font-size:30px;color:#fde047;text-shadow:0 0 10px #f59e0b,0 2px 3px #000;font-variant-numeric:tabular-nums;min-width:28px;text-align:center}
 .crsl{width:min(92vw,420px);margin:0 auto;display:block}
 .win{position:fixed;inset:0;z-index:40;background:radial-gradient(circle at 50% 40%,#4c1d95dd,#000e);display:flex;align-items:center;justify-content:center;animation:winin .4s;overflow:hidden}
 .win::before{content:"";position:absolute;inset:-30%;background:repeating-conic-gradient(#ffffff14 0 8deg,transparent 8deg 24deg);animation:spinr 18s linear infinite}
@@ -5365,8 +5372,11 @@ function bilSlots(gg,n){ const w=el("div","bslots"); for(let i=0;i<7;i++){ const
 function bilCue(){ const st=cur, b=st&&st.b&&st.b.find(q=>q.i===0&&q.on); return b?{x:b.x,y:b.y}:null; }
 function bilEnsure(){ if(BLX.cv) return; const cv=document.createElement("canvas"); cv.width=444; cv.height=800; cv.className="bilc"; BLX.cv=cv; BLX.ctx=cv.getContext("2d");
   const pt=e=>{ const r=cv.getBoundingClientRect(), cx=(e.clientX-r.left)/r.width*444, cy=(e.clientY-r.top)/r.height*800; return {x:2-(cy-44)/356, y:(cx-44)/356}; };
-  cv.addEventListener("pointerdown",e=>{ if(!bilCanShoot()) return; BLX.drag=pt(e); const cbz=bilCue(); BLX.mode=(!cbz||Math.hypot(BLX.drag.x-cbz.x,BLX.drag.y-cbz.y)<.22)?"pull":"rot"; try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
-  cv.addEventListener("pointermove",e=>{ if(!BLX.drag) return; const p=pt(e); if(BLX.mode==="rot"){ const cbz=bilCue(); if(cbz){ BLX.aim={ang:Math.atan2(cbz.y-p.y,cbz.x-p.x),pow:.25,rot:1}; bilAimSend(); bilRender(); } return; } const dx=BLX.drag.x-p.x, dy=BLX.drag.y-p.y, d=Math.hypot(dx,dy); BLX.aim={ang:Math.atan2(dy,dx),pow:Math.min(1,d/.35)}; bilAimSend(); bilRender(); });
+  const rawP=e=>{ const r=cv.getBoundingClientRect(); return {cx:(e.clientX-r.left)/r.width*444, cy:(e.clientY-r.top)/r.height*800}; };
+  const barPow=e=>{ const q=rawP(e); return Math.max(0,Math.min(1,(44+2*356-q.cy)/(2*356))); };
+  const curAng=()=>(BLX.ang!=null?BLX.ang:((cur&&cur.lastAng)||0));
+  cv.addEventListener("pointerdown",e=>{ if(!bilCanShoot()) return; if(rawP(e).cx>=406){ BLX.mode="bar"; BLX.drag={x:0,y:0}; BLX.aim={ang:curAng(),pow:barPow(e)}; bilAimSend(); bilRender(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} return; } BLX.drag=pt(e); const cbz=bilCue(); BLX.mode=(!cbz||Math.hypot(BLX.drag.x-cbz.x,BLX.drag.y-cbz.y)<.22)?"pull":"rot"; try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
+  cv.addEventListener("pointermove",e=>{ if(!BLX.drag) return; if(BLX.mode==="bar"){ BLX.aim={ang:curAng(),pow:barPow(e)}; bilAimSend(); bilRender(); return; } const p=pt(e); if(BLX.mode==="rot"){ const cbz=bilCue(); if(cbz){ BLX.aim={ang:Math.atan2(cbz.y-p.y,cbz.x-p.x),pow:.25,rot:1}; BLX.ang=BLX.aim.ang; bilAimSend(); bilRender(); } return; } const dx=BLX.drag.x-p.x, dy=BLX.drag.y-p.y, d=Math.hypot(dx,dy); BLX.aim={ang:Math.atan2(dy,dx),pow:Math.min(1,d/.35)}; BLX.ang=BLX.aim.ang; bilAimSend(); bilRender(); });
   const end=()=>{ const a=BLX.aim; BLX.drag=null; BLX.aim=null; bilAimSend(true); bilRender(); if(a&&a.pow>.06&&!a.rot) bilShoot(a.ang,a.pow,false); };
   cv.addEventListener("pointerup",end); cv.addEventListener("pointercancel",()=>{ BLX.drag=null; BLX.aim=null; bilAimSend(true); bilRender(); }); }
 let BAIM_T=0;
@@ -5518,7 +5528,7 @@ function sndDice(){
   for(let i=0;i<8;i++) setTimeout(()=>noise(.05,.22,2200+Math.random()*1800,700),i*68);
   setTimeout(()=>{ noise(.1,.45,1600,250); tone("sine",170,55,.2,.35); },600);
 }
-const CR_R=.026, CR_SR=.035, CR_PR=.046, CR_K=1.6, CR_DT=1/240, CR_POCK=[[.058,.058],[.942,.058],[.058,.942],[.942,.942]];
+const CR_R=.03, CR_SR=.04, CR_PR=.046, CR_K=1.6, CR_DT=1/240, CR_POCK=[[.058,.058],[.942,.058],[.058,.942],[.942,.942]];
 function carromInit(){
   const P=[{id:"q",t:"q",x:.5,y:.5}], R1=2.1*CR_R, R2=4.2*CR_R;
   for(let k=0;k<6;k++){ const a=k*Math.PI/3; P.push({id:"i"+k,t:k%2?"b":"w",x:+(.5+R1*Math.cos(a)).toFixed(5),y:+(.5+R1*Math.sin(a)).toFixed(5)}); }
@@ -5721,7 +5731,7 @@ function crDisc(c,x,y,r,t,o){ o=o||{}; const sh=o.sh==null?1:o.sh; c.save(); c.g
 function crStartSim(st){ const a=st.anim; cr.sim=carromStart(st.pieces,a.sx,st.turn,a.ang,a.pow); cr.simSeq=a.seq; cr.last=performance.now(); cr.acc=0; cancelAnimationFrame(cr.raf);
   beep(260,520,.12,.12);
   const loop=now=>{ if(!cr.sim) return; cr.acc+=Math.min((now-cr.last)/1000,.1); cr.last=now; let moving=true, n=0;
-    while(cr.acc>=CR_DT&&n<40){ const ev0=cr.sim.ev.length; moving=carromStep(cr.sim); cr.acc-=CR_DT; n++; if(cr.sim.ev.length>ev0) nz(.12,.3,"lowpass",600,1,0,150); if(!moving) break; }
+    while(cr.acc>=CR_DT&&n<40){ const ev0=cr.sim.ev.length; moving=carromStep(cr.sim); cr.acc-=CR_DT; n++; if(cr.sim.ev.length>ev0){ nz(.05,.5,"bandpass",2600,2.5,0,1500); nz(.02,.25,"highpass",5000,1,0,0); } if(!moving) break; }
     crRender(); if(!moving||cr.sim.steps>9000) crEndSim(); else cr.raf=requestAnimationFrame(loop); };
   cr.raf=requestAnimationFrame(loop); }
 function crEndSim(){ const S=cr.sim; cr.sim=null; const st=cr.st;
@@ -5730,15 +5740,31 @@ function crEndSim(){ const S=cr.sim; cr.sim=null; const st=cr.st;
 function crRender(){
   const c=cr.ctx, st=cr.st; if(!c||!st) return; const S=720, f=cr.flip, X=x=>(f?1-x:x)*S, Y=y=>(f?1-y:y)*S;
   c.clearRect(0,0,S,S);
-  let g=c.createLinearGradient(0,0,S,S); g.addColorStop(0,"#9a6a35"); g.addColorStop(.5,"#5b3a17"); g.addColorStop(1,"#80532a"); c.fillStyle=g; c.fillRect(0,0,S,S);
-  const m=20; g=c.createLinearGradient(m,m,S-m,S-m); g.addColorStop(0,"#f3d9a4"); g.addColorStop(1,"#d9a85a"); c.fillStyle=g; c.fillRect(m,m,S-2*m,S-2*m);
-  c.strokeStyle="rgba(60,30,5,.65)"; c.lineWidth=3; c.strokeRect(m,m,S-2*m,S-2*m); c.strokeStyle="rgba(255,255,255,.4)"; c.lineWidth=2; c.strokeRect(m+4,m+4,S-2*m-8,S-2*m-8);
-  c.strokeStyle="rgba(110,64,16,.55)"; c.lineWidth=3;
-  [.15,.85].forEach(y=>{ c.beginPath(); c.moveTo(.2*S,Y(y)); c.lineTo(.8*S,Y(y)); c.stroke(); [.2,.8].forEach(x=>{ c.beginPath(); c.arc(x*S,Y(y),.012*S,0,6.283); c.stroke(); }); });
-  c.beginPath(); c.arc(S/2,S/2,.17*S,0,6.283); c.stroke(); c.beginPath(); c.arc(S/2,S/2,.045*S,0,6.283); c.stroke();
+  let g=c.createLinearGradient(0,0,S,S); g.addColorStop(0,"#2b1a0c"); g.addColorStop(.5,"#140b05"); g.addColorStop(1,"#2b1a0c"); c.fillStyle=g; c.fillRect(0,0,S,S);
+  const m=20; g=c.createLinearGradient(m,m,S-m,S-m); g.addColorStop(0,"#f6e2b3"); g.addColorStop(.5,"#ecc98a"); g.addColorStop(1,"#d9a965"); c.fillStyle=g; c.fillRect(m,m,S-2*m,S-2*m);
+  c.strokeStyle="#3b2210"; c.lineWidth=4; c.strokeRect(m,m,S-2*m,S-2*m);
+  c.strokeStyle="rgba(30,15,5,.75)"; c.lineWidth=2; c.strokeRect(m+22,m+22,S-2*m-44,S-2*m-44);
+  // red rails between the pockets, with round ends
+  c.lineCap="round"; c.strokeStyle="#b91c1c"; c.lineWidth=13;
+  [[.16*S,.058*S,.84*S,.058*S],[.16*S,.942*S,.84*S,.942*S],[.058*S,.16*S,.058*S,.84*S],[.942*S,.16*S,.942*S,.84*S]].forEach(r=>{ c.beginPath(); c.moveTo(r[0],r[1]); c.lineTo(r[2],r[3]); c.stroke(); });
+  c.fillStyle="#b91c1c"; [[.2,.058],[.8,.058],[.2,.942],[.8,.942],[.058,.2],[.058,.8],[.942,.2],[.942,.8]].forEach(q=>{ c.beginPath(); c.arc(q[0]*S,q[1]*S,.017*S,0,6.283); c.fill(); });
+  // diagonal guides and circular arrows at the corners
+  c.strokeStyle="rgba(40,22,8,.8)"; c.lineWidth=2.5;
+  [[.2,.2,1,1],[.8,.2,-1,1],[.2,.8,1,-1],[.8,.8,-1,-1]].forEach(q=>{ const px=q[0]*S, py=q[1]*S, dx=q[2], dy=q[3];
+    c.beginPath(); c.moveTo(px-dx*.07*S,py-dy*.07*S); c.lineTo(px+dx*.17*S,py+dy*.17*S); c.stroke();
+    c.beginPath(); c.arc(px+dx*.06*S,py+dy*.06*S,.05*S,dx*dy>0?Math.PI*1.1:-.1,dx*dy>0?Math.PI*1.9:Math.PI*.9); c.stroke(); });
+  // centre: red and cream rings with a red/black star
+  const cx=S/2, cy=S/2;
+  c.fillStyle="#b91c1c"; c.beginPath(); c.arc(cx,cy,.17*S,0,6.283); c.fill();
+  c.fillStyle="#f6e2b3"; c.beginPath(); c.arc(cx,cy,.155*S,0,6.283); c.fill();
+  c.strokeStyle="#b91c1c"; c.lineWidth=3; c.beginPath(); c.arc(cx,cy,.14*S,0,6.283); c.stroke();
+  c.strokeStyle="#111"; c.lineWidth=2; c.beginPath(); c.arc(cx,cy,.125*S,0,6.283); c.stroke();
+  for(let i=0;i<8;i++){ const an=i*Math.PI/4; c.fillStyle=i%2?"#111":"#b91c1c"; c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+Math.cos(an-.2)*.035*S,cy+Math.sin(an-.2)*.035*S); c.lineTo(cx+Math.cos(an)*.12*S,cy+Math.sin(an)*.12*S); c.lineTo(cx+Math.cos(an+.2)*.035*S,cy+Math.sin(an+.2)*.035*S); c.closePath(); c.fill(); }
+  c.fillStyle="#b91c1c"; c.beginPath(); c.arc(cx,cy,.022*S,0,6.283); c.fill();
+  // gold pockets with a wider gold ring
   CR_POCK.forEach(p=>{ const x=X(p[0]), y=Y(p[1]), r=.046*S;
-    c.beginPath(); c.arc(x,y,r*1.2,0,6.283); c.fillStyle="#0f766e"; c.fill();
-    c.beginPath(); c.arc(x,y,r*1.1,0,6.283); const rg=c.createLinearGradient(x-r,y-r,x+r,y+r); rg.addColorStop(0,"#5eead4"); rg.addColorStop(1,"#0d9488"); c.fillStyle=rg; c.fill();
+    c.beginPath(); c.arc(x,y,r*1.32,0,6.283); c.fillStyle="#7c2d12"; c.fill();
+    c.beginPath(); c.arc(x,y,r*1.24,0,6.283); const rg=c.createLinearGradient(x-r,y-r,x+r,y+r); rg.addColorStop(0,"#fef08a"); rg.addColorStop(.5,"#facc15"); rg.addColorStop(1,"#a16207"); c.fillStyle=rg; c.fill();
     c.beginPath(); c.arc(x,y,r,0,6.283); const ig=c.createRadialGradient(x-r*.25,y-r*.25,r*.1,x,y,r); ig.addColorStop(0,"#1f2937"); ig.addColorStop(1,"#020617"); c.fillStyle=ig; c.fill();
     c.lineWidth=3; c.strokeStyle="rgba(255,255,255,.45)"; c.beginPath(); c.arc(x,y,r*1.15,3.5,5.1); c.stroke(); });
   const FALL=72;
@@ -5776,7 +5802,10 @@ function drawCarrom(b){
   const cnt=t=>st.pieces.filter(q=>q.t===t).length, bar=el("div","lbar");
   [["A","⚪","#fbbf24"],["B","⚫","#22d3ee"]].forEach(([k,ic,col])=>{ const pl=st.players[k], d=el("div","lpl crp"+(st.turn===k&&st.status==="playing"?" on":"")); d.style.borderColor=col;
     const nb=el("div","crsc",String((st.score||{})[k]||0)); nb.style.color=col; d.append(el("div",null,ic),ptag(pl,26),el("small","crl","النقاط"),nb,el("small",null,"القطع المتبقية: "+cnt(k==="A"?"w":"b"))); bar.append(d); });
-  b.append(bar,cr.cv);
+  const wrap=el("div","crwrap"); wrap.append(cr.cv);
+  const tagFor=(k,pos)=>{ const pl=st.players[k]; if(!pl) return null; const t=el("div","crtag "+pos); t.style.borderColor=(k==="A"?"#fbbf24":"#22d3ee"); t.append(ptag(pl,30), el("b","crtn",pl.name||""), el("span","crts",String((st.score||{})[k]||0))); return t; };
+  const tb=tagFor(cr.flip?"B":"A","bot"), tt=tagFor(cr.flip?"A":"B","top"); if(tb) wrap.append(tb); if(tt) wrap.append(tt);
+  b.append(bar,wrap);
   const mine=st.status==="playing"&&st.players[st.turn]&&st.players[st.turn].uid===uid;
   if(mine&&!cr.sim&&!st.anim){ const sl=el("input","crsl"); sl.type="range"; sl.min="0.2"; sl.max="0.8"; sl.step="0.005"; sl.value=String(cr.sx); sl.oninput=()=>{ cr.sx=Number(sl.value); crRender(); }; b.append(sl); }
   const msg=st.status==="done"?"🏆 فاز "+st.players[st.winner].name+"!":(st.anim||cr.sim?"الضربة جارية…":(mine?"دورك: حرّك المضرب بالشريط ثم اسحب على اللوحة للتصويب وأفلت":"دور "+st.players[st.turn].name));
