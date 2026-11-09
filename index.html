@@ -5094,7 +5094,12 @@ const meP=()=>({uid,name:prof.name,emoji:prof.emoji});
 const clone=o=>JSON.parse(JSON.stringify(o));
 function chatNote(t){}
 let gameRedraw=null;
-function closeGame(){ if(unsubGame){ unsubGame(); unsubGame=null; } clearTimeout(botT); rndStop(); domClear(); if(gameOv){ gameOv.remove(); gameOv=null; } cur=null; gameRedraw=null; autoStop(); crReset(); bilReset(); l3Dispose(); gcStop(); vwStop(); }
+function xoCloseBtn(on){ let x=document.getElementById("xoCloseX"); if(!on){ if(x) x.remove(); return; } if(x) return;
+  x=document.createElement("button"); x.id="xoCloseX"; x.textContent="✕ إلغاء البطاقة";
+  x.setAttribute("style","position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:2147483647;padding:10px 22px;border-radius:14px;border:2px solid #facc15;background:#0f172a;color:#fff;font-weight:900;font-size:16px;box-shadow:0 6px 18px #000a;cursor:pointer");
+  x.onclick=()=>{ document.querySelectorAll("div.gfx,div.cine,div.win,.gfx-rays,.cn-rays,.win-card,.gfx-ico").forEach(n=>{ let t=n; while(t.parentElement&&t.parentElement!==document.body&&t.parentElement!==gameOv&&!t.parentElement.classList.contains("gpanel")) t=t.parentElement; if(t!==gameOv&&t!==x&&t!==document.body) t.remove(); }); x.remove(); };
+  document.body.append(x); }
+function closeGame(){ if(unsubGame){ unsubGame(); unsubGame=null; } clearTimeout(botT); xoCloseBtn(false); rndStop(); domClear(); if(gameOv){ gameOv.remove(); gameOv=null; } cur=null; gameRedraw=null; autoStop(); crReset(); bilReset(); l3Dispose(); gcStop(); vwStop(); }
 function openTable(id,kind){
   closeGame(); gtid=id; gkind=kind; lastRollN=null; LASTV={}; LB=null; domReset(); let lastSig=""; const o=el("div","ov"), p=el("div","gpanel gbox"); o.append(p); document.body.append(o); gameOv=o; vwStart();
   const draw=()=>{ p.innerHTML=""; p.classList.toggle("lpurp",kind==="ludo"); p.classList.toggle("gdom",kind==="domino"); p.append(el("div","pgrab"));
@@ -5588,6 +5593,7 @@ function drawXO(b){
   b.append(el("div","lmsg",st.status==="done"?(st.winner==="draw"?"🤝 تعادل":"🏆 فاز "+st[st.winner].name):(myMark===st.turn?"دورك!":"دور "+st[st.turn].name)));
   if(st.status==="done"||st.host===uid){ const nb=el("button","btn alt full",st.status==="done"?"🔄 لعبة جديدة":"إنهاء اللعبة"); nb.style.marginTop="8px";
     nb.onclick=()=>{ if(st.status==="done") newTable("xo"); else endTable(); }; b.append(nb); }
+  xoCloseBtn(st.status==="done");
 }
 function botTick(){
   clearTimeout(botT); const st=cur; if(!st||st.status!=="playing"||st.host!==uid) return;
@@ -5891,7 +5897,7 @@ function drawCarrom(b){
     const nb=el("div","crsc",String((st.score||{})[k]||0)); nb.style.color=col; d.append(el("div",null,ic),ptag(pl,26),el("small","crl","النقاط"),nb,el("small",null,"القطع المتبقية: "+cnt(k==="A"?"w":"b"))); bar.append(d); });
   const wrap=el("div","crwrap"); wrap.append(cr.cv);
   const tagFor=(k,pos)=>{ const pl=st.players[k]; if(!pl) return null; const t=el("div","crtag "+pos); t.style.borderColor=(k==="A"?"#fbbf24":"#22d3ee"); const pp=PROFS[pl.uid]||{}; const av=el("span","pav2"); av.style.width="64px"; av.style.height="64px"; av.style.fontSize="34px"; setAv(av,pl.emoji||pp.emoji||"👤",pp.photo); t.append(av, el("b","crtn",pl.name||""), el("span","crts",String((st.score||{})[k]||0))); return t; };
-  const tb=tagFor(cr.flip?"B":"A","bot"), tt=tagFor(cr.flip?"A":"B","top"); if(tt) wrap.prepend(tt);
+  const tb=tagFor(cr.flip?"B":"A","bot");
   b.append(bar,wrap);
   const mine=st.status==="playing"&&st.players[st.turn]&&st.players[st.turn].uid===uid;
   if(mine&&!cr.sim&&!st.anim){ const sl=el("input","crsl"); sl.type="range"; sl.min="0.2"; sl.max="0.8"; sl.step="0.005"; sl.value=String(cr.sx); sl.oninput=()=>{ cr.sx=Number(sl.value); crRender(); }; b.append(sl); }
