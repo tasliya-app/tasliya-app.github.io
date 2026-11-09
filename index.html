@@ -406,6 +406,16 @@ textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line)
 .crwrap .crtag{background:none!important;border:none!important;box-shadow:none!important;padding:0!important}
 .wcoin{display:block;width:100%;height:58px;border:none;border-radius:18px;font-size:18px;font-weight:900;color:#422006;background:linear-gradient(135deg,#fde68a,#f59e0b 55%,#b45309);box-shadow:0 10px 24px #f59e0b66,inset 0 1px 0 #fff8;cursor:pointer;transition:transform .15s}
 .wcoin:active{transform:scale(.97)}
+.agbig{font-size:19px!important;font-weight:900}
+.agico{background:none!important;border:none!important;padding:4px!important;box-shadow:none!important}
+.agico svg{width:30px;height:30px;display:block}
+.agtop{display:block;color:#fbbf24;font-size:13px;font-weight:800}
+.agicons{display:flex;gap:12px;margin:8px 0 6px}
+.agicons .agico svg{width:36px;height:36px}
+.aggo2{color:#93c5fd;font-size:14px;font-weight:800}
+.agheadbig{font-size:26px!important;font-weight:900;margin:4px 0 12px}
+.aghead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.agbuyc{width:56px;height:56px;border-radius:50%;border:none;font-size:26px;flex:none;cursor:pointer;background:linear-gradient(135deg,#fde68a,#f59e0b 60%,#b45309);box-shadow:0 8px 22px #f59e0b66}
 .cntclock{width:150px;height:150px;margin:6px auto 10px;border-radius:50%;background:conic-gradient(#fde68a,#f59e0b,#fff7d6,#b45309,#fde68a);padding:8px;box-shadow:0 10px 30px #f59e0b55;display:flex}
 .cntclock span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,#312e81,#1e1b4b);font-size:64px}
 .ccard{margin:10px auto;max-width:420px;padding:18px 14px;border-radius:26px;background:linear-gradient(160deg,#1e1b4b,#0f172a);border:1px solid #fbbf2433;box-shadow:0 18px 40px #0008;text-align:center}
@@ -422,6 +432,9 @@ textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line)
 .cbtn:disabled{background:#ffffff1a;color:#94a3b8;box-shadow:none}
 .cntprice{font-size:26px;font-weight:900;color:#fbbf24;margin:8px 0;text-shadow:0 2px 8px #000}
 .lcdbox .lcd{color:#fbbf24!important;text-shadow:0 0 10px #f59e0b}
+.ov>.gpanel{max-height:calc(100vh - 4px)!important}
+.ov>.gpanel{max-height:calc(100dvh - 4px)!important}
+.gfx,.cine{pointer-events:auto!important}
 .agrow{display:flex;align-items:center;gap:12px;padding:16px 14px!important;margin:10px 0!important;border-radius:22px!important;background:linear-gradient(160deg,#1e1b4b,#0f172a)!important;border:1px solid #fbbf2440!important;box-shadow:0 12px 30px #0007!important;cursor:pointer}
 .agrow .av{width:62px!important;height:62px!important;font-size:30px!important}
 .agnm{display:block;font-size:17px;font-weight:900;color:#fff}
@@ -2613,27 +2626,33 @@ const AGENCY_PRICE=15000000;
 const waLink=v=>{ const d=String(v||"").replace(/[^\d]/g,""); return d.length>=7?"https://wa.me/"+d:""; };
 const tgLink=v=>{ const s=String(v||"").trim().replace(/^https?:\/\/t\.me\//i,"").replace(/^@/,""); return /^[A-Za-z0-9_]{4,}$/.test(s)?"https://t.me/"+s:""; };
 const dFmt=t=>{ try{ return new Date(t).toLocaleDateString("en-GB"); }catch(e){ return ""; } };
-function agRow(label,val,link,ltr){ const r=el("div","agi"); r.append(el("span","mut",label)); const b=el("b",null,val||"—"); if(ltr) b.style.direction="ltr"; r.append(b);
-  if(val){ const cp=el("button","agc agcp","📋 نسخ"); cp.onclick=async e=>{ e.stopPropagation(); try{ await navigator.clipboard.writeText(String(val)); toast("تم النسخ ✓"); }catch(_){ toast(String(val)); } }; r.append(cp); }
-  if(link){ const go=el("button","agc","↗"); go.onclick=e=>{ e.stopPropagation(); try{ window.open(link,"_blank"); }catch(_){} }; r.append(go); } return r; }
+const AG_TG='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#229ED9"/><path fill="#fff" d="M5.4 11.6l10.9-4.2c.5-.2 1 .1.8.9l-1.9 8.9c-.1.6-.5.8-1 .5l-2.7-2-1.3 1.3c-.1.1-.3.3-.6.3l.2-2.8 5.1-4.6c.2-.2 0-.3-.3-.1L8.6 13.6l-2.7-.9c-.6-.2-.6-.6.1-1.1z"/></svg>',AG_WA='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#fff" d="M17.2 14.3c-.3-.1-1.6-.8-1.9-.9-.3-.1-.4-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.1c-.2-.5-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5 2.9 1.1 2.9.8 3.4.7.6-.1 1.6-.7 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.3-.2-.6-.3z"/></svg>';
+function agRow(label,val,link,ltr,noCopy,icon){ const r=el("div","agi"); r.append(el("span","mut",label)); const b=el("b",null,val||"—"); if(ltr) b.style.direction="ltr"; if(link) b.classList.add("agbig"); r.append(b);
+  if(val&&!noCopy){ const cp=el("button","agc agcp","📋 نسخ"); cp.onclick=async e=>{ e.stopPropagation(); try{ await navigator.clipboard.writeText(String(val)); toast("تم النسخ ✓"); }catch(_){ toast(String(val)); } }; r.append(cp); }
+  if(link){ const go=el("button","agc agico"); go.innerHTML=icon||"↗"; go.onclick=e=>{ e.stopPropagation(); try{ window.open(link,"_blank"); }catch(_){} }; r.append(go); } return r; }
 function idPhotoFrom(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onerror=rej; r.onload=()=>{ const im=new Image(); im.onerror=rej; im.onload=()=>{
   let m=1000, q=.78, out=""; for(let k=0;k<5;k++){ const s=Math.min(1,m/Math.max(im.width,im.height)), cv=document.createElement("canvas"); cv.width=Math.max(1,Math.round(im.width*s)); cv.height=Math.max(1,Math.round(im.height*s));
     cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height); out=cv.toDataURL("image/jpeg",q); if(out.length<600000) break; m*=.8; q-=.06; } res(out); }; im.src=r.result; }; r.readAsDataURL(file); }); }
 function sheetAgents(){
   if(OWNER) return sheetWallet();
   sheet("🧑‍💼 الشحن من الوكلاء",(c,close)=>{
+  const hd=el("div","aghead"); hd.append(el("h2","agheadbig","الشحن من الوكلاء")); c.append(hd);
     c.append(el("div","mut","رصيدك الحالي: 🪙 "+fmtc(coins)),el("p","mut","اختر وكيلاً لعرض معلوماته، ثم تواصل معه لشحن نقاطك. دفع المبلغ للوكيل يتم خارج التطبيق مباشرةً بينك وبينه."));
     const L=el("div","mut","جارٍ التحميل…"); c.append(L);
-    const buy=el("button","btn full wbtn wb-o","🪪 شراء وكالة"); buy.style.marginTop="10px"; buy.onclick=()=>{ close(); sheetBuyAgency(); };
-    const adm=el("button","btn alt full","📨 طلب شحن من الإدارة"); adm.style.marginTop="8px"; adm.onclick=()=>{ close(); sheetChargeAdmin(); }; c.append(buy,adm);
-    db.collection("agents").get().then(sn=>{ L.className=""; L.textContent=""; const ow=el("div","card room agrow"), oav=el("div","av"); setAv(oav,"👑"); const ot=el("div"); ot.style.flex="1"; ot.append(el("b",null,"وكالة المالك"),el("div","mut","الوكيل الرسمي — اضغط لعرض وسائل التواصل")); ow.append(oav,ot); ow.style.cursor="pointer"; ow.onclick=()=>{ close(); sheetOwnerContact(); }; L.append(ow); const rows=sn.docs.map(d=>Object.assign({id:d.id},d.data())).sort((x,y)=>(x.t||0)-(y.t||0));
+    const buy=el("button","agbuyc","🪪"); buy.title="شراء وكالة"; buy.setAttribute("aria-label","شراء وكالة"); buy.onclick=()=>{ close(); sheetBuyAgency(); }; hd.append(buy);
+    const adm=el("button","btn alt full","📨 طلب شحن من الإدارة"); adm.style.marginTop="8px"; adm.onclick=()=>{ close(); sheetChargeAdmin(); }; c.append(adm);
+    db.collection("agents").get().then(sn=>{ L.className=""; L.textContent="";  const rows=sn.docs.map(d=>Object.assign({id:d.id},d.data())).sort((x,y)=>(x.t||0)-(y.t||0));
       if(!rows.length){ L.className="mut"; L.textContent="لا يوجد وكلاء حالياً."; return; }
-      rows.forEach(a=>{ const r=el("div","card room agrow"), av=el("div","av"), pp=PROFS[a.uid]||{}; setAv(av,pp.emoji||"🧑‍💼",pp.photo); const t=el("div"); t.style.flex="1"; t.append(el("b","agnm",a.name||"وكيل"),el("span","agbadge","✓ معتمد"),el("div","agid2","ID: "+(a.ref||a.pid||"")));
-        r.append(frameWrap(av,AF(pp),2),t,el("span","aggo","عرض التفاصيل ›")); r.onclick=()=>{ close(); agentInfo(a); }; L.append(r); });
+      rows.forEach(a=>{ const r=el("div","card room agrow"), av=el("div","av"), pp=PROFS[a.uid]||{}; setAv(av,pp.emoji||"🧑‍💼",pp.photo); const t=el("div"); t.style.flex="1";
+        t.append(el("small","agtop","وكالة"), el("b","agnm",a.name||"وكيل"));
+        const ic=el("div","agicons"); const w1=el("button","agico"); w1.innerHTML=AG_WA; w1.onclick=e=>{ e.stopPropagation(); if(a.wa) window.open(waLink(a.wa),"_blank"); };
+        const t1=el("button","agico"); t1.innerHTML=AG_TG; t1.onclick=e=>{ e.stopPropagation(); if(a.tg) window.open(tgLink(a.tg),"_blank"); }; ic.append(w1,t1);
+        t.append(ic, el("div","aggo2","عرض التفاصيل ›"));
+        r.append(frameWrap(av,AF(pp),2),t); r.onclick=()=>{ close(); agentInfo(a); }; L.append(r); });
     }).catch(()=>{ L.className="mut"; L.textContent="تعذر تحميل الوكلاء"; }); }); }
 function agentInfo(a){ sheet(a.name||"وكيل",(c,close)=>{
   const pp=PROFS[a.uid]||{}, av=el("div","av"); av.style.cssText="width:84px;height:84px;font-size:42px;margin:6px auto"; setAv(av,pp.emoji||"🧑‍💼",pp.photo); const w=el("div"); w.style.textAlign="center"; w.append(frameWrap(av,AF(pp),3)); c.append(w);
-  c.append(agRow("اسم الوكيل",a.name),agRow("رمز الإحالة",String(a.ref||a.pid||""),"",true),agRow("العنوان",a.address),agRow("معرّف تليگرام",a.tg,tgLink(a.tg),true),agRow("واتساب",a.wa,waLink(a.wa),true));
+  c.append(agRow("اسم الوكيل",a.name,"",false,true),agRow("رمز الإحالة",String(a.ref||a.pid||""),"",true,true),agRow("العنوان",a.address,"",false,true),agRow("معرّف تليگرام",a.tg,tgLink(a.tg),true,false,AG_TG),agRow("واتساب",a.wa,waLink(a.wa),true,false,AG_WA));
   c.append(el("p","mut","💡 دفع المبلغ للوكيل يتم خارج التطبيق مباشرةً بينك وبينه، والتطبيق ليس طرفاً فيه. داخل التطبيق فقط تُسدَّد نقاط الوكيل للإدارة."));
   const bk=el("button","btn alt full bkp","رجوع إلى قائمة الوكلاء"); bk.style.marginTop="12px"; bk.onclick=()=>{ close(); sheetAgents(); }; c.append(bk); }); }
 function sheetBuyAgency(){
@@ -3259,7 +3278,7 @@ function mySeat(){ const N=room?micN(room):99; return Object.keys(seats).find(k=
 
 /* ---------- VOICE: WebRTC mesh between seated players (STUN only) ----------
    signalling in Firestore: rooms/{id}/rtc/{lo_hi} (offer/answer) and rooms/{id}/rtcc (ICE candidates) */
-const RTC_CFG={iceTransportPolicy:"all",iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"turn:openrelay.metered.ca:80",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:80?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:5349",username:"openrelayproject",credential:"openrelayproject"}]};
+const RTC_CFG={iceTransportPolicy:"all",iceServers:[{urls:"stun:stun.relay.metered.ca:80"},{urls:"turn:global.relay.metered.ca:80",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"turn:global.relay.metered.ca:80?transport=tcp",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"turn:global.relay.metered.ca:443",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"turns:global.relay.metered.ca:443?transport=tcp",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"turn:openrelay.metered.ca:80",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:80?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:5349",username:"openrelayproject",credential:"openrelayproject"}]};
 let RT={want:false,rid:null,un:[],pcs:{},acc:{},docs:{},cand:{},audio:{},an:{},mic:null,micP:null,micDenied:false,t0:0,lvl:null,ac:null};
 const rtKey=o=>[uid,o].sort().join("_");
 const rtSid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
@@ -5731,11 +5750,14 @@ function gcSubscribe(){ if(GC.un) return; GC.cid="g"+gtid; GC.ids=null;
   try{ GC.un=db.collection("dms/"+GC.cid+"/msgs").orderBy("t","asc").limit(80).onSnapshot(sn=>{ const docs=sn.docs, fresh=[]; GC.msgs=docs.map(d=>d.data());
       if(GC.ids===null) GC.ids=new Set(docs.map(d=>d.id)); else docs.forEach(d=>{ if(!GC.ids.has(d.id)){ GC.ids.add(d.id); const m=d.data(); if(m.from!==uid) fresh.push(m); } });
       if(fresh.length) gcIncoming(fresh[fresh.length-1],fresh.length); if(GC.open) gcRenderList(); }); }catch(e){} }
+document.addEventListener("click",e=>{ const o=e.target.closest&&e.target.closest(".gfx,.cine"); if(o) o.remove(); },true);
+const startFxSweep=()=>{ new MutationObserver(ms=>{ ms.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType===1&&n.matches&&n.matches(".gfx,.cine")) setTimeout(()=>n.remove(),20000); })); }).observe(document.body,{childList:true}); };
+if(document.body) startFxSweep(); else document.addEventListener("DOMContentLoaded",startFxSweep);
 let VW={un:null,hb:null,n:0,rid:""};
 function vwStart(){ vwStop(); if(!gtid||!db||!uid) return; const id=gtid; VW.rid=id;
   const beat=()=>{ try{ const ph=(prof.photo&&String(prof.photo).length<400)?String(prof.photo):""; db.doc("tables/"+id+"/viewers/"+uid).set({t:Date.now(),name:prof.name||"",emoji:prof.emoji||"",photo:ph}).catch(()=>{}); }catch(e){} };
   beat(); VW.hb=setInterval(beat,30000);
-  try{ VW.un=db.collection("tables/"+id+"/viewers").onSnapshot(sn=>{ if(VW.rid!==id) return; const now=Date.now(), pl=new Set(gcPlayers(cur).map(q=>q.uid));
+  try{ VW.un=db.collection("tables/"+id+"/viewers").onSnapshot(sn=>{ if(VW.rid!==id) return; const now=Date.now(), pl=new Set([...gcPlayers(cur).map(q=>q.uid), ...(cur?[...Object.values(cur.players||{}),cur.X,cur.O].filter(Boolean).map(q=>q.uid):[])]);
       VW.list=sn.docs.filter(d=>{ const v=d.data(); return v&&v.t&&now-v.t<90000&&!pl.has(d.id); }).map(d=>({uid:d.id,...d.data()})); VW.n=VW.list.length; vwPaint(); }); }catch(e){} }
 function vwStop(){ try{ if(VW.un) VW.un(); }catch(e){} if(VW.hb) clearInterval(VW.hb); if(VW.rid&&uid){ try{ db.doc("tables/"+VW.rid+"/viewers/"+uid).delete().catch(()=>{}); }catch(e){} } VW={un:null,hb:null,n:0,rid:""}; }
 function vwPaint(){ document.querySelectorAll(".vwbtn").forEach(x=>{ x.textContent="👁 "+VW.n; }); }
@@ -5808,8 +5830,8 @@ function crRender(){
   c.strokeStyle="rgba(30,15,5,.75)"; c.lineWidth=2; c.strokeRect(m+22,m+22,S-2*m-44,S-2*m-44);
   // red rails between the pockets, with round ends
   c.lineCap="round"; c.strokeStyle="#b91c1c"; c.lineWidth=13;
-  [[.16*S,.058*S,.84*S,.058*S],[.16*S,.942*S,.84*S,.942*S],[.058*S,.16*S,.058*S,.84*S],[.942*S,.16*S,.942*S,.84*S]].forEach(r=>{ c.beginPath(); c.moveTo(r[0],r[1]); c.lineTo(r[2],r[3]); c.stroke(); });
-  c.fillStyle="#b91c1c"; [[.2,.058],[.8,.058],[.2,.942],[.8,.942],[.058,.2],[.058,.8],[.942,.2],[.942,.8]].forEach(q=>{ c.beginPath(); c.arc(q[0]*S,q[1]*S,.017*S,0,6.283); c.fill(); });
+  [[.16*S,.058*S,.84*S,.058*S],[.16*S,.88*S,.84*S,.88*S],[.058*S,.16*S,.058*S,.84*S],[.942*S,.16*S,.942*S,.84*S]].forEach(r=>{ c.beginPath(); c.moveTo(r[0],r[1]); c.lineTo(r[2],r[3]); c.stroke(); });
+  c.fillStyle="#b91c1c"; [[.2,.058],[.8,.058],[.2,.88],[.8,.88],[.058,.2],[.058,.8],[.942,.2],[.942,.8]].forEach(q=>{ c.beginPath(); c.arc(q[0]*S,q[1]*S,.017*S,0,6.283); c.fill(); });
   // diagonal guides and circular arrows at the corners
   c.strokeStyle="rgba(40,22,8,.8)"; c.lineWidth=2.5;
   [[.2,.2,1,1],[.8,.2,-1,1],[.2,.8,1,-1],[.8,.8,-1,-1]].forEach(q=>{ const px=q[0]*S, py=q[1]*S, dx=q[2], dy=q[3];
@@ -5866,7 +5888,7 @@ function drawCarrom(b){
     const nb=el("div","crsc",String((st.score||{})[k]||0)); nb.style.color=col; d.append(el("div",null,ic),ptag(pl,26),el("small","crl","النقاط"),nb,el("small",null,"القطع المتبقية: "+cnt(k==="A"?"w":"b"))); bar.append(d); });
   const wrap=el("div","crwrap"); wrap.append(cr.cv);
   const tagFor=(k,pos)=>{ const pl=st.players[k]; if(!pl) return null; const t=el("div","crtag "+pos); t.style.borderColor=(k==="A"?"#fbbf24":"#22d3ee"); const pp=PROFS[pl.uid]||{}; const av=el("span","pav2"); av.style.width="64px"; av.style.height="64px"; av.style.fontSize="34px"; setAv(av,pl.emoji||pp.emoji||"👤",pp.photo); t.append(av, el("b","crtn",pl.name||""), el("span","crts",String((st.score||{})[k]||0))); return t; };
-  const tb=tagFor(cr.flip?"B":"A","bot"), tt=tagFor(cr.flip?"A":"B","top"); if(tt) wrap.prepend(tt); if(tb) wrap.append(tb);
+  const tb=tagFor(cr.flip?"B":"A","bot"), tt=tagFor(cr.flip?"A":"B","top"); if(tt) wrap.prepend(tt);
   b.append(bar,wrap);
   const mine=st.status==="playing"&&st.players[st.turn]&&st.players[st.turn].uid===uid;
   if(mine&&!cr.sim&&!st.anim){ const sl=el("input","crsl"); sl.type="range"; sl.min="0.2"; sl.max="0.8"; sl.step="0.005"; sl.value=String(cr.sx); sl.oninput=()=>{ cr.sx=Number(sl.value); crRender(); }; b.append(sl); }
