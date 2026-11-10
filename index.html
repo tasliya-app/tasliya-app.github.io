@@ -2767,7 +2767,7 @@ const sendDay=()=>{ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()
 async function sendUsedToday(){ try{ const s=await db.doc("data/users/"+uid+"/limits/send").get(); const d=s.exists?s.data():{}; return d.day===sendDay()?(+d.amt||0):0; }catch(e){ return 0; } }
 async function sendAddToday(n){ try{ const used=await sendUsedToday(); await db.doc("data/users/"+uid+"/limits/send").set({day:sendDay(),amt:used+n}); }catch(e){} }
 async function userSend(t,n){ if(n>coins){ toast("رصيدك لا يكفي"); return false; }
-  const limited=!OWNER&&t.role!=="agent";
+  const limited=!OWNER&&!window.IS_AGENT&&t.role!=="agent";
   if(limited){ const used=await sendUsedToday(); const left=DAILY_SEND-used; if(n>left){ toast(left>0?"المتبقي من حد اليوم "+fmtc(left)+" نقطة فقط":"وصلت إلى حد التحويل اليومي "+fmtc(DAILY_SEND)+" نقطة"); return false; } }
   await setCoins(coins-n);
   try{ await db.collection("credits").add({to:t.id,amt:n,kind:"recv",from:uid,t:Date.now()}); }catch(e){ await setCoins(coins+n); throw e; }
