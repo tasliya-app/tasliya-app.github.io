@@ -464,6 +464,11 @@ button,a,.fb,.rb,.tile,.htile,.seat2,.room,.card,.nav button{touch-action:manipu
 .chbar .chname{font-size:16px!important;font-weight:900!important;color:#831843!important;text-shadow:0 1px 0 #fff,0 0 6px #fff!important}
 .chbar .cht,.chbar .chamt{color:#831843!important;text-shadow:0 1px 0 #fff!important}
 .chbar .chvs{color:#be185d!important}
+/* gift button: remove the gold square frame, keep the icon and amount */
+.gbtn{border:0!important;box-shadow:none!important;background:none!important}
+/* room chat: long lines stay right of the side icons and wrap inside the bubble */
+.rs-chat{padding-left:76px!important;padding-right:10px!important;box-sizing:border-box;max-width:100%}
+.rs-chat .msg{overflow-wrap:anywhere;word-break:break-word;max-width:100%}
 .crwrap .crtag .crtn{color:#fbbf24!important;font-size:20px!important;font-weight:900;max-width:150px!important;text-shadow:0 2px 3px #000}
 .lpl,.dlab{border:none!important;background:none!important;box-shadow:none!important}
 .lpl.on,.dlab.on{box-shadow:none!important;background:none!important;transform:none!important}
@@ -2942,7 +2947,12 @@ function adminFindUser(){ sheet("👤 تعديل مستخدم",(c,close)=>{ cons
     const sn=await db.collection("profiles").where("pid","==",n).limit(1).get(); if(sn.empty) return toast("لا يوجد مستخدم بهذا ID");
     const d=sn.docs[0]; PROFS[d.id]=PROFS[d.id]||d.data(); close(); adminUserEdit(d.id); }; c.append(b); }); }
 function adminUserEdit(u){ const P0=PROFS[u]||{}; sheet("👤 "+(P0.name||"مستخدم"),(c,close)=>{ c.append(el("div","mut","ID: "+(P0.pid||""))); const r1=el("button","btn full","✏️ تغيير الاسم"), r2=el("button","btn full alt","🆔 تغيير الـ ID"); r2.style.marginTop="8px";
-  r1.onclick=()=>{ close(); ownerRename(u); }; r2.onclick=()=>{ close(); ownerSetPid(u); }; c.append(r1,r2); }); }
+  r1.onclick=()=>{ close(); ownerRename(u); }; r2.onclick=()=>{ close(); ownerSetPid(u); }; c.append(r1,r2);
+  if(OWNER){ const r3=el("button","btn full alt","🖼️ تغيير الصورة"); r3.style.marginTop="8px";
+    r3.onclick=()=>{ const file=document.createElement("input"); file.type="file"; file.accept="image/*";
+      file.onchange=async()=>{ const f=file.files[0]; if(!f) return; try{ const data=await photoCrop(f); await db.doc("profiles/"+u).update({photo:data}); if(PROFS[u]) PROFS[u].photo=data; toast("تم تغيير الصورة"); close(); }catch(e){ if(e&&e.message==="cancel") return; toast("تعذر تغيير الصورة"); } };
+      file.click(); };
+    c.append(r3); } }); }
 function staffMgr(){ sheet("🛡️ الأدمن",async(c,close)=>{ const L=el("div"); c.append(el("p","mut","الأدمن يقرأ البلاغات ويعدّل الأسماء والـ IDs فقط. الإضافة والإزالة بيدك."), L);
   const load=async()=>{ try{ const s=await db.doc("app/staff").get(); return s.exists?(s.data().uids||[]):[]; }catch(e){ return []; } };
   const draw=async()=>{ L.innerHTML=""; const ids=await load(); if(!ids.length) L.append(el("p","mut","لا يوجد أدمن بعد."));
@@ -2981,8 +2991,18 @@ function userDMs(u){ const P=PROFS[u]||{}; sheet("💬 رسائل "+(P.name||"")
       L.append(r); }); }).catch(()=>{ L.textContent="تعذر التحميل"; }); }); }
 function roomsMgr(){ sheet("🏠 الغرف",(c,close)=>{ const L=el("div"); L.style.cssText="max-height:60vh;overflow:auto";
   rooms.forEach(r=>{ const row=el("div","room"), i=el("div"); i.style.flex="1"; i.append(el("b",null,r.name),el("div","mut","#"+(r.num||"")+" • "+((PROFS[r.owner]||{}).name||""))); const go=el("button","btn","دخول"), del=el("button","btn alt","🗑️");
-    go.onclick=()=>{ close(); openRoom(r); }; del.onclick=async()=>{ if(!confirm("حذف الغرفة نهائياً؟")) return; try{ await db.doc("rooms/"+r.id).delete(); toast("حُذفت الغرفة"); close(); }catch(e){ toast("تعذر الحذف"); } }; row.append(i,go,del); L.append(row); });
+    go.onclick=()=>{ close(); openRoom(r); }; del.onclick=async()=>{ if(!confirm("حذف الغرفة نهائياً؟")) return; try{ await db.doc("rooms/"+r.id).delete(); toast("حُذفت الغرفة"); close(); }catch(e){ toast("تعذر الحذف"); } };
+    const ed=el("button","btn alt","✏️"); ed.onclick=()=>{ close(); ownerRoomEdit(r); };
+    if(OWNER) row.append(i,go,ed,del); else row.append(i,go,del); L.append(row); });
   if(!rooms.length) L.append(el("p","mut","لا توجد غرف")); c.append(L); }); }
+function ownerRoomEdit(r){ sheet("✏️ "+(r.name||"غرفة"),(c,close)=>{
+  const n=el("input"); n.value=r.name||""; n.maxLength=30;
+  const e=el("input"); e.value=r.emoji||""; e.maxLength=4; e.placeholder="الإيموجي";
+  const p=el("input"); p.value=r.pin||""; p.maxLength=4; p.inputMode="numeric"; p.placeholder="قفل 4 أرقام (فارغ = بدون قفل)";
+  const ok=el("button","btn full","حفظ");
+  ok.onclick=async()=>{ const nm=n.value.trim(); const pin=p.value.trim(); if(!nm) return toast("اكتب اسمًا للغرفة"); if(pin&&!/^\d{4}$/.test(pin)) return toast("اكتب 4 أرقام أو اتركه فارغًا");
+    try{ await db.doc("rooms/"+r.id).update({name:nm,pin:pin,emoji:e.value.trim()||r.emoji||""}); if(room&&room.id===r.id){ room.name=nm; room.pin=pin; } toast("تم الحفظ"); close(); }catch(err){ toast("تعذر الحفظ"); } };
+  c.append(el("div","mut","اسم الغرفة"),n,el("div","mut","الإيموجي"),e,el("div","mut","القفل"),p,ok); }); }
 function renderDM(a){
   if(!unsubInbox) unsubInbox=db.collection("inbox/"+uid+"/threads").orderBy("t","desc").limit(30).onSnapshot(s=>{inbox=s.docs.map(d=>d.data()); if(tab==="dm"&&!dm&&!room) render();});
   if(!dmView){
@@ -3013,7 +3033,7 @@ function renderDM(a){
 const cidOf=o=>[uid,o].sort().join("_");
 function openChat(o){
   dm=o; dmMsgs=[];
-  unsubChat=db.collection("dms/"+cidOf(o.uid)+"/msgs").orderBy("t","asc").limit(100).onSnapshot(s=>{dmMsgs=s.docs.map(d=>d.data()); drawDM();});
+  unsubChat=db.collection("dms/"+cidOf(o.uid)+"/msgs").orderBy("t","asc").limit(100).onSnapshot(s=>{ const cutD=((prof.clr||{})[o.uid])||0; dmMsgs=s.docs.map(d=>d.data()).filter(x=>(x.t||0)>cutD); drawDM(); });
   render();
 }
 function renderChat(a){
@@ -3297,7 +3317,7 @@ function mySeat(){ const N=room?micN(room):99; return Object.keys(seats).find(k=
 
 /* ---------- VOICE: WebRTC mesh between seated players (STUN only) ----------
    signalling in Firestore: rooms/{id}/rtc/{lo_hi} (offer/answer) and rooms/{id}/rtcc (ICE candidates) */
-const RTC_CFG={iceTransportPolicy:"all",iceServers:[{urls:"stun:stun.relay.metered.ca:80"},{urls:"turn:global.relay.metered.ca:80",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"turn:global.relay.metered.ca:80?transport=tcp",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"turn:global.relay.metered.ca:443",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"turns:global.relay.metered.ca:443?transport=tcp",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"turn:openrelay.metered.ca:80",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:80?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:5349",username:"openrelayproject",credential:"openrelayproject"}]};
+const RTC_CFG={iceCandidatePoolSize:4,bundlePolicy:"max-bundle",iceTransportPolicy:"all",iceServers:[{urls:"stun:stun.relay.metered.ca:80"},{urls:"turn:global.relay.metered.ca:80",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"turn:global.relay.metered.ca:80?transport=tcp",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"turn:global.relay.metered.ca:443",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"turns:global.relay.metered.ca:443?transport=tcp",username:"64fd5f7caa338b5f7ef1ecac",credential:"n64PhzzenL4qkcJc"},{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"turn:openrelay.metered.ca:80",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:80?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478",username:"openrelayproject",credential:"openrelayproject"},{urls:"turn:openrelay.metered.ca:3478?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:443?transport=tcp",username:"openrelayproject",credential:"openrelayproject"},{urls:"turns:openrelay.metered.ca:5349",username:"openrelayproject",credential:"openrelayproject"}]};
 let RT={want:false,rid:null,un:[],pcs:{},acc:{},docs:{},cand:{},audio:{},an:{},mic:null,micP:null,micDenied:false,t0:0,lvl:null,ac:null};
 const rtKey=o=>[uid,o].sort().join("_");
 const rtSid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
