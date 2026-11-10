@@ -3270,7 +3270,7 @@ function openRoom(r){
   room=r; presJT=Date.now(); msgs=[]; seats={}; micMuted=false; joinT=Date.now()-1500; watchTop();
   unsubMsgs=db.collection("rooms/"+r.id+"/msgs").where("t",">=",joinT).orderBy("t","asc").limit(300).onSnapshot(s=>{msgs=s.docs.map(d=>d.data()).filter(m=>m.t>=joinT); drawChat(); try{ s.docChanges().forEach(ch=>{ if(ch.type==="added"){ const m=ch.doc.data(); if(m.type==="gift"&&m.t>=joinT&&Date.now()-m.t<10000) giftPop(m); } }); }catch(_){} });
   unsubSeats=db.collection("rooms/"+r.id+"/seats").onSnapshot(s=>{seats={}; s.docs.forEach(d=>seats[d.id]=d.data()); drawSeats(); rtSync();}); rtStart(r.id);
-  unsubRoomDoc=db.doc("rooms/"+r.id).onSnapshot(sn=>{ if(!room||room.id!==r.id) return; if(!sn.exists){ toast("تم حذف الغرفة"); closeRoom(); return; } const v=document.getElementById("mi"), val=v?v.value:""; room={...room,...sn.data(),id:r.id}; render(); const n=document.getElementById("mi"); if(n) n.value=val; if(window.__modDraw) window.__modDraw(); });
+  unsubRoomDoc=db.doc("rooms/"+r.id).onSnapshot(sn=>{ if(!room||room.id!==r.id) return; if(!sn.exists){ toast("تم حذف الغرفة"); closeRoom(); return; } const v=document.getElementById("mi"), val=v?v.value:"", hadFocus=!!v&&document.activeElement===v; const prevJ=JSON.stringify(room); room={...room,...sn.data(),id:r.id}; if(JSON.stringify(room)!==prevJ) render(); const n=document.getElementById("mi"); if(n){ n.value=val; if(hadFocus) n.focus(); } if(window.__modDraw) window.__modDraw(); });
   render(); finalizeTops(r); startPres(); presOn(); startNotif(); rlWatch(); wheelWatch(); setTimeout(()=>{ try{ if(!adoptAssets.f&&!(navigator.connection&&navigator.connection.saveData)) loadAsset("fx.js",()=>(adoptAssets.f?{x:1}:{})); }catch(_){} },6000);
   if(unsubKick){ unsubKick(); } unsubKick=db.doc("rooms/"+r.id+"/kicks/"+uid).onSnapshot(sn=>{ if(sn.exists&&sn.data().t>=joinT-1000&&room&&room.id===r.id){ toast("تم طردك من الغرفة"); closeRoom(); } });
 }
@@ -3776,8 +3776,8 @@ function renderRoom(a){
   const inp=el("input"); inp.placeholder="اكتب رسالتك…"; inp.maxLength=200; inp.id="mi"; if(room.chatOff&&!isMod()){inp.disabled=true; inp.placeholder="الدردشة مغلقة من الإدارة";}
   const emo=el("button","rb"); emo.innerHTML=whBtnIcon(); emo.id="rlb"; emo.style.position="relative"; const rlc=el("span","pcb","0"); rlc.style.display="none"; emo.append(rlc); emo.onclick=rlPanel;
   const send=el("button","rb"); send.innerHTML=icH("send");
-  const go=async()=>{const x=inp.value.trim(); if(!x) return; if(room.chatOff&&!isMod()) return toast("الدردشة مغلقة"); inp.value=""; const rp=replyTo; replyTo=null; paintReply(); await db.collection("rooms/"+room.id+"/msgs").add(Object.assign({type:"text",uid,name:(prof.badge||"")+prof.name,text:x,t:Date.now()},rp?{reply:{n:rp.n,t:rp.t}}:{}));};
-  send.onclick=go; inp.onkeydown=e=>{if(e.key==="Enter")go()};
+  const go=async()=>{const x=inp.value.trim(); if(!x) return; if(room.chatOff&&!isMod()) return toast("الدردشة مغلقة"); inp.value=""; inp.focus(); const rp=replyTo; replyTo=null; paintReply(); await db.collection("rooms/"+room.id+"/msgs").add(Object.assign({type:"text",uid,name:(prof.badge||"")+prof.name,text:x,t:Date.now()},rp?{reply:{n:rp.n,t:rp.t}}:{}));};
+  send.onclick=go; send.onmousedown=e=>e.preventDefault(); inp.onkeydown=e=>{if(e.key==="Enter")go()};
   bar.append(inp,send,emo);
   const rpb=el("div","rpbar"); rpb.id="rpbar"; s.append(t,sg,mid,chat,fl,rpb,bar); a.append(s); drawSeats(); drawChat(true); applyMusic(); paintReply();
 }
