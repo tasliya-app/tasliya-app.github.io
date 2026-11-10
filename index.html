@@ -2396,7 +2396,7 @@ function drawList(){
   const mine=rooms.filter(r=>r.owner===uid);
   L.append(sec("⭐","غرفتي",mine.length));
   if(mine.length){const g=el("div","grid"); mine.forEach(r=>g.append(rcard(r,true))); L.append(g);} else L.append(el("p","mut","لم تنشئ أي غرفة بعد."));
-  const all=rooms.filter(ok);
+  const all=rooms.filter(ok).sort((a,b)=>presIn(b.id).length-presIn(a.id).length);
   L.append(sec(cat==="fav"?"❤️":"🌐",cat==="fav"?"الغرف المفضلة":"جميع الغرف",all.length));
   if(cat==="fav"&&!all.length) L.append(el("p","mut","لا توجد غرف مفضلة بعد — اضغط القلب ♡ أعلى أي غرفة لإضافتها."));
   else if(all.length){const g=el("div","grid"); all.forEach(r=>g.append(rcard(r,false))); L.append(g);} else L.append(el("p","mut","لا توجد غرف مطابقة."));
@@ -3264,7 +3264,8 @@ function startPres(){ if(unsubPres||!db) return;
       if(!presFirst&&room&&q.room===room.id&&q.uid!==uid&&(!z||z.room!==q.room||z.jt!==q.jt)) entryBanner(q);
       if(!z||z.t!==q.t||z.room!==q.room||z.jt!==q.jt) presSeen[q.uid]={t:q.t,room:q.room,jt:q.jt,seenAt:now}; });
     Object.keys(presSeen).forEach(k=>{ if(!presDocs.some(d=>d.uid===k)) delete presSeen[k]; });
-    presFirst=false; presPaint(); if(room&&RT.rid) rtSync(); });
+    presFirst=false; presPaint(); if(room&&RT.rid) rtSync();
+    if(!room&&document.getElementById("rlist")){ const ks=rooms.map(r=>r.id+":"+presIn(r.id).length).join("|"); if(ks!==window.__rlKey){ window.__rlKey=ks; try{ drawList(); }catch(e){} } } });
   setInterval(presPaint,15000); }
 function presPaint(){ document.querySelectorAll(".rcn").forEach(x=>{ const n=presIn(x.dataset.r).length; x.textContent=String(n); x.classList.toggle("z",!n); });
   const n=document.getElementById("pcnt"); if(n&&room) n.textContent=String(presIn(room.id).length);
