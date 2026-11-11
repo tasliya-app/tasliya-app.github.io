@@ -1829,6 +1829,7 @@ input[placeholder^="اكتب رسال"]{font-weight:800!important;font-size:16px
 .msg.imgmsg{padding:4px!important;background:transparent!important;box-shadow:none!important}
 .dmimg{display:block;max-width:200px;max-height:240px;width:auto;height:auto;border-radius:14px;cursor:pointer;background:#1e1b2e}
 .dmpic{font-size:20px;min-width:38px}
+.gimg2.cust,.gct.soft .gimg2.cust,.gpop .gimg2.cust,.gcard2 .gimg2.cust,.gcvip .gct.soft .gimg2.cust{object-fit:contain!important;object-position:50% 50%!important;transform:none!important;-webkit-mask-image:none!important;mask-image:none!important;border-radius:0!important;filter:drop-shadow(0 3px 4px #0008)!important;image-rendering:auto!important}
 </style>
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap">
 </head>
@@ -3905,7 +3906,7 @@ const fsOf=g=>(g&&GIFT_FS[g[6]])||52;
 function giftImg(gd,sz,fb){
   const w=el("span","gimgw"); w.style.width=w.style.height=sz+"px"; w.style.setProperty("--s",sz+"px");
   const ga=gd&&GA[gd[6]], mk=gd&&gd[5], th=(gd&&CUSTOM_ICON[gd[6]])||(gd&&GIFT_TH[gd[6]])||((ga&&ga.thumb)?ga.thumb:((gd&&(GIFT_ART[gd[6]]||GIFT_IMG[gd[6]]))||(mk&&THUMBS[mk])));
-  const put=u=>{ w.textContent=""; const im=el("img","gimg2"+((gd&&(u===GIFT_ART[gd[6]]||u===GIFT_TH[gd[6]]))?" art":"")); im.src=u; im.alt=""; im.decoding="async"; im.style.setProperty("--fs",fsOf(gd)+"%"); w.append(im); };
+  const put=u=>{ w.textContent=""; const im=el("img","gimg2"+((gd&&(u===GIFT_ART[gd[6]]||u===GIFT_TH[gd[6]]))?" art":"")+((gd&&CUSTOM_ICON[gd[6]]&&u===CUSTOM_ICON[gd[6]])?" cust":"")); im.src=u; im.alt=""; im.decoding="async"; im.style.setProperty("--fs",fsOf(gd)+"%"); w.append(im); };
   if(th) put(th);
   else { w.append(el("span","gem",gd?gd[0]:(fb||"🎁"))); if(mk) makeThumb(mk).then(()=>{ if(THUMBS[mk]) put(THUMBS[mk]); }); }
   return w; }
