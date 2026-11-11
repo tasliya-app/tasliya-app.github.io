@@ -3022,6 +3022,11 @@ async function userAdmin(u){ const P=PROFS[u]||{}; let bal=0, banned=false;
     const row=(t,f,alt)=>{ const b=el("button","btn full"+(alt?" alt":""),t); b.style.marginTop="8px"; b.onclick=f; c.append(b); };
     row(banned?"✅ رفع الحظر":"🚫 حظر من التطبيق",async()=>{ try{ if(banned) await db.doc("bans/"+u).delete(); else await db.doc("bans/"+u).set({t:Date.now(),by:uid}); toast(banned?"رُفع الحظر":"تم الحظر"); close(); }catch(e){ toast("تعذر التنفيذ"); } },!banned);
     if(OWNER){ row("✏️ تغيير الاسم",()=>{ close(); ownerRename(u); },true); row("🆔 تغيير الـ ID",()=>{ close(); ownerSetPid(u); },true); }
+    if(OWNER){ row("🖼️ تغيير الصورة",()=>{ const file=document.createElement("input"); file.type="file"; file.accept="image/*";
+      file.onchange=async()=>{ const f=file.files[0]; if(!f) return; try{ const data=await photoCrop(f); await db.doc("profiles/"+u).update({photo:data}); if(PROFS[u]) PROFS[u].photo=data; toast("تم تغيير الصورة"); close(); }catch(e){ if(e&&e.message==="cancel") return; toast("تعذر تغيير الصورة"); } };
+      file.click(); },true); }
+    if(OWNER&&u!==uid){ const on=(window.SUPER_IDS||[]).includes(u); row("🛡️ "+(on?"سحب صلاحية السوبر أدمن":"منح صلاحية السوبر أدمن"),async()=>{ if(!confirm(on?"سحب صلاحية السوبر أدمن من هذا المستخدم؟":"منح هذا المستخدم كامل صلاحيات المالك؟")) return;
+      try{ const sn=await db.doc("app/superadmins").get(); const cur=(sn.exists&&sn.data().uids)||[]; const nx=on?cur.filter(x=>x!==u):[...new Set([...cur,u])]; await db.doc("app/superadmins").set({uids:nx}); toast(on?"تم سحب الصلاحية":"تمت إضافة السوبر أدمن ✓"); close(); }catch(e){ toast("تعذر الحفظ"); } },true); }
     row("💬 رسائله الخاصة",()=>{ close(); userDMs(u); },true);
     const inp=el("input"); inp.type="number"; inp.placeholder="مبلغ الخصم"; inp.style.marginTop="8px"; c.append(inp);
     row("💰 خصم من رصيده إلى حسابي",async()=>{ const n=Math.floor(+inp.value||0); if(n<=0||n>bal) return toast("المبلغ غير صحيح"); try{ await db.collection("credits").add({to:u,amt:-n,kind:"adjust",t:Date.now()}); await setCoins(coins+n); logTx("deduct",n,u,0); toast("تم خصم "+fmtc(n)+" وأُضيفت إلى حسابك ✓"); close(); }catch(e){ toast("تعذر الخصم"); } },true); }); }
