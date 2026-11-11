@@ -1833,6 +1833,7 @@ input[placeholder^="اكتب رسال"]{font-weight:800!important;font-size:16px
 .gcm .cmc{flex:1 1 auto;min-width:200px;max-width:100%}
 .gcb.g2 .gcl{min-width:112px;overflow-wrap:anywhere}
 .gcb.g2 .gct{flex:none}
+.board .bt{font-size:.9em!important}.board .bn{font-size:.9em!important;padding:6px 10px!important}
 </style>
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap">
 </head>
@@ -4084,12 +4085,12 @@ function openBoard(){ loadLastChamp();
     c.innerHTML=""; const top=calcTop(topRows), h=el("div","bh"), x=el("button","rb","✕"); x.onclick=shut;
     h.append(starTop(42),el("div","bt","Top الدعم — كل الغرف"),el("span","sp"),x);
     const bn=el("div","bn"), bd=el("div"); bd.append(el("b",null,"ينتهي بعد "+leftText(weekEnd()-Date.now())),el("div","mut","يُجمع دعم كل شخص طوال الأسبوع في جميع الغرف. يبدأ السبت 12:01 ص وينتهي الجمعة 12 ليلاً، ثم يبدأ Top جديد")); bn.append(el("div",null,"⏳"),bd);
-    c.append(h); if(LASTCH) c.append(lchampCard(LASTCH)); c.append(el("div",null,"")); c.lastChild.style.height="10px";
+    c.append(h); c.append(el("div",null,"")); c.lastChild.style.height="10px";
     for(let i=0;i<10;i++){ const u=top[i], r=el("div","trow "+(u?(i<3?"t"+(i+1):"tx"):"tempty"));
       if(!u){ r.append(el("div","trk",String(i+1)),el("div","tnm","— فارغ —")); c.append(r); continue; }
       const up=PROFS[u.uid]||{}, av=el("div","av"); av.style.cssText="width:44px;height:44px;font-size:22px"; setAv(av,up.emoji||u.emoji||"👤",up.photo);
       const nm=el("div","tnm"); nm.append(up.name||u.name); if(AV(up)&&VCOL[AV(up)]) nm.append(" ",vbadge(AV(up),13));
-      const am=el("div","tam"); am.append(fmt(u.tot)+" "); const wbw=new Set(up.topWeeks||[]).size; if(i<3&&wbw>0) am.append(medalSvg(["gold","bronze","silver"][i],32,String(wbw))); r.append(el("div","trk",String(i+1)),frameWrap(av,AF(up),3),nm,am); c.append(r); }
+      const am=el("div","tam"); am.append(fmt(u.tot)+" "); const wbw=new Set(up.topWeeks||[]).size; const md=(i<3&&wbw>0)?medalSvg(["gold","bronze","silver"][i],32,String(wbw)):null; if(md&&i%2===1) r.append(md); else if(md) am.append(md); r.append(el("div","trk",String(i+1)),frameWrap(av,AF(up),3),nm,am); c.append(r); }
   c.append(bn);
   };
   BOARD=draw; draw(); const iv=setInterval(()=>{ if(!document.body.contains(o)){ clearInterval(iv); if(BOARD===draw) BOARD=null; } else draw(); },30000);
