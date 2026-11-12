@@ -4258,19 +4258,18 @@ function hbPaint(){
   if(hb.st==="on"&&isMod()&&Date.now()-(hb.t||0)>HB_TIME&&window.__hbTo!==hb.t){ window.__hbTo=hb.t; roomUpdate({hb:{...hb,st:"end",win:"L",lastOk:false,lastT:Date.now()}},"المحيبس: انتهى الوقت").catch(()=>{}); }
 }
 async function hbJoin(){
-  const ref=db.doc("rooms/"+room.id);
+  const ref=db.doc("rooms/"+room.id), nm=(prof&&prof.name)||"لاعب";
   if(coins<HB_COST) return toast("رصيدك لا يكفي للدخول");
-  let ok=false, msg="";
-  try{ await db.runTransaction(async tx=>{
-      const sn=await tx.get(ref); const cur=((sn.data()||{}).hb)||{};
-      const h=(cur.st&&cur.st!=="end")?cur:{};
-      if(h.st==="on"){ msg="اللعبة جارية"; return; }
-      if(h.rA){ msg="هناك لاعب ينتظر الدور بالفعل"; return; }
-      tx.update(ref,{hb:{...h, st:"wait", rA:uid, rAn:prof.name, rB:null, rBn:null, sc:{A:0,B:0}, pay:{[uid]:true}}});
-      ok=true; }); }
-  catch(e){ console.error("hbJoin",e); return toast("تعذر الانضمام: "+(((e&&e.code)||(e&&e.message)||String(e)||"").toString().slice(0,160))); }
-  if(!ok) return toast(msg||"تعذر الانضمام");
-  if(!(await spend(HB_COST,"hb"))){ try{ await ref.update({"hb.rA":null,"hb.rAn":null,"hb.pay":{}}); }catch(e){} return; }
+  let cur;
+  try{ cur=((await ref.get()).data()||{}).hb||{}; }catch(e){ return toast("تعذر الاتصال بالغرفة"); }
+  const h=(cur.st&&cur.st!=="end")?cur:{};
+  if(h.st==="on") return toast("اللعبة جارية");
+  if(h.rA) return toast("هناك لاعب ينتظر الدور بالفعل");
+  try{
+    if(h.st==="wait") await ref.update({"hb.st":"wait","hb.rA":uid,"hb.rAn":nm,"hb.rB":null,"hb.rBn":null,"hb.sc":{A:0,B:0},["hb.pay."+uid]:true});
+    else await ref.update({hb:{st:"wait",rA:uid,rAn:nm,rB:null,rBn:null,sc:{A:0,B:0},pay:{[uid]:true}}});
+  }catch(e){ return toast("تعذر الانضمام: "+String((e&&e.code)||(e&&e.message)||e).slice(0,160)); }
+  if(!(await spend(HB_COST,"hb"))){ try{ await ref.update({"hb.rA":null,"hb.rAn":null,["hb.pay."+uid]:null}); }catch(e){} return; }
   try{ if(room.owner){ await credit(room.owner,4000,"hb"); await credit("__app__",-4000,"hb"); } }catch(e){}
   logAct("انضم لاعب للعب المحيبس");
 }
