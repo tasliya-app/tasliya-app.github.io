@@ -4192,17 +4192,32 @@ async function hbStart(){
   const ring=1+Math.floor(Math.random()*10);
   await roomUpdate({hb:{...cur,st:"on",rnd:1,ring,rev:[],sc:{A:0,B:0},win:null,lastH:null,lastOk:null,lastT:null,t:Date.now()}},"بدأت لعبة المحيبس");
 }
-async function hbPick(h){
+async function hbDecide(h,choice){
   const cur=room.hb; if(!cur||cur.st!=="on"||cur.rA!==uid) return;
+  const isRing=h===cur.ring;
+  const correct= choice==="take" ? isRing : !isRing;
   try{
-    if(h===cur.ring){ hbSound(true,HB_CLAP_SND); await roomUpdate({hb:{...cur,st:"end",win:"A",lastH:h,lastOk:true,lastT:Date.now(),msg:"أنت بطل",msgT:Date.now()}},"المحيبس: وجده اللاعب"); }
-    else { hbSound(true,HB_OPEN_SND); await roomUpdate({hb:{...cur,rev:[...(cur.rev||[]),h],lastH:h,lastOk:null,lastT:Date.now()}}); }
+    if(choice==="take"&&correct){ hbSound(true,HB_CLAP_SND); await roomUpdate({hb:{...cur,st:"end",win:"A",lastH:h,lastOk:true,lastT:Date.now(),msg:"أنت بطل",msgT:Date.now()}},"المحيبس: وجده اللاعب"); }
+    else if(choice==="empty"&&correct){ hbSound(true,HB_OPEN_SND); await roomUpdate({hb:{...cur,rev:[...(cur.rev||[]),h],lastH:h,lastOk:true,lastT:Date.now()}}); }
+    else { hbSound(false); await roomUpdate({hb:{...cur,lastH:h,lastOk:false,lastT:Date.now()}}); }
   }catch(e){ toast("تعذر تنفيذ الاختيار"); }
+}
+function hbHelp(h){
+  const hb=room.hb; if(!hb||hb.st!=="on") return;
+  window.__hbHelp=true; toast(h===hb.ring?"💍 المحبس في هذه اليد":"هذه اليد فارغة"); setTimeout(()=>{ window.__hbHelp=false; },4000);
 }
 function hbPop(h,anchor){
   const hb=room.hb; if(!hb||hb.st!=="on") return;
-  if(hb.rA===uid){ if((hb.rev||[]).includes(h)) return toast("هذه اليد فارغة"); return hbPick(h); }
-  if(OWNER){ window.__hbHelp=true; toast(h===hb.ring?"💍 المحبس في هذه اليد":"هذه اليد فارغة"); setTimeout(()=>{ window.__hbHelp=false; },4000); }
+  if(hb.rA===uid){ if((hb.rev||[]).includes(h)) return toast("هذه اليد فارغة"); }
+  else if(!OWNER) return;
+  sheet("✋ اليد رقم "+h,(c,close)=>{
+    if(hb.rA===uid){
+      const e=el("button","btn full","🖐️ فارغة"); e.onclick=()=>{ close(); hbDecide(h,"empty"); };
+      const t=el("button","btn full","💍 أخذ المحبس"); t.style.marginTop="8px"; t.onclick=()=>{ close(); hbDecide(h,"take"); };
+      c.append(e,t);
+    }
+    if(OWNER){ const hp=el("button","btn alt full","🛟 مساعدة (للمالك فقط)"); hp.style.marginTop="8px"; hp.onclick=()=>{ close(); hbHelp(h); }; c.append(hp); }
+  });
 }
 function hbPayout(hb){
   if(isMod()&&!hb.paid&&!window.__hbPaid){ window.__hbPaid=true;
@@ -4236,12 +4251,19 @@ function hbPaint(){
   const fill=(box,t,nm)=>{ box.textContent=""; const rp=PROFS[t==="A"?hb.rA:hb.rB]||{}; const av=el("div","av"); av.style.cssText="width:34px;height:34px;font-size:18px;flex:none"; setAv(av,rp.emoji||"👤",rp.photo);
     box.append(av, el("span","hbn",(nm?"فريق "+nm:"بانتظار الممثل")), el("b","hbs",String((hb.sc&&hb.sc[t])||0)));
     if(secs!==null&&srch===t){ const gt=el("span","hbgr","فريق "+(nm||"")+" يتقدم"); gt.style.cssText="display:block;width:100%;color:#22c55e;font-weight:900;font-size:14px;text-shadow:0 0 8px #052e16,0 1px 0 #052e16"; box.append(gt); box.append(el("span","hbt","⏳ "+secs+"ث")); } };
-  { const sN=hb.rAn; bot.textContent=""; const sg=el("span","hbsn",(sN?sN:"بانتظار الممثل")+" يتقدم"); sg.style.cssText="color:#22c55e;font-weight:900;font-size:18px;text-shadow:0 0 8px #052e16,0 1px 0 #052e16"; bot.append(sg); if(secs!==null) bot.append(el("span","hbt","⏳ "+secs+"ث")); }
-  if(!bar){ bar=el("div","hbbar"); bar.id="hbbar"; g.parentNode.insertBefore(bar,g); }
-  const tn=t=>t==="A"?"الفريق الأول":"الفريق الثاني";
-  if(hb.st==="end") bar.textContent="🏁 انتهت اللعبة — "+(hb.win==="A"?"فاز "+(hb.rAn||"اللاعب"):"انتهى الوقت وخسر "+(hb.rAn||"اللاعب"));
-  else if(hb.st==="wait") bar.textContent="💍 بانتظار اللاعب — "+(hb.rAn||"—");
-  else { const left=Math.max(0,Math.ceil((HB_TIME-(Date.now()-(hb.t||0)))/1000)); bar.textContent="💍 "+(hb.rAn||"اللاعب")+" يبحث عن المحبس • ⏳ "+left+"ث"; }
+  if(hb.st==="on"){
+    if(bar){ bar.remove(); bar=null; }
+    bot.textContent=""; bot.style.cssText="display:flex;flex-direction:column;align-items:center;gap:4px";
+    const rp=PROFS[hb.rA]||{}; const av=el("div","av"); av.style.cssText="width:44px;height:44px;font-size:22px"; setAv(av,rp.emoji||"👤",rp.photo);
+    const nm=el("span","hbsn",hb.rAn||"اللاعب"); nm.style.cssText="color:#22c55e;font-weight:900;font-size:18px;text-shadow:0 0 8px #052e16,0 1px 0 #052e16";
+    const sub=el("span","hbsn","يبحث عن المحبس"+(secs!==null?" • ⏳ "+secs+"ث":"")); sub.style.cssText="color:#22c55e;font-weight:900;font-size:14px;text-shadow:0 0 8px #052e16,0 1px 0 #052e16";
+    bot.append(av,nm,sub);
+  } else {
+    bot.style.cssText=""; bot.textContent=""; const sN=hb.rAn; const sg=el("span","hbsn",(sN?sN:"بانتظار الممثل")+" يتقدم"); sg.style.cssText="color:#22c55e;font-weight:900;font-size:18px;text-shadow:0 0 8px #052e16,0 1px 0 #052e16"; bot.append(sg);
+    if(!bar){ bar=el("div","hbbar"); bar.id="hbbar"; g.parentNode.insertBefore(bar,g); }
+    if(hb.st==="end") bar.textContent="🏁 انتهت اللعبة — "+(hb.win==="A"?"فاز "+(hb.rAn||"اللاعب"):"انتهى الوقت وخسر "+(hb.rAn||"اللاعب"));
+    else bar.textContent="💍 بانتظار اللاعب — "+(hb.rAn||"—");
+  }
   const hrow=hb.st==="on"?[1,2,3,4,5,6,7,8,9,10]:[], srow=[];
   [...g.querySelectorAll(":scope > .seat2")].forEach((d,idx)=>{ const h=idx+1; d.classList.remove("hbh","hbe","hbfade","hbprom"); d.onclick=null;
     d.querySelectorAll(".hbhand,.hbring2").forEach(x=>{ if(!(x.classList.contains("hbring2")&&hb.st==="on"&&h===hb.ring&&OWNER&&window.__hbHelp)) x.remove(); });
