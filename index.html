@@ -4268,7 +4268,7 @@ async function hbJoin(){
       if(h.rA){ msg="هناك لاعب ينتظر الدور بالفعل"; return; }
       tx.update(ref,{hb:{...h, st:"wait", rA:uid, rAn:prof.name, rB:null, rBn:null, sc:{A:0,B:0}, pay:{[uid]:true}}});
       ok=true; }); }
-  catch(e){ return toast("تعذر الانضمام: "+((e&&e.code)||"خطأ في الحفظ")); }
+  catch(e){ console.error("hbJoin",e); return toast("تعذر الانضمام: "+(((e&&e.code)||(e&&e.message)||String(e)||"").toString().slice(0,160))); }
   if(!ok) return toast(msg||"تعذر الانضمام");
   if(!(await spend(HB_COST,"hb"))){ try{ await ref.update({"hb.rA":null,"hb.rAn":null,"hb.pay":{}}); }catch(e){} return; }
   try{ if(room.owner){ await credit(room.owner,4000,"hb"); await credit("__app__",-4000,"hb"); } }catch(e){}
@@ -4276,7 +4276,7 @@ async function hbJoin(){
 }
 function hbSheet(){ sheet("💍 المحيبس",(c,close)=>{ const hb=room.hb;
   const box=el("div"); c.append(box);
-  if(hb&&hb.st==="on"){ box.append(el("p","mut","اللعبة جارية — "+(hb.rAn||"اللاعب")+" يبحث عن المحبس")); return; }
+  if(hb&&hb.st==="on"){ box.append(el("p","mut","اللعبة جارية — "+(hb.rAn||"اللاعب")+" يبحث عن المحبس")); if(isMod()){ const cn=el("button","btn alt full","🗑️ إلغاء اللعبة الجارية"); cn.onclick=async()=>{ if(!confirm("إلغاء اللعبة الجارية؟ لا يُسترد المبلغ في هذه الحالة.")) return; close(); await hbCancel(); }; box.append(cn); } return; }
   const live=(hb&&hb.st==="wait")?hb:null;
   box.append(el("p","mut","يدفع اللاعب "+fmtc(HB_COST)+" 🪙 للدخول، ويبحث عن المحبس بين 10 أيادي خلال دقيقتين."));
   if(hb&&hb.st==="end") box.append(el("div","mut","آخر نتيجة: "+(hb.win==="A"?"وجد المحبس — فاز "+(hb.rAn||""):"انتهى الوقت — خسر "+(hb.rAn||""))));
@@ -4293,8 +4293,8 @@ async function hbCancel(){
   const ref=db.doc("rooms/"+room.id); let payers=[];
   try{
     const sn=await ref.get(), cur=(sn.data()||{}).hb;
-    if(!cur||!cur.st||cur.st==="on") return toast("لا توجد لعبة في الانتظار لإلغائها");
-    payers=Object.keys(cur.pay||{});
+    if(!cur||!cur.st||cur.st==="end") return toast("لا توجد لعبة لإلغائها");
+    payers=cur.st==="wait"?Object.keys(cur.pay||{}):[];
     await ref.update({hb:null});
   }catch(e){ return toast("تعذر الإلغاء: "+((e&&e.code)||(e&&e.message)||"خطأ")); }
   for(const u of payers) await credit(u,HB_COST,"hb");
