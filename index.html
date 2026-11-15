@@ -1291,7 +1291,7 @@ button,a,.fb,.rb,.tile,.htile,.seat2,.room,.card,.nav button{touch-action:manipu
 .lvb.room,.lvb.me{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35)}
 .lvring{position:relative;width:120px;height:120px;margin:6px auto 10px}
 .rlvw{position:relative;flex:none;margin-bottom:8px}
-.rlvw .lvb.room{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);margin:0;z-index:3;height:15px;border:1.5px solid #1e1b4b}
+.rlvw .lvb{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);margin:0;z-index:3;height:15px;border:1.5px solid #1e1b4b}
 .rs-top .host{max-width:52vw;min-width:0}
 .rs-top .host .rnm{max-width:calc(52vw - 110px)}
 .lvring svg{display:block}
@@ -1976,7 +1976,7 @@ function start(){
   try{ db.doc("app/theme").onSnapshot(sn=>{ const d=sn.exists?sn.data():{}; const cc=d.c||null, bb=d.bg||null; applyTheme(cc,bb); try{ if(cc) localStorage.setItem("thmC",cc); else localStorage.removeItem("thmC"); if(bb) localStorage.setItem("thmB",bb); else localStorage.removeItem("thmB"); }catch(_){} }); }catch(e){}
   try{ db.doc("agents/"+uid).onSnapshot(sn=>{ const was=!!window.IS_AGENT; window.IS_AGENT=!!sn.exists; if(was!==window.IS_AGENT&&!room&&!dm&&(tab==="me"||tab==="wallet")) render(); }); }catch(e){}
   try{ db.doc("bans/"+uid).onSnapshot(sn=>{ window.__banned=!!sn.exists; if(window.__banned) showBanned(); else if(!room&&!dm) render(); }); }catch(e){}
-  try{ db.doc("app/topmods").onSnapshot(s=>{ window.TOPMOD=s.exists?s.data():{hide:{},pin:{}}; if(BOARD) BOARD(); },()=>{}); }catch(e){} try{ db.doc("app/lock").onSnapshot(s=>{ window.LOCK=s.exists?s.data():{on:false}; try{ render(); }catch(e){} },()=>{}); }catch(e){}
+  try{ db.doc("app/lvlbase").onSnapshot(s=>{ window.LVLBASE=s.exists?(s.data().base||{}):{}; Object.keys(PLV).forEach(u=>{ delete PLV[u]; plvLoad(u); }); },()=>{}); }catch(e){} try{ db.doc("app/topmods").onSnapshot(s=>{ window.TOPMOD=s.exists?s.data():{hide:{},pin:{}}; if(BOARD) BOARD(); },()=>{}); }catch(e){} try{ db.doc("app/lock").onSnapshot(s=>{ window.LOCK=s.exists?s.data():{on:false}; try{ render(); }catch(e){} },()=>{}); }catch(e){}
   try{ db.doc("app/superadmins").onSnapshot(s=>{ const ids=(s.exists&&s.data().uids)||[]; window.SUPER_IDS=ids; window.IS_SUPER=ids.includes(uid); const ne=!!(window.OWNER_BASE||window.IS_SUPER); if(ne!==OWNER){ OWNER=ne; if(!room&&!dm) render(); } },()=>{}); }catch(e){}
   db.doc("app/staff").get().then(s=>{ window.IS_ADMIN=!!(s.exists&&(s.data().uids||[]).includes(uid)); }).catch(()=>{}); loadFriends(); watchTop(); watchNews(); watchCredits(); watchGiftAssets(); watchMusic(); loadThree().catch(()=>{}); if(!unsubProfs) unsubProfs=db.collection("profiles").onSnapshot(sn=>{ PROFS={}; sn.docs.forEach(d=>PROFS[d.id]=d.data()); const me0=PROFS[uid]; if(me0){ prof.topWeeks=me0.topWeeks||[]; checkTopWin(); } if(room) drawChat(); });
   if(!unsubFeed) unsubFeed=db.collection("gifts_feed").orderBy("t","desc").limit(1).onSnapshot(sn=>{
@@ -3115,7 +3115,7 @@ function sheetAppTheme(){ sheet("🎨 ألوان الواجهة",(c,close)=>{
   rs.onclick=()=>save("#8b5cf6","#d8b4fe"); c.append(rs); }); }
 function sCirc(emoji,label,fn){ const r=el("button","scirc"), ic=el("span","sci",emoji), t=el("span","sct",label); r.append(ic,t); r.onclick=fn; return r; }
 function ownerPanel(){ sheet("🛠️ ضبط التطبيق",(c,close)=>{ const g=el("div","sgrid");
-  [["👑","لوحة المالك",()=>{ close(); sheetOwner(); }],["👤","ضبط المستخدمين",()=>{ close(); usersMgr(); }],["🏠","ضبط الغرف",()=>{ close(); roomsMgr(); }],["🚩","البلاغات",()=>{ close(); reportsList(); }],["🕵️","كشف المتجسسين",()=>{ close(); spySheet(); }],["🔐","قفل التطبيق",()=>{ close(); lockSheet(); }],["🛡️","الأدمن",()=>{ close(); staffMgr(); }],["🎨","لون الواجهة",()=>{ close(); sheetAppTheme(); }],["🧑‍💼","ضبط الوكلاء",()=>{ close(); agentsMgr(); }],["🏆","تعديل التوب",()=>{ close(); topModSheet(); }],["🆘","الدعم الفني",()=>{ close(); supportMgr(); }]]
+  [["👑","لوحة المالك",()=>{ close(); sheetOwner(); }],["👤","ضبط المستخدمين",()=>{ close(); usersMgr(); }],["🏠","ضبط الغرف",()=>{ close(); roomsMgr(); }],["🚩","البلاغات",()=>{ close(); reportsList(); }],["🕵️","كشف المتجسسين",()=>{ close(); spySheet(); }],["🔐","قفل التطبيق",()=>{ close(); lockSheet(); }],["🛡️","الأدمن",()=>{ close(); staffMgr(); }],["🎨","لون الواجهة",()=>{ close(); sheetAppTheme(); }],["🧑‍💼","ضبط الوكلاء",()=>{ close(); agentsMgr(); }],["🏆","تعديل التوب",()=>{ close(); topModSheet(); }],["📈","بدء عداد المستويات من الآن",()=>{ close(); lvlBaseReset(); }],["🆘","الدعم الفني",()=>{ close(); supportMgr(); }]]
     .forEach(([i,t,f])=>g.append(sCirc(i,t,f)));
   c.append(g); }); }
 function usersMgr(){ const US={bal:{},ban:{}}; sheet("👤 المستخدمون",(c,close)=>{ c.closest(".ov")?.classList.add("ovc"); const q=el("input"); q.placeholder="بحث بالاسم أو الـ ID"; const L=el("div"); L.style.cssText="max-height:55vh;overflow:auto;margin-top:8px";
@@ -3650,7 +3650,7 @@ function drawSeats(){
   for(let i=1;i<=N;i++){
     const sd=seats[i], d=el("div","seat2"), c=el("div","sc"+(sd?" on":""),sd?sd.emoji:""); if(sd&&sd.uid) c.dataset.u=sd.uid; if(!sd) c.innerHTML=icH((room.lockedSeats||[]).includes(i)?"lock":"mic"); if(sd&&sd.photo) setAv(c,"",sd.photo);
     if(sd&&sd.muted){ const mmx=el("span","mm"); mmx.innerHTML=icH("micoff"); c.append(mmx); }
-    const nm=el("div","sn",sd?sd.name:String(i)); const sp=sd?(PROFS[sd.uid]||{}):{}; if(sd&&AV(sp)) nm.append(" ",vbadge(AV(sp),11)); if(sd&&sd.uid) nm.prepend(plvSpan(sd.uid)); d.append(frameWrap(c,sd?AF(sp):"",3),nm);
+    const nm=el("div","sn",sd?sd.name:String(i)); const sp=sd?(PROFS[sd.uid]||{}):{}; if(sd&&AV(sp)) nm.append(" ",vbadge(AV(sp),11)); const sfw=el("div","rlvw"); sfw.append(frameWrap(c,sd?AF(sp):"",3)); if(sd&&sd.uid) sfw.append(plvSpan(sd.uid)); d.append(sfw,nm);
     d.onclick=(ev)=>{ ev.stopPropagation(); seatPop(i,d); };
     g.append(d);
   }
@@ -4021,7 +4021,7 @@ async function toggleFav(rid,btn){ const cur=favList().slice(), on=cur.includes(
 
 // ===== مستويات: مستوى الحساب + مستوى الغرفة =====
 const LVL_MAX=50;
-function lvlTotal(L){ return L<=1?0:100*(L-1)+10*(L-2)*(L-1); }
+function lvlTotal(L){ return L<=1?0:100*(L-1)+25*(L-1)*(L-2); }
 function lvlFromXp(x){ let L=1; while(L<LVL_MAX && x>=lvlTotal(L+1)) L++; return L; }
 // ألوان حسب الشريحة: كل 10 مستويات لون جديد
 const LV_PAL={
@@ -4030,13 +4030,13 @@ const LV_PAL={
 };
 function lvlTier(L){ return Math.min(4,Math.floor((L-1)/10)); }
 function lvbStyle(n,kind,L){ const pr=LV_PAL[kind][lvlTier(L)]; n.style.background="linear-gradient(135deg,"+pr[0]+","+pr[1]+")"; n.style.boxShadow="0 0 6px "+pr[1]; }
-// مستوى الحساب: 1 XP لكل 100 نقطة مدعومة (مجموع topw لكل الأسابيع)
+// مستوى الحساب: 1 XP لكل 1000 نقطة مدعومة (مجموع topw لكل الأسابيع)
 const PLV={}, PLV_Q={}, PLV_TTL=300000;
 function plvPaint(u){ const c=PLV[u]; if(!c) return; document.querySelectorAll('[data-plv="'+u+'"]').forEach(n=>{ n.textContent="Lv "+c.lv; n.style.display=""; lvbStyle(n,"p",c.lv); }); }
 function plvLoad(u){
   if(!u||PLV_Q[u]) return; const c=PLV[u]; if(c&&Date.now()-c.t<PLV_TTL) return;
   PLV_Q[u]=1;
-  db.collection("topw").where("uid","==",u).get().then(sn=>{ let pts=0; sn.docs.forEach(d=>{ pts+=(+(d.data().tot)||0); }); const xp=Math.floor(pts/100); PLV[u]={pts:pts,xp:xp,lv:lvlFromXp(xp),t:Date.now()}; plvPaint(u); })
+  db.collection("topw").where("uid","==",u).get().then(sn=>{ let pts=0; sn.docs.forEach(d=>{ pts+=(+(d.data().tot)||0); }); pts=Math.max(0,pts-(+((window.LVLBASE||{})[u])||0)); const xp=Math.floor(pts/1000); PLV[u]={pts:pts,xp:xp,lv:lvlFromXp(xp),t:Date.now()}; plvPaint(u); })
     .catch(()=>{ if(!PLV[u]) PLV[u]={pts:0,xp:0,lv:1,t:0}; })
     .then(()=>{ delete PLV_Q[u]; });
 }
@@ -4052,6 +4052,15 @@ const RLV={rid:null,ready:false,pres:0,mic:0,last:0,unsub:null,timer:0,all:[]};
 function rlvXp(){ let x=0; RLV.all.forEach(d=>{ x+=Math.floor((+d.pres||0)/1800000)*10+Math.floor((+d.mic||0)/900000)*5; }); return x; }
 function rlvPaint(){ const b=document.getElementById("rlvb"); if(!b||!RLV.rid) return; const x=rlvXp(), L=lvlFromXp(x); b.textContent="Lv "+L; lvbStyle(b,"r",L); }
 // نافذة التقدم: حلقة دائرية + ما تبقى للمستوى التالي
+// المالك فقط: يحفظ مجموع كل مستخدم الآن كنقطة بداية، ولا يُحتسب ما قبلها في مستوى الحساب
+function lvlBaseReset(){
+  if(!OWNER) return;
+  if(!confirm("سيبدأ عداد مستويات الحساب من الآن، ولن يُحتسب الدعم السابق. متابعة؟")) return;
+  db.collection("topw").get().then(sn=>{
+    const base={}; sn.docs.forEach(d=>{ const x=d.data(); if(!x||!x.uid) return; base[x.uid]=(base[x.uid]||0)+(+x.tot||0); });
+    return db.doc("app/lvlbase").set({t:Date.now(),base:base});
+  }).then(()=>toast("تم بدء عداد المستويات من الآن ✓")).catch(e=>{ console.error(e); toast("تعذر ضبط البداية"); });
+}
 function lvlSheet(kind,id){
   const isP=kind==="p", c0=isP?PLV[id]:null;
   if(isP && !c0) return toast("جارٍ تحميل المستوى...");
@@ -4067,7 +4076,7 @@ function lvlSheet(kind,id){
     if(b){ c.append(el("p",null,"المستوى التالي: "+(L+1))); c.append(el("p",null,"المتبقي: "+(b-xp)+" XP")); }
     else c.append(el("p",null,"وصلت إلى أعلى مستوى ✨"));
     c.append(el("p","mut","التقدم: "+xp+" / "+(b||xp)+" XP"));
-    if(isP) c.append(el("p","mut","النقاط المدعومة: "+c0.pts+" (كل 100 نقطة = 1 XP)"));
+    if(isP) c.append(el("p","mut","النقاط المدعومة: "+c0.pts+" (كل 1000 نقطة = 1 XP)"));
     else c.append(el("p","mut","حضور المالك: 10 XP كل 30 دقيقة • وقت المايك: 5 XP كل 15 دقيقة"));
   });
 }
@@ -4164,7 +4173,7 @@ function chatMsg(d,av,pp,m,rk,nb){
     pill.innerHTML='<svg viewBox="0 0 24 24" width="12" height="12"><path fill="#fff" d="M6.2 3h11.6l4.2 6.2L12 21.5 2 9.2z"/><path fill="none" stroke="#0003" stroke-width="1.2" stroke-linejoin="round" d="M2 9.2h20M9 3l-1.6 6.2L12 21.5M15 3l1.6 6.2L12 21.5"/></svg>';
     pill.append("TOP "+rk); hd.append(pill); }
   if(m.reply&&m.reply.t){ const q=el("div","cmq"); q.append(el("b",null,m.reply.n||""),el("span",null,m.reply.t)); bub.append(q); } bub.append(document.createTextNode(m.text)); col.append(hd,bub);
-  d.append(frameWrap(av,AF(pp),2),col); }
+  const avw=el("div","rlvw"); avw.append(frameWrap(av,AF(pp),2)); if(m.uid) avw.append(plvSpan(m.uid)); d.append(avw,col); }
 let replyTo=null;
 function paintReply(){ const b=document.getElementById("rpbar"); if(!b) return; b.innerHTML="";
   if(!replyTo){ b.style.display="none"; return; }
@@ -4245,7 +4254,7 @@ function chatSig(m){ const pp=PROFS[m.uid]||{};
 function chatNode(m){ let n;
   if(m.type==="gift") n=giftMsg(m);
   else if(m.type==="sys") n=el("div","msg gift",m.text);
-  else{ const rk=topRank[m.uid], d=el("div","msg cm"+(rk?" tm tm"+(rk<=3?rk:"x"):"")), pp=PROFS[m.uid]||{}, av=el("span","mav"); setAv(av,pp.emoji||"👤",pp.photo); const nb=el("b",null,m.name); if(AV(pp)&&VCOL[AV(pp)]) nb.append(" ",vbadge(AV(pp),14)); const nbw=el("span","nbw"); if(m.uid) nbw.append(plvSpan(m.uid)); nbw.append(nb); chatMsg(d,av,pp,m,rk,nbw); d.style.cursor="pointer"; d.onclick=()=>userMenu(m.uid,m.name); lpress(d,()=>setReply(m)); n=d; }
+  else{ const rk=topRank[m.uid], d=el("div","msg cm"+(rk?" tm tm"+(rk<=3?rk:"x"):"")), pp=PROFS[m.uid]||{}, av=el("span","mav"); setAv(av,pp.emoji||"👤",pp.photo); const nb=el("b",null,m.name); if(AV(pp)&&VCOL[AV(pp)]) nb.append(" ",vbadge(AV(pp),14)); chatMsg(d,av,pp,m,rk,nb); d.style.cursor="pointer"; d.onclick=()=>userMenu(m.uid,m.name); lpress(d,()=>setReply(m)); n=d; }
   n.addEventListener("animationend",ev=>{ if(ev.target===n) n.classList.add("seen"); }); return n; }
 function drawChat(now){
   if(now===true){ if(chatRaf){ cancelAnimationFrame(chatRaf); chatRaf=0; } return drawChatNow(); }
