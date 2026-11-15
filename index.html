@@ -1284,6 +1284,19 @@ button,a,.fb,.rb,.tile,.htile,.seat2,.room,.card,.nav button{touch-action:manipu
 .umpm,.umk,.umid,.umfr,.umbn,.umb,.sbg,.nb,.rchip,.gm-btn,.dmn-end,.gb2go,.ginv-ok,.ginv-no{border-color:var(--gold)!important}
 /* room title + favourite heart */
 .hin{min-width:0}.rnl{display:flex;align-items:center;gap:2px;min-width:0}
+.lvb{display:inline-flex;align-items:center;justify-content:center;height:15px;min-width:24px;padding:0 5px;border-radius:8px;font-size:9.5px;font-weight:900;line-height:1;color:#052e16;background:linear-gradient(135deg,#67e8f9,#22d3ee);box-shadow:0 0 6px rgba(34,211,238,.45);vertical-align:middle;flex:none;white-space:nowrap;font-variant-numeric:tabular-nums;margin-inline-end:4px}
+.lvb.room{margin:0 4px 0 0;color:#052e16}
+.lvb.me{color:#4c0519;background:linear-gradient(135deg,#fda4af,#fb7185);box-shadow:0 0 6px rgba(251,113,133,.5)}
+.nbw{display:inline-flex;align-items:center;flex-wrap:wrap}
+.lvb.room,.lvb.me{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.lvring{position:relative;width:120px;height:120px;margin:6px auto 10px}
+.rlvw{position:relative;flex:none;margin-bottom:8px}
+.rlvw .lvb.room{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);margin:0;z-index:3;height:15px;border:1.5px solid #1e1b4b}
+.rs-top .host{max-width:52vw;min-width:0}
+.rs-top .host .rnm{max-width:calc(52vw - 110px)}
+.lvring svg{display:block}
+.lvring .ctr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:#fff;text-shadow:0 1px 3px #000}
+
 .rnm{font-size:14.5px;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .favh{flex:none;width:32px;height:32px;margin-inline-start:-6px;padding:0;border:0;background:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .favh svg{overflow:visible;transition:transform .2s}
@@ -3637,7 +3650,7 @@ function drawSeats(){
   for(let i=1;i<=N;i++){
     const sd=seats[i], d=el("div","seat2"), c=el("div","sc"+(sd?" on":""),sd?sd.emoji:""); if(sd&&sd.uid) c.dataset.u=sd.uid; if(!sd) c.innerHTML=icH((room.lockedSeats||[]).includes(i)?"lock":"mic"); if(sd&&sd.photo) setAv(c,"",sd.photo);
     if(sd&&sd.muted){ const mmx=el("span","mm"); mmx.innerHTML=icH("micoff"); c.append(mmx); }
-    const nm=el("div","sn",sd?sd.name:String(i)); const sp=sd?(PROFS[sd.uid]||{}):{}; if(sd&&AV(sp)) nm.append(" ",vbadge(AV(sp),11)); d.append(frameWrap(c,sd?AF(sp):"",3),nm);
+    const nm=el("div","sn",sd?sd.name:String(i)); const sp=sd?(PROFS[sd.uid]||{}):{}; if(sd&&AV(sp)) nm.append(" ",vbadge(AV(sp),11)); if(sd&&sd.uid) nm.prepend(plvSpan(sd.uid)); d.append(frameWrap(c,sd?AF(sp):"",3),nm);
     d.onclick=(ev)=>{ ev.stopPropagation(); seatPop(i,d); };
     g.append(d);
   }
@@ -4005,12 +4018,84 @@ function favHeart(rid){ const b=el("button","favh"+(favList().includes(rid)?" on
 async function toggleFav(rid,btn){ const cur=favList().slice(), on=cur.includes(rid), nx=on?cur.filter(x=>x!==rid):[rid].concat(cur).slice(0,100);
   prof.favRooms=nx; if(btn){ btn.classList.toggle("on",!on); btn.classList.remove("pop"); void btn.offsetWidth; if(!on) btn.classList.add("pop"); } toast(on?"أُزيلت الغرفة من المفضلة":"أُضيفت الغرفة إلى المفضلة ❤️");
   try{ await saveProf({favRooms:nx}); }catch(e){ prof.favRooms=cur; if(btn) btn.classList.toggle("on",on); toast("تعذر حفظ المفضلة"); } }
+
+// ===== مستويات: مستوى الحساب + مستوى الغرفة =====
+const LVL_MAX=50;
+function lvlTotal(L){ return L<=1?0:100*(L-1)+10*(L-2)*(L-1); }
+function lvlFromXp(x){ let L=1; while(L<LVL_MAX && x>=lvlTotal(L+1)) L++; return L; }
+// ألوان حسب الشريحة: كل 10 مستويات لون جديد
+const LV_PAL={
+  r:[["#67e8f9","#0891b2"],["#86efac","#16a34a"],["#93c5fd","#2563eb"],["#fde68a","#d97706"],["#fca5a5","#dc2626"]],
+  p:[["#f0abfc","#a21caf"],["#fda4af","#e11d48"],["#d8b4fe","#7c3aed"],["#fdba74","#ea580c"],["#f5d0fe","#be185d"]]
+};
+function lvlTier(L){ return Math.min(4,Math.floor((L-1)/10)); }
+function lvbStyle(n,kind,L){ const pr=LV_PAL[kind][lvlTier(L)]; n.style.background="linear-gradient(135deg,"+pr[0]+","+pr[1]+")"; n.style.boxShadow="0 0 6px "+pr[1]; }
+// مستوى الحساب: 1 XP لكل 100 نقطة مدعومة (مجموع topw لكل الأسابيع)
+const PLV={}, PLV_Q={}, PLV_TTL=300000;
+function plvPaint(u){ const c=PLV[u]; if(!c) return; document.querySelectorAll('[data-plv="'+u+'"]').forEach(n=>{ n.textContent="Lv "+c.lv; n.style.display=""; lvbStyle(n,"p",c.lv); }); }
+function plvLoad(u){
+  if(!u||PLV_Q[u]) return; const c=PLV[u]; if(c&&Date.now()-c.t<PLV_TTL) return;
+  PLV_Q[u]=1;
+  db.collection("topw").where("uid","==",u).get().then(sn=>{ let pts=0; sn.docs.forEach(d=>{ pts+=(+(d.data().tot)||0); }); const xp=Math.floor(pts/100); PLV[u]={pts:pts,xp:xp,lv:lvlFromXp(xp),t:Date.now()}; plvPaint(u); })
+    .catch(()=>{ if(!PLV[u]) PLV[u]={pts:0,xp:0,lv:1,t:0}; })
+    .then(()=>{ delete PLV_Q[u]; });
+}
+function plvSpan(u){
+  const s=el("span","lvb me","Lv 1"); s.dataset.plv=u; s.style.display="none"; s.title="مستوى الحساب";
+  const c=PLV[u]; if(c){ s.textContent="Lv "+c.lv; s.style.display=""; lvbStyle(s,"p",c.lv); }
+  s.onclick=e=>{ e.stopPropagation(); lvlSheet("p",u); };
+  plvLoad(u); return s;
+}
+// مستوى الغرفة: يحسب من ملفات rlv لكل مستخدم في الغرفة
+// حضور المالك: كل 30 دقيقة = 10 XP (المالك فقط)، وقت المايك (على المنصة): كل 15 دقيقة = 5 XP
+const RLV={rid:null,ready:false,pres:0,mic:0,last:0,unsub:null,timer:0,all:[]};
+function rlvXp(){ let x=0; RLV.all.forEach(d=>{ x+=Math.floor((+d.pres||0)/1800000)*10+Math.floor((+d.mic||0)/900000)*5; }); return x; }
+function rlvPaint(){ const b=document.getElementById("rlvb"); if(!b||!RLV.rid) return; const x=rlvXp(), L=lvlFromXp(x); b.textContent="Lv "+L; lvbStyle(b,"r",L); }
+// نافذة التقدم: حلقة دائرية + ما تبقى للمستوى التالي
+function lvlSheet(kind,id){
+  const isP=kind==="p", c0=isP?PLV[id]:null;
+  if(isP && !c0) return toast("جارٍ تحميل المستوى...");
+  const xp=isP?c0.xp:rlvXp(), L=isP?c0.lv:lvlFromXp(xp);
+  sheet(isP?"مستوى الحساب":"مستوى الغرفة",(c)=>{
+    const a=lvlTotal(L), b=L<LVL_MAX?lvlTotal(L+1):null;
+    const pct=b?Math.max(0,Math.min(1,(xp-a)/(b-a))):1;
+    const col=LV_PAL[kind][lvlTier(L)][1], C=2*Math.PI*52;
+    const ring=el("div","lvring");
+    ring.innerHTML='<svg viewBox="0 0 120 120" width="120" height="120"><circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/><circle cx="60" cy="60" r="52" fill="none" stroke="'+col+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+C.toFixed(2)+'" stroke-dashoffset="'+(C*(1-pct)).toFixed(2)+'" transform="rotate(-90 60 60)"/></svg>';
+    const ctr=el("div","ctr"); ctr.append(el("span",null,"Lv "+L)); ring.append(ctr); c.append(ring);
+    c.append(el("p",null,"المستوى الحالي: "+L));
+    if(b){ c.append(el("p",null,"المستوى التالي: "+(L+1))); c.append(el("p",null,"المتبقي: "+(b-xp)+" XP")); }
+    else c.append(el("p",null,"وصلت إلى أعلى مستوى ✨"));
+    c.append(el("p","mut","التقدم: "+xp+" / "+(b||xp)+" XP"));
+    if(isP) c.append(el("p","mut","النقاط المدعومة: "+c0.pts+" (كل 100 نقطة = 1 XP)"));
+    else c.append(el("p","mut","حضور المالك: 10 XP كل 30 دقيقة • وقت المايك: 5 XP كل 15 دقيقة"));
+  });
+}
+function rlvStop(){ clearInterval(RLV.timer); RLV.timer=0; if(RLV.unsub){ try{ RLV.unsub(); }catch(e){} RLV.unsub=null; } RLV.rid=null; RLV.ready=false; RLV.all=[]; }
+function rlvStart(rid){
+  if(RLV.rid===rid) return; rlvStop();
+  RLV.rid=rid; RLV.ready=false; RLV.pres=0; RLV.mic=0; RLV.all=[];
+  try{ RLV.unsub=db.collection("rlv").where("rid","==",rid).onSnapshot(sn=>{ if(RLV.rid!==rid) return; RLV.all=sn.docs.map(d=>d.data()); rlvPaint(); },()=>{}); }catch(e){}
+  try{ db.doc("rlv/"+rid+"_"+uid).get().then(s=>{ if(RLV.rid!==rid) return; const d=s.exists?s.data():{}; RLV.pres=+d.pres||0; RLV.mic=+d.mic||0; RLV.last=Date.now(); RLV.ready=true; }).catch(()=>{}); }catch(e){}
+  RLV.timer=setInterval(rlvTick,30000);
+}
+function rlvTick(){
+  if(!room||room.id!==RLV.rid){ rlvStop(); return; }
+  if(!RLV.ready) return;
+  const now=Date.now(), dt=Math.min(Math.max(0,now-RLV.last),120000); RLV.last=now;
+  const owner=room.owner===uid, onStage=!!mySeat();
+  if(!owner && !onStage) return;
+  if(owner) RLV.pres+=dt;
+  if(onStage) RLV.mic+=dt;
+  const data={rid:RLV.rid,uid:uid,mic:RLV.mic,t:now}; if(owner) data.pres=RLV.pres;
+  try{ db.doc("rlv/"+RLV.rid+"_"+uid).set(data,{merge:true}).catch(()=>{}); }catch(e){}
+}
 function renderRoom(a){
   const h=hueOf(room.id), s=el("div","room-screen");
   const rt=room.bg!=null?THEMES[room.bg]:null; if(room.bgImg){ s.style.background="linear-gradient(180deg,#0000001a,#00000040),url(\""+room.bgImg+"\") center/cover no-repeat"; } else s.style.background=rt?"radial-gradient(circle at 50% 42%,"+rt[1]+"77,transparent 62%),linear-gradient(180deg,"+rt[0]+"dd,#07040f)":"radial-gradient(circle at 50% 42%,hsla("+h+",65%,32%,.55),transparent 62%),linear-gradient(180deg,#0a0618,#120b2a 55%,#07040f)";
   const t=el("div","rs-top"), host=el("div","host"), hav=el("div","av",room.emoji||"🎙️");
   hav.style.cssText="width:46px;height:46px;font-size:24px;border:2px solid #7dd3fc"; setAv(hav,room.emoji||"🎙️",room.photo);
-  const hi=el("div","hin"), oP=PROFS[room.owner]||{}, nb0=el("b","rnm",room.name||room.ownerName), l1=el("div","rnl"); l1.append(favHeart(room.id),nb0); hi.append(l1,el("div","roomid","ID #"+(room.num||""))); host.append(frameWrap(hav,AF(oP),3),hi);
+  const hi=el("div","hin"), oP=PROFS[room.owner]||{}, nb0=el("b","rnm",room.name||room.ownerName), l1=el("div","rnl"); const rlvb=el("span","lvb room","Lv 1"); rlvb.id="rlvb"; rlvb.onclick=e=>{ e.stopPropagation(); lvlSheet("r",room.id); }; l1.append(favHeart(room.id),nb0); rlvStart(room.id); rlvPaint(); hi.append(l1,el("div","roomid","ID #"+(room.num||""))); const rlvw=el("div","rlvw"); rlvw.append(frameWrap(hav,AF(oP),3),rlvb); host.append(rlvw,hi);
   const gear=el("button","rb"); gear.innerHTML=icH("gear"); gear.onclick=openSettings;
   const back=el("button","bkb"); back.append(el("small",null,"رجوع"),el("span","bka","→")); back.onclick=closeRoom;
   const crown=starTop(34); crown.classList.add("crown2"); crown.onclick=openBoard;
@@ -4160,7 +4245,7 @@ function chatSig(m){ const pp=PROFS[m.uid]||{};
 function chatNode(m){ let n;
   if(m.type==="gift") n=giftMsg(m);
   else if(m.type==="sys") n=el("div","msg gift",m.text);
-  else{ const rk=topRank[m.uid], d=el("div","msg cm"+(rk?" tm tm"+(rk<=3?rk:"x"):"")), pp=PROFS[m.uid]||{}, av=el("span","mav"); setAv(av,pp.emoji||"👤",pp.photo); const nb=el("b",null,m.name); if(AV(pp)&&VCOL[AV(pp)]) nb.append(" ",vbadge(AV(pp),14)); chatMsg(d,av,pp,m,rk,nb); d.style.cursor="pointer"; d.onclick=()=>userMenu(m.uid,m.name); lpress(d,()=>setReply(m)); n=d; }
+  else{ const rk=topRank[m.uid], d=el("div","msg cm"+(rk?" tm tm"+(rk<=3?rk:"x"):"")), pp=PROFS[m.uid]||{}, av=el("span","mav"); setAv(av,pp.emoji||"👤",pp.photo); const nb=el("b",null,m.name); if(AV(pp)&&VCOL[AV(pp)]) nb.append(" ",vbadge(AV(pp),14)); const nbw=el("span","nbw"); if(m.uid) nbw.append(plvSpan(m.uid)); nbw.append(nb); chatMsg(d,av,pp,m,rk,nbw); d.style.cursor="pointer"; d.onclick=()=>userMenu(m.uid,m.name); lpress(d,()=>setReply(m)); n=d; }
   n.addEventListener("animationend",ev=>{ if(ev.target===n) n.classList.add("seen"); }); return n; }
 function drawChat(now){
   if(now===true){ if(chatRaf){ cancelAnimationFrame(chatRaf); chatRaf=0; } return drawChatNow(); }
