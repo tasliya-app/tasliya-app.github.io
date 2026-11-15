@@ -4198,7 +4198,7 @@ function calcTopRange(rows,ws,we){ const agg={};
   rows.forEach(m=>{ if(m.type!=="gift"||m.t<ws||m.t>=we) return; const k=m.uid||m.name; (agg[k]=agg[k]||{uid:m.uid,name:m.name,emoji:m.emoji||"👤",tot:0}).tot+=m.amt||0; });
   return Object.values(agg).sort((a,b)=>b.tot-a.tot).slice(0,10); }
 function calcTop(rows){ return rows.filter(r=>r&&r.tot>0).slice().sort((a,b)=>b.tot-a.tot).slice(0,10); }
-function calcTopLive(rows){ const M=window.TOPMOD||{hide:{},pin:{}}, H=M.hide||{}, P=M.pin||{}; const base=rows.filter(r=>r&&r.tot>0&&!H[r.uid]).slice().sort((a,b)=>b.tot-a.tot); const pins=Object.entries(P).map(([u,k])=>[u,+k]).filter(([u,k])=>k>=1&&k<=10).sort((a,b)=>a[1]-b[1]); for(const [u,k] of pins){ const i=base.findIndex(r=>r.uid===u); if(i<0) continue; const [row]=base.splice(i,1); base.splice(Math.min(k-1,base.length),0,row); } return base.slice(0,10); }
+function calcTopLive(rows){ const M=window.TOPMOD||{}, H=M.hide||{}, P=M.pin||{}, A=M.adj||{}; const base=rows.filter(r=>r&&!H[r.uid]).map(r=>Object.assign({},r,{tot:(r.tot||0)-(+A[r.uid]||0)})).filter(r=>r.tot>0).sort((a,b)=>b.tot-a.tot); const pins=Object.entries(P).map(([u,k])=>[u,+k]).filter(([u,k])=>k>=1&&k<=10).sort((a,b)=>a[1]-b[1]); for(const [u,k] of pins){ const i=base.findIndex(r=>r.uid===u); if(i<0) continue; const [row]=base.splice(i,1); base.splice(Math.min(k-1,base.length),0,row); } return base.slice(0,10); }
 function recalcTop(){ topList=calcTopLive(topRows); topRank={}; topList.forEach((u,i)=>{ if(u.uid) topRank[u.uid]=i+1; }); }
 function leftText(ms){ if(ms<=0) return "انتهى"; const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4); return (d?d+" يوم ":"")+h+" ساعة "+m+" دقيقة"; }
 let LASTCH=null, LASTCH_WK="", LASTCH_BUSY=false;
@@ -4229,19 +4229,23 @@ function openBoard(){ loadLastChamp(); logView("top");
   BOARD=draw; draw(); const iv=setInterval(()=>{ if(!document.body.contains(o)){ clearInterval(iv); if(BOARD===draw) BOARD=null; } else draw(); },30000);
 }
 function topModSheet(){ sheet("🏆 تعديل التوب",(c,close)=>{
-  const M=window.TOPMOD||{hide:{},pin:{}}, H=M.hide||{}, P=M.pin||{};
+  const M=window.TOPMOD||{}, H=M.hide||{}, P=M.pin||{}, A=M.adj||{};
   const nm=uid=>((PROFS[uid]||{}).name)||uid;
-  const save=async nx=>{ try{ await db.doc("app/topmods").set(nx); toast("تم الحفظ ✓"); }catch(e){ toast("تعذر الحفظ"); } close(); topModSheet(); };
-  c.append(el("p","mut","اختر شخصًا من التوب الحالي لرفعه إلى مركز محدد أو إخفائه من القائمة المعروضة فقط. الرصيد الفعلي لا يتغير."));
-  calcTopLive(topRows).forEach((u,i)=>{ const r=el("div","trow"); r.style.cssText="display:flex;align-items:center;gap:6px;margin:6px 0;flex-wrap:wrap";
-    const n=el("div","tnm",(i+1)+". "+nm(u.uid)); n.style.flex="1";
-    const bu=el("button","btn alt","⬆️ رفع"); bu.onclick=()=>{ const k=Math.floor(Number(prompt("المركز الجديد (1 إلى 10)؟"))); if(!(k>=1&&k<=10)) return toast("أدخل رقماً من 1 إلى 10"); save({hide:{...H},pin:{...P,[u.uid]:k}}); };
+  const who=(uid,pre)=>{ const Pf=PROFS[uid]||{}, d=el("div"); d.style.cssText="display:flex;align-items:center;gap:8px;flex:1;color:#1e1b4b;font-weight:800;font-size:15px"; const av=el("div","av"); av.style.cssText="width:36px;height:36px;font-size:18px;flex:none"; setAv(av,Pf.emoji||"👤",Pf.photo); d.append(av,el("span",null,(pre||"")+nm(uid))); return d; };
+  const save=async nx=>{ try{ await db.doc("app/topmods").set(Object.assign({hide:H,pin:P,adj:A},nx)); toast("تم الحفظ ✓"); }catch(e){ toast("تعذر الحفظ"); } close(); topModSheet(); };
+  const row=()=>{ const r=el("div"); r.style.cssText="display:flex;align-items:center;gap:6px;margin:6px 0;flex-wrap:wrap"; return r; };
+  c.append(el("p","mut","اختر شخصًا من التوب الحالي لرفعه أو إخفائه أو خصم جزء من نقاطه المعروضة في التوب. الرصيد الفعلي لا يتغير."));
+  calcTopLive(topRows).forEach((u,i)=>{ const r=row(); const n=who(u.uid,(i+1)+". "); n.style.flex="1";
+    const bu=el("button","btn alt","⬆️ رفع"); bu.onclick=()=>{ const k=Math.floor(Number(prompt("المركز الجديد (1 إلى 10)؟"))); if(!(k>=1&&k<=10)) return toast("أدخل رقماً من 1 إلى 10"); save({pin:{...P,[u.uid]:k}}); };
+    const bd=el("button","btn alt","➖ خصم"); bd.onclick=()=>{ const k=Math.floor(Number(prompt("عدد النقاط المعروضة للخصم من "+nm(u.uid)+"؟"))); if(!(k>0)) return toast("أدخل عدداً صحيحاً"); if(!confirm("خصم "+k+" من الرقم المعروض في التوب لـ"+nm(u.uid)+"؟")) return; save({adj:{...A,[u.uid]:(+A[u.uid]||0)+k}}); };
     const bh=el("button","btn alt","🙈 إخفاء"); bh.onclick=()=>{ if(!confirm("إخفاء "+nm(u.uid)+" من التوب؟")) return; const pp={...P}; delete pp[u.uid]; save({hide:{...H,[u.uid]:true},pin:pp}); };
-    r.append(n,bu,bh); c.append(r); });
+    r.append(n,bu,bd,bh); c.append(r); });
   const pinned=Object.keys(P).filter(u=>P[u]);
-  if(pinned.length){ c.append(el("b",null,"المرفوعون")); pinned.forEach(uid=>{ const r=el("div","trow"); r.style.cssText="display:flex;align-items:center;gap:6px;margin:6px 0"; const n=el("div","tnm","مركز "+P[uid]+" — "+nm(uid)); n.style.flex="1"; const b=el("button","btn alt","إلغاء الرفع"); b.onclick=()=>{ const pp={...P}; delete pp[uid]; save({hide:{...H},pin:pp}); }; r.append(n,b); c.append(r); }); }
+  if(pinned.length){ c.append(el("b",null,"المرفوعون")); pinned.forEach(uid=>{ const r=row(); const n=who(uid,"مركز "+P[uid]+" — "); n.style.flex="1"; const b=el("button","btn alt","إلغاء الرفع"); b.onclick=()=>{ const pp={...P}; delete pp[uid]; save({pin:pp}); }; r.append(n,b); c.append(r); }); }
+  const adjd=Object.keys(A).filter(u=>A[u]);
+  if(adjd.length){ c.append(el("b",null,"المخصوم من المعروض")); adjd.forEach(uid=>{ const r=row(); const n=who(uid,"−"+A[uid]+" — "); n.style.flex="1"; const b=el("button","btn alt","إلغاء الخصم"); b.onclick=()=>{ const aa={...A}; delete aa[uid]; save({adj:aa}); }; r.append(n,b); c.append(r); }); }
   const hid=Object.keys(H).filter(u=>H[u]);
-  if(hid.length){ c.append(el("b",null,"المخفيون")); hid.forEach(uid=>{ const r=el("div","trow"); r.style.cssText="display:flex;align-items:center;gap:6px;margin:6px 0"; const n=el("div","tnm",nm(uid)); n.style.flex="1"; const b=el("button","btn alt","إظهار"); b.onclick=()=>{ const hh={...H}; delete hh[uid]; save({hide:hh,pin:{...P}}); }; r.append(n,b); c.append(r); }); }
+  if(hid.length){ c.append(el("b",null,"المخفيون")); hid.forEach(uid=>{ const r=row(); const n=who(uid,""); n.style.flex="1"; const b=el("button","btn alt","إظهار"); b.onclick=()=>{ const hh={...H}; delete hh[uid]; save({hide:hh}); }; r.append(n,b); c.append(r); }); }
 }); }
 let unsubRoomDoc=null;
 function toast(m){ const t=el("div","toast",m); document.body.append(t); setTimeout(()=>t.remove(),2400); }
