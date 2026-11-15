@@ -4030,13 +4030,13 @@ const LV_PAL={
 };
 function lvlTier(L){ return Math.min(4,Math.floor((L-1)/10)); }
 function lvbStyle(n,kind,L){ const pr=LV_PAL[kind][lvlTier(L)]; n.style.background="linear-gradient(135deg,"+pr[0]+","+pr[1]+")"; n.style.boxShadow="0 0 6px "+pr[1]; }
-// مستوى الحساب: 1 XP لكل 1000 نقطة مدعومة (مجموع topw لكل الأسابيع)
+// مستوى الحساب: 1 XP لكل 3000 نقطة مدعومة (مجموع topw لكل الأسابيع)
 const PLV={}, PLV_Q={}, PLV_TTL=300000;
 function plvPaint(u){ const c=PLV[u]; if(!c) return; document.querySelectorAll('[data-plv="'+u+'"]').forEach(n=>{ n.textContent="Lv "+c.lv; n.style.display=""; lvbStyle(n,"p",c.lv); }); }
 function plvLoad(u){
   if(!u||PLV_Q[u]) return; const c=PLV[u]; if(c&&Date.now()-c.t<PLV_TTL) return;
   PLV_Q[u]=1;
-  db.collection("topw").where("uid","==",u).get().then(sn=>{ let pts=0; sn.docs.forEach(d=>{ pts+=(+(d.data().tot)||0); }); pts=Math.max(0,pts-(+((window.LVLBASE||{})[u])||0)); const xp=Math.floor(pts/1000); PLV[u]={pts:pts,xp:xp,lv:lvlFromXp(xp),t:Date.now()}; plvPaint(u); })
+  db.collection("topw").where("uid","==",u).get().then(sn=>{ let pts=0; sn.docs.forEach(d=>{ pts+=(+(d.data().tot)||0); }); pts=Math.max(0,pts-(+((window.LVLBASE||{})[u])||0)); const xp=Math.floor(pts/3000); PLV[u]={pts:pts,xp:xp,lv:lvlFromXp(xp),t:Date.now()}; plvPaint(u); })
     .catch(()=>{ if(!PLV[u]) PLV[u]={pts:0,xp:0,lv:1,t:0}; })
     .then(()=>{ delete PLV_Q[u]; });
 }
@@ -4076,7 +4076,7 @@ function lvlSheet(kind,id){
     if(b){ c.append(el("p",null,"المستوى التالي: "+(L+1))); c.append(el("p",null,"المتبقي: "+(b-xp)+" XP")); }
     else c.append(el("p",null,"وصلت إلى أعلى مستوى ✨"));
     c.append(el("p","mut","التقدم: "+xp+" / "+(b||xp)+" XP"));
-    if(isP) c.append(el("p","mut","النقاط المدعومة: "+c0.pts+" (كل 1000 نقطة = 1 XP)"));
+    if(isP) c.append(el("p","mut","النقاط المدعومة: "+c0.pts+" (كل 3000 نقطة = 1 XP)"));
     else c.append(el("p","mut","حضور المالك: 10 XP كل 30 دقيقة • وقت المايك: 5 XP كل 15 دقيقة"));
   });
 }
