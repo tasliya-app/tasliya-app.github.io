@@ -1673,6 +1673,7 @@ body:has(.gfx-em) .gcard,body:has(.gfx-em) .win-card,body:has(.gfx-em) .guide{fi
 .npub:active{transform:scale(.96)}
 .npub:disabled{opacity:.5;cursor:default}
 .ncomp .npub{border-width:2px!important;border-color:transparent!important;border-style:solid!important}
+.hbring{margin-top:10px;color:#fbbf24;font-weight:900;font-size:17px;text-align:center;text-shadow:0 0 8px #f59e0b99,0 2px 4px #0008}
 @keyframes hbwin{from{transform:translate(-50%,-50%) scale(.2) rotate(-8deg);opacity:0}to{transform:translate(-50%,-50%) scale(1) rotate(0);opacity:1}}
 .chb2{box-shadow:0 0 0 1px #f9a8d4,0 6px 18px #ec489966}
 .chside .av{box-shadow:0 0 0 2px #f472b6,0 0 10px #f472b6aa}
@@ -1962,7 +1963,7 @@ function start(){
   try{ db.doc("app/theme").onSnapshot(sn=>{ const d=sn.exists?sn.data():{}; const cc=d.c||null, bb=d.bg||null; applyTheme(cc,bb); try{ if(cc) localStorage.setItem("thmC",cc); else localStorage.removeItem("thmC"); if(bb) localStorage.setItem("thmB",bb); else localStorage.removeItem("thmB"); }catch(_){} }); }catch(e){}
   try{ db.doc("agents/"+uid).onSnapshot(sn=>{ const was=!!window.IS_AGENT; window.IS_AGENT=!!sn.exists; if(was!==window.IS_AGENT&&!room&&!dm&&(tab==="me"||tab==="wallet")) render(); }); }catch(e){}
   try{ db.doc("bans/"+uid).onSnapshot(sn=>{ window.__banned=!!sn.exists; if(window.__banned) showBanned(); else if(!room&&!dm) render(); }); }catch(e){}
-  try{ db.doc("app/lock").onSnapshot(s=>{ window.LOCK=s.exists?s.data():{on:false}; try{ render(); }catch(e){} },()=>{}); }catch(e){}
+  try{ db.doc("app/topmods").onSnapshot(s=>{ window.TOPMOD=s.exists?s.data():{hide:{},pin:{}}; if(BOARD) BOARD(); },()=>{}); }catch(e){} try{ db.doc("app/lock").onSnapshot(s=>{ window.LOCK=s.exists?s.data():{on:false}; try{ render(); }catch(e){} },()=>{}); }catch(e){}
   try{ db.doc("app/superadmins").onSnapshot(s=>{ const ids=(s.exists&&s.data().uids)||[]; window.SUPER_IDS=ids; window.IS_SUPER=ids.includes(uid); const ne=!!(window.OWNER_BASE||window.IS_SUPER); if(ne!==OWNER){ OWNER=ne; if(!room&&!dm) render(); } },()=>{}); }catch(e){}
   db.doc("app/staff").get().then(s=>{ window.IS_ADMIN=!!(s.exists&&(s.data().uids||[]).includes(uid)); }).catch(()=>{}); loadFriends(); watchTop(); watchNews(); watchCredits(); watchGiftAssets(); watchMusic(); loadThree().catch(()=>{}); if(!unsubProfs) unsubProfs=db.collection("profiles").onSnapshot(sn=>{ PROFS={}; sn.docs.forEach(d=>PROFS[d.id]=d.data()); const me0=PROFS[uid]; if(me0){ prof.topWeeks=me0.topWeeks||[]; checkTopWin(); } if(room) drawChat(); });
   if(!unsubFeed) unsubFeed=db.collection("gifts_feed").orderBy("t","desc").limit(1).onSnapshot(sn=>{
@@ -3101,7 +3102,7 @@ function sheetAppTheme(){ sheet("🎨 ألوان الواجهة",(c,close)=>{
   rs.onclick=()=>save("#8b5cf6","#d8b4fe"); c.append(rs); }); }
 function sCirc(emoji,label,fn){ const r=el("button","scirc"), ic=el("span","sci",emoji), t=el("span","sct",label); r.append(ic,t); r.onclick=fn; return r; }
 function ownerPanel(){ sheet("🛠️ ضبط التطبيق",(c,close)=>{ const g=el("div","sgrid");
-  [["👑","لوحة المالك",()=>{ close(); sheetOwner(); }],["👤","ضبط المستخدمين",()=>{ close(); usersMgr(); }],["🏠","ضبط الغرف",()=>{ close(); roomsMgr(); }],["🚩","البلاغات",()=>{ close(); reportsList(); }],["🕵️","كشف المتجسسين",()=>{ close(); spySheet(); }],["🔐","قفل التطبيق",()=>{ close(); lockSheet(); }],["🛡️","الأدمن",()=>{ close(); staffMgr(); }],["🎨","لون الواجهة",()=>{ close(); sheetAppTheme(); }],["🧑‍💼","ضبط الوكلاء",()=>{ close(); agentsMgr(); }],["🆘","الدعم الفني",()=>{ close(); supportMgr(); }]]
+  [["👑","لوحة المالك",()=>{ close(); sheetOwner(); }],["👤","ضبط المستخدمين",()=>{ close(); usersMgr(); }],["🏠","ضبط الغرف",()=>{ close(); roomsMgr(); }],["🚩","البلاغات",()=>{ close(); reportsList(); }],["🕵️","كشف المتجسسين",()=>{ close(); spySheet(); }],["🔐","قفل التطبيق",()=>{ close(); lockSheet(); }],["🛡️","الأدمن",()=>{ close(); staffMgr(); }],["🎨","لون الواجهة",()=>{ close(); sheetAppTheme(); }],["🧑‍💼","ضبط الوكلاء",()=>{ close(); agentsMgr(); }],["🏆","تعديل التوب",()=>{ close(); topModSheet(); }],["🆘","الدعم الفني",()=>{ close(); supportMgr(); }]]
     .forEach(([i,t,f])=>g.append(sCirc(i,t,f)));
   c.append(g); }); }
 function usersMgr(){ const US={bal:{},ban:{}}; sheet("👤 المستخدمون",(c,close)=>{ c.closest(".ov")?.classList.add("ovc"); const q=el("input"); q.placeholder="بحث بالاسم أو الـ ID"; const L=el("div"); L.style.cssText="max-height:55vh;overflow:auto;margin-top:8px";
@@ -3161,7 +3162,7 @@ async function userAdmin(u){ const P=PROFS[u]||{}; let bal=0, banned=false;
       try{ const sn=await db.doc("app/superadmins").get(); const cur=(sn.exists&&sn.data().uids)||[]; const nx=on?cur.filter(x=>x!==u):[...new Set([...cur,u])]; await db.doc("app/superadmins").set({uids:nx}); toast(on?"تم سحب الصلاحية":"تمت إضافة السوبر أدمن ✓"); close(); }catch(e){ toast("تعذر الحفظ"); } },true); }
     row("💬 رسائله الخاصة",()=>{ close(); userDMs(u); },true);
     const inp=el("input"); inp.type="number"; inp.placeholder="مبلغ الخصم"; inp.style.marginTop="8px"; c.append(inp);
-    row("💰 خصم من رصيده إلى حسابي",async()=>{ const n=Math.floor(+inp.value||0); if(n<=0||n>bal) return toast("المبلغ غير صحيح"); try{ await db.collection("credits").add({to:u,amt:-n,kind:"adjust",t:Date.now()}); await setCoins(coins+n); logTx("deduct",n,u,0); toast("تم خصم "+fmtc(n)+" وأُضيفت إلى حسابك ✓"); close(); }catch(e){ toast("تعذر الخصم"); } },true); }); }
+    row("💰 خصم من رصيده إلى حسابي",async()=>{ const n=Math.floor(+inp.value||0); if(n<=0||n>bal) return toast("المبلغ غير صحيح"); try{ await db.collection("credits").add({from:uid,to:u,amt:-n,kind:"adjust",t:Date.now()}); await setCoins(coins+n); logTx("deduct",n,u,0); toast("تم خصم "+fmtc(n)+" وأُضيفت إلى حسابك ✓"); close(); }catch(e){ toast("تعذر الخصم"); } },true); }); }
 function userDMs(u){ const P=PROFS[u]||{}; sheet("💬 رسائل "+(P.name||""),(c,close)=>{ const L=el("div"); L.style.cssText="max-height:60vh;overflow:auto"; c.append(L); L.textContent="جاري التحميل…";
   db.collection("inbox/"+u+"/threads").orderBy("t","desc").limit(30).get().then(sn=>{ L.innerHTML=""; if(!sn.docs.length){ L.append(el("p","mut","لا توجد محادثات")); return; }
     sn.docs.forEach(d=>{ const th=d.data(), r=el("div","room"); r.append(el("b",null,th.name||"مستخدم"),el("div","mut",String(th.last||"").slice(0,40))); r.style.cursor="pointer";
@@ -4197,7 +4198,8 @@ function calcTopRange(rows,ws,we){ const agg={};
   rows.forEach(m=>{ if(m.type!=="gift"||m.t<ws||m.t>=we) return; const k=m.uid||m.name; (agg[k]=agg[k]||{uid:m.uid,name:m.name,emoji:m.emoji||"👤",tot:0}).tot+=m.amt||0; });
   return Object.values(agg).sort((a,b)=>b.tot-a.tot).slice(0,10); }
 function calcTop(rows){ return rows.filter(r=>r&&r.tot>0).slice().sort((a,b)=>b.tot-a.tot).slice(0,10); }
-function recalcTop(){ topList=calcTop(topRows); topRank={}; topList.forEach((u,i)=>{ if(u.uid) topRank[u.uid]=i+1; }); }
+function calcTopLive(rows){ const M=window.TOPMOD||{hide:{},pin:{}}, H=M.hide||{}, P=M.pin||{}; const base=rows.filter(r=>r&&r.tot>0&&!H[r.uid]).slice().sort((a,b)=>b.tot-a.tot); const pins=Object.entries(P).map(([u,k])=>[u,+k]).filter(([u,k])=>k>=1&&k<=10).sort((a,b)=>a[1]-b[1]); for(const [u,k] of pins){ const i=base.findIndex(r=>r.uid===u); if(i<0) continue; const [row]=base.splice(i,1); base.splice(Math.min(k-1,base.length),0,row); } return base.slice(0,10); }
+function recalcTop(){ topList=calcTopLive(topRows); topRank={}; topList.forEach((u,i)=>{ if(u.uid) topRank[u.uid]=i+1; }); }
 function leftText(ms){ if(ms<=0) return "انتهى"; const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4); return (d?d+" يوم ":"")+h+" ساعة "+m+" دقيقة"; }
 let LASTCH=null, LASTCH_WK="", LASTCH_BUSY=false;
 async function loadLastChamp(){ const w=wkAgo(1); if(LASTCH_WK===w||LASTCH_BUSY) return; LASTCH_BUSY=true;
@@ -4213,7 +4215,7 @@ function openBoard(){ loadLastChamp(); logView("top");
   const o=el("div","ov"), c=el("div","board"); o.append(c); document.body.append(o);
   const shut=()=>{ o.remove(); BOARD=null; }; o.onclick=e=>{ if(e.target===o) shut(); };
   const draw=()=>{
-    c.innerHTML=""; const top=calcTop(topRows), h=el("div","bh"), x=el("button","rb","✕"); x.onclick=shut;
+    c.innerHTML=""; const top=calcTopLive(topRows), h=el("div","bh"), x=el("button","rb","✕"); x.onclick=shut;
     h.append(starTop(42),el("div","bt","Top الدعم — كل الغرف"),el("span","sp"),x);
     const bn=el("div","bn"), bd=el("div"); bd.append(el("b",null,"ينتهي بعد "+leftText(weekEnd()-Date.now())),el("div","mut","يُجمع دعم كل شخص طوال الأسبوع في جميع الغرف. يبدأ السبت 12:01 ص وينتهي الجمعة 12 ليلاً، ثم يبدأ Top جديد")); bn.append(el("div",null,"⏳"),bd);
     c.append(h); if(LASTCH) c.append(lchampCard(LASTCH)); c.append(el("div",null,"")); c.lastChild.style.height="10px";
@@ -4226,6 +4228,21 @@ function openBoard(){ loadLastChamp(); logView("top");
   };
   BOARD=draw; draw(); const iv=setInterval(()=>{ if(!document.body.contains(o)){ clearInterval(iv); if(BOARD===draw) BOARD=null; } else draw(); },30000);
 }
+function topModSheet(){ sheet("🏆 تعديل التوب",(c,close)=>{
+  const M=window.TOPMOD||{hide:{},pin:{}}, H=M.hide||{}, P=M.pin||{};
+  const nm=uid=>((PROFS[uid]||{}).name)||uid;
+  const save=async nx=>{ try{ await db.doc("app/topmods").set(nx); toast("تم الحفظ ✓"); }catch(e){ toast("تعذر الحفظ"); } close(); topModSheet(); };
+  c.append(el("p","mut","اختر شخصًا من التوب الحالي لرفعه إلى مركز محدد أو إخفائه من القائمة المعروضة فقط. الرصيد الفعلي لا يتغير."));
+  calcTopLive(topRows).forEach((u,i)=>{ const r=el("div","trow"); r.style.cssText="display:flex;align-items:center;gap:6px;margin:6px 0;flex-wrap:wrap";
+    const n=el("div","tnm",(i+1)+". "+nm(u.uid)); n.style.flex="1";
+    const bu=el("button","btn alt","⬆️ رفع"); bu.onclick=()=>{ const k=Math.floor(Number(prompt("المركز الجديد (1 إلى 10)؟"))); if(!(k>=1&&k<=10)) return toast("أدخل رقماً من 1 إلى 10"); save({hide:{...H},pin:{...P,[u.uid]:k}}); };
+    const bh=el("button","btn alt","🙈 إخفاء"); bh.onclick=()=>{ if(!confirm("إخفاء "+nm(u.uid)+" من التوب؟")) return; const pp={...P}; delete pp[u.uid]; save({hide:{...H,[u.uid]:true},pin:pp}); };
+    r.append(n,bu,bh); c.append(r); });
+  const pinned=Object.keys(P).filter(u=>P[u]);
+  if(pinned.length){ c.append(el("b",null,"المرفوعون")); pinned.forEach(uid=>{ const r=el("div","trow"); r.style.cssText="display:flex;align-items:center;gap:6px;margin:6px 0"; const n=el("div","tnm","مركز "+P[uid]+" — "+nm(uid)); n.style.flex="1"; const b=el("button","btn alt","إلغاء الرفع"); b.onclick=()=>{ const pp={...P}; delete pp[uid]; save({hide:{...H},pin:pp}); }; r.append(n,b); c.append(r); }); }
+  const hid=Object.keys(H).filter(u=>H[u]);
+  if(hid.length){ c.append(el("b",null,"المخفيون")); hid.forEach(uid=>{ const r=el("div","trow"); r.style.cssText="display:flex;align-items:center;gap:6px;margin:6px 0"; const n=el("div","tnm",nm(uid)); n.style.flex="1"; const b=el("button","btn alt","إظهار"); b.onclick=()=>{ const hh={...H}; delete hh[uid]; save({hide:hh,pin:{...P}}); }; r.append(n,b); c.append(r); }); }
+}); }
 let unsubRoomDoc=null;
 function toast(m){ const t=el("div","toast",m); document.body.append(t); setTimeout(()=>t.remove(),2400); }
 function toastV(m){ const t=el("div","toast tvz",m); document.body.append(t); setTimeout(()=>t.remove(),3200); }
@@ -4381,7 +4398,7 @@ function hbWinCard(hb){
   const title=el("div","hbwt", tie?"انتهت الجولة بالتعادل":(lost?(hb.evK==="wrong"?"اختيار خاطئ":"انتهى الوقت"):"وجد المحبس"));
   const nm=el("div","hbwn", tie?"لا يوجد فائز":pName);
   const sub=el("div","hbws", tie?"النتيجة متساوية":(lost?(hb.evK==="wrong"?"أخطأ في اختيار اليد":"لم يجد المحبس في الوقت"):"الفائز بالمحبس"));
-  card.append(x,avw,pill,title,nm,sub);
+  card.append(x,avw,pill,title,nm,sub); if(hb.ring) card.append(el("div","hbring","💍 المحبس كان في اليد رقم "+hb.ring));
   card.onclick=()=>card.remove(); document.body.append(card);
   if(!tie&&!(hb.ev&&window.__hbSelf===hb.ev)){ if(hb.win==="A") hbSound(true,HB_CLAP_SND); else hbSound(false); }
 }
