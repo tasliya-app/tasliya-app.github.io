@@ -4012,7 +4012,7 @@ function userMenu(u,nm){ if(!u||!room) return; const P=PROFS[u]||{}, name=P.name
         try{ db.collection("rooms/"+room.id+"/log").add({t:Date.now(),by:prof.name,text:"🚩 بلاغ ضد "+name+" (ID "+(P.pid||"")+")"}).then(()=>toast("تم إرسال البلاغ للإدارة ✓")).catch(()=>toast("تعذر إرسال البلاغ")); }catch(e){ toast("تعذر إرسال البلاغ"); } });
       umColor(row); c.append(row); }
     if(isMod()&&u!==uid&&u!==room.owner&&myRank()>rankOf(u)){ const ar=el("div","umadm"), k=el("button","umk","طرد"), b=el("button","umbn","حظر");
-      k.onclick=async()=>{ close(); try{ await db.doc("rooms/"+room.id+"/kicks/"+u).set({t:Date.now(),by:uid,name:name}); for(const key of Object.keys(seats)){ if(seats[key].uid===u) await db.doc("rooms/"+room.id+"/seats/"+key).delete(); } logAct("طرد "+name); toast("تم الطرد ✓"); }catch(e){ toast("تعذر الطرد"); } };
+      k.onclick=async()=>{ if(!confirm("طرد "+name+" من الغرفة؟")) return; close(); try{ await db.doc("rooms/"+room.id+"/kicks/"+u).set({t:Date.now(),by:uid,name:name}); for(const key of Object.keys(seats)){ if(seats[key].uid===u) await db.doc("rooms/"+room.id+"/seats/"+key).delete(); } logAct("طرد "+name); toast("تم الطرد ✓"); }catch(e){ toast("تعذر الطرد"); } };
       b.onclick=async()=>{ if(!confirm("حظر "+name+" من الغرفة نهائياً؟")) return; close(); try{ await roomUpdate({banned:[...(room.banned||[]),u]},"حظر "+name); await db.doc("rooms/"+room.id+"/kicks/"+u).set({t:Date.now(),by:uid}); toast("تم الحظر ✓"); }catch(e){ toast("تعذر الحظر"); } };
       ar.append(k,b);
       if(OWNER||room.owner===uid){ const pm=el("button","umpm","الصلاحيات"); pm.onclick=()=>{ close(); sheetMods(); }; ar.append(pm); }
@@ -6823,7 +6823,12 @@ function domMiniSvg(){ return '<svg viewBox="0 0 40 40" width="30" height="30" s
 /* ===== hardware back button: go to previous page instead of leaving ===== */
 let NAVH=[], __lastNav=null, __navBack=false, __exitT=0;
 { const __r0=render; render=function(){ try{ if(!room&&!dm){ const k=tab+"|"+(dmView||""); if(__lastNav&&k!==__lastNav&&!__navBack){ NAVH.push(__lastNav); if(NAVH.length>30) NAVH.shift(); } __lastNav=k; } }catch(_){} return __r0.apply(this,arguments); }; }
+// Remember when a text field was last focused or left: a back press right after that only closes the keyboard, it must not leave the room.
+let inputFocusT=0;
+document.addEventListener("focusin",e=>{ if(e.target&&e.target.matches&&e.target.matches("input,textarea")) inputFocusT=Date.now(); },true);
+document.addEventListener("focusout",e=>{ if(e.target&&e.target.matches&&e.target.matches("input,textarea")) inputFocusT=Date.now(); },true);
 function appBack(){
+  if(Date.now()-inputFocusT<2500){ try{ const a=document.activeElement; if(a&&a.blur&&a.matches&&a.matches("input,textarea")) a.blur(); }catch(_){} return true; }
   const ovs=[...document.querySelectorAll("body > .ov")], top=ovs[ovs.length-1];
   if(top){ if(top===gameOv) closeGame(); else if(top===modesOv) closeModes(); else top.remove(); return true; }
   const w=document.querySelector(".win"); if(w){ w.remove(); return true; }
@@ -6928,7 +6933,10 @@ function chCol(p,score,fill,color){
   return col;
 }
 function chSide(p,score,side){
-  const d=el("div","chside "+side), nm=el("div","chname"); const cav=chAv(p.uid,p.emoji); cav.style.cursor="pointer"; cav.onclick=()=>{ try{ userMenu(p.uid,p.name); }catch(e){} };
+  const d=el("div","chside "+side), nm=el("div","chname"); const cav=chAv(p.uid,p.emoji);
+  // The bar lets taps pass through (so the mic seat underneath stays usable); the photo and name of the player catch their own taps.
+  nm.style.cssText="pointer-events:auto;cursor:pointer"; cav.style.pointerEvents="auto";
+  nm.onclick=()=>{ try{ userMenu(p.uid,p.name); }catch(e){} };
   nm.append(cav, el("span",null,p.name)); const sc=el("span","chscore",String(score)); d.append(nm,sc); d._sc=sc; return d;
 }
 function chBump(e){ e.classList.remove("chbump"); void e.offsetWidth; e.classList.add("chbump"); }
@@ -7071,7 +7079,7 @@ function makeDb(F,fs){
   const mkDoc=path=>{ const ref=()=>F.doc(fs,path);
     return { id:path.split("/").pop(), path:path,
       get:async()=>snapDoc(await F.getDoc(ref())),
-      set:async v=>F.setDoc(ref(),enc(v)),
+      set:async (v,o)=>(o&&o.merge)?F.setDoc(ref(),enc(v),{merge:true}):F.setDoc(ref(),enc(v)),
       update:async v=>F.updateDoc(ref(),enc(v)),
       delete:async()=>F.deleteDoc(ref()),
       onSnapshot:cb=>F.onSnapshot(ref(),s=>cb(snapDoc(s)),e=>{ console.warn("doc listener",path,e&&e.code||e); if(typeof window!=="undefined"&&window.__fsErr) window.__fsErr(path,e); }) }; };
