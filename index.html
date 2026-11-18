@@ -1986,7 +1986,7 @@ function signup(){
   const inp=el("input"); inp.placeholder="اسمك"; inp.maxLength=20;
   const b=el("button","btn full","ابدأ"); 
   b.onclick=async()=>{ const name=inp.value.trim(); if(!name) return;
-    prof={name,pid:OWNER?1:1000000+Math.floor(Math.random()*9000000),emoji:EMOJIS[Math.floor(Math.random()*EMOJIS.length)]};
+    prof={name,pid:OWNER?1:1000000+Math.floor(Math.random()*9000000),emoji:EMOJIS[Math.floor(Math.random()*EMOJIS.length)],joined:Date.now()};
     await db.doc("profiles/"+uid).set(prof); await loadWallet(); start(); };
   c.append(inp,b); a.append(c);
 }
@@ -1999,7 +1999,7 @@ function start(){
   try{ db.doc("bans/"+uid).onSnapshot(sn=>{ window.__banned=!!sn.exists; if(window.__banned) showBanned(); else if(!room&&!dm) render(); }); }catch(e){}
   try{ db.doc("app/lvlbase").onSnapshot(s=>{ window.LVLBASE=s.exists?(s.data().base||{}):{}; Object.keys(PLV).forEach(u=>{ delete PLV[u]; plvLoad(u); }); },()=>{}); }catch(e){} try{ db.doc("app/topmods").onSnapshot(s=>{ window.TOPMOD=s.exists?s.data():{hide:{},pin:{}}; if(BOARD) BOARD(); },()=>{}); }catch(e){} try{ db.doc("app/lock").onSnapshot(s=>{ window.LOCK=s.exists?s.data():{on:false}; try{ render(); }catch(e){} },()=>{}); }catch(e){}
   try{ db.doc("app/superadmins").onSnapshot(s=>{ const ids=(s.exists&&s.data().uids)||[]; window.SUPER_IDS=ids; window.IS_SUPER=ids.includes(uid); const ne=!!(window.OWNER_BASE||window.IS_SUPER); if(ne!==OWNER){ OWNER=ne; if(!room&&!dm) render(); } },()=>{}); }catch(e){}
-  db.doc("app/staff").get().then(s=>{ window.IS_ADMIN=!!(s.exists&&(s.data().uids||[]).includes(uid)); }).catch(()=>{}); loadFriends(); watchTop(); watchNews(); watchCredits(); watchGiftAssets(); watchMusic(); loadThree().catch(()=>{}); if(!unsubProfs) unsubProfs=db.collection("profiles").onSnapshot(sn=>{ PROFS={}; sn.docs.forEach(d=>PROFS[d.id]=d.data()); const me0=PROFS[uid]; if(me0){ prof.topWeeks=me0.topWeeks||[]; checkTopWin(); } if(room) drawChat(); });
+  db.doc("app/staff").onSnapshot(s=>{ window.IS_ADMIN=!!(s.exists&&(s.data().uids||[]).includes(uid)); }, ()=>{}); loadFriends(); watchTop(); watchNews(); watchCredits(); watchGiftAssets(); watchMusic(); loadThree().catch(()=>{}); if(!unsubProfs) unsubProfs=db.collection("profiles").onSnapshot(sn=>{ PROFS={}; sn.docs.forEach(d=>PROFS[d.id]=d.data()); const me0=PROFS[uid]; if(me0){ prof.topWeeks=me0.topWeeks||[]; checkTopWin(); } if(room) drawChat(); });
   if(!unsubFeed) unsubFeed=db.collection("gifts_feed").orderBy("t","desc").limit(1).onSnapshot(sn=>{
     sn.docChanges().forEach(ch=>{ if(ch.type!=="added") return; const n=ch.doc.data(); if(Date.now()-n.t>20000||!room) return; const gg=findGift(n); if(gg&&gg[7]<1) return; showGiftBanner(n); }); });
   if(!unsubGrant&&!OWNER) unsubGrant=db.doc("grants/"+uid).onSnapshot(g=>{ if(g.exists){ const d=g.data(); claimGrant(d.total||0,d.debit||0,d.by); } });
@@ -2850,7 +2850,7 @@ function sheetChargeAdmin(){
     c.append(inp,pv,qr,ok); setTimeout(()=>{ try{ inp.focus(); }catch(e){} },80);
   }); }
 /* ================= AGENTS (وكلاء الشحن) ================= */
-const AGENCY_PRICE=15000000;
+const AGENCY_PRICE=5000000;
 const waLink=v=>{ const d=String(v||"").replace(/[^\d]/g,""); return d.length>=7?"https://wa.me/"+d:""; };
 const tgLink=v=>{ const s=String(v||"").trim().replace(/^https?:\/\/t\.me\//i,"").replace(/^@/,""); return /^[A-Za-z0-9_]{4,}$/.test(s)?"https://t.me/"+s:""; };
 const dFmt=t=>{ try{ return new Date(t).toLocaleDateString("en-GB"); }catch(e){ return ""; } };
@@ -3030,7 +3030,7 @@ function deleteAccountSheet(){ if(OWNER) return toast("حساب المالك ل�
 function logout(){
   if(!confirm("هل تريد تسجيل الخروج؟")) return;
   if(window.__signOut){ window.__signOut(); return; }
-  if(unsubRooms) unsubRooms(); if(unsubInbox) unsubInbox(); unsubInbox=null; tab="home"; room=null; dm=null; signedOut=true; showLogin();
+  if(unsubRooms) unsubRooms(); if(unsubInbox) unsubInbox(); unsubInbox=null; tab="home"; room=null; wakeOff(); dm=null; signedOut=true; showLogin();
 }
 function showLogin(){
   const a=$("#app"); a.innerHTML="";
@@ -3139,12 +3139,24 @@ function ownerPanel(){ sheet("🛠️ ضبط التطبيق",(c,close)=>{ const 
   [["👑","لوحة المالك",()=>{ close(); sheetOwner(); }],["👤","ضبط المستخدمين",()=>{ close(); usersMgr(); }],["🏠","ضبط الغرف",()=>{ close(); roomsMgr(); }],["🚩","البلاغات",()=>{ close(); reportsList(); }],["🕵️","كشف المتجسسين",()=>{ close(); spySheet(); }],["🔐","قفل التطبيق",()=>{ close(); lockSheet(); }],["🛡️","الأدمن",()=>{ close(); staffMgr(); }],["🎨","لون الواجهة",()=>{ close(); sheetAppTheme(); }],["🧑‍💼","ضبط الوكلاء",()=>{ close(); agentsMgr(); }],["🏆","تعديل التوب",()=>{ close(); topModSheet(); }],["📈","بدء عداد المستويات من الآن",()=>{ close(); lvlBaseReset(); }],["💰","تصوير الرصيد وتصفيره",()=>{ close(); balResetSheet(); }],["🆘","الدعم الفني",()=>{ close(); supportMgr(); }]]
     .forEach(([i,t,f])=>g.append(sCirc(i,t,f)));
   c.append(g); }); }
-function usersMgr(){ const US={bal:{},ban:{}}; sheet("👤 المستخدمون",(c,close)=>{ c.closest(".ov")?.classList.add("ovc"); const q=el("input"); q.placeholder="بحث بالاسم أو الـ ID"; const L=el("div"); L.style.cssText="max-height:55vh;overflow:auto;margin-top:8px";
-  const draw=()=>{ L.innerHTML=""; const t=q.value.trim().toLowerCase(); Object.entries(PROFS).filter(([u,p])=>!t||String(p.name||"").toLowerCase().includes(t)||String(p.pid||"")===t).sort((a,b)=>(US.bal[b[0]]||0)-(US.bal[a[0]]||0)).slice(0,80).forEach(([u,p])=>{ const r=el("div","room"), av=el("div","av"); av.style.cssText="width:40px;height:40px;font-size:20px"; setAv(av,p.emoji||"🙂",p.photo); const i=el("div"); i.style.flex="1"; const mt=el("div","usmeta"); mt.append(el("span","uspid","ID #"+(p.pid||"")), el("span","usbal","🪙 "+fmtc(US.bal[u]||0))); i.append(el("b",null,p.name||"مستخدم"), mt); const wr=el("div","uswrap"); wr.append(frameWrap(av,AF(p),2),el("span","ustat "+(US.ban[u]?"off":"on"))); r.append(wr,i); r.style.cursor="pointer"; r.onclick=()=>{ close(); userAdmin(u); }; L.append(r); }); };
+function usersMgr(){ const US={bal:{},ban:{},seen:{}}; sheet("👤 المستخدمون",(c,close)=>{ c.closest(".ov")?.classList.add("ovc"); const q=el("input"); q.placeholder="بحث بالاسم أو الـ ID"; const L=el("div"); L.style.cssText="max-height:55vh;overflow:auto;margin-top:8px";
+  const draw=()=>{ L.innerHTML=""; const t=q.value.trim().toLowerCase();
+    const tb=el("table","ustb"); tb.style.cssText="width:100%;border-collapse:collapse;font-size:13px";
+    const hd=el("tr"); ["الاسم","ID","الرصيد","تاريخ الانضمام"].forEach(h=>{ const th=el("th",null,h); th.style.cssText="text-align:right;padding:6px;border-bottom:1px solid #8884;position:sticky;top:0;background:var(--card,#fff)"; hd.append(th); }); tb.append(hd);
+    const cell=(...ch)=>{ const x=el("td"); x.style.cssText="padding:6px;border-bottom:1px solid #8882"; x.append(...ch); return x; };
+    Object.entries(PROFS).filter(([u,p])=>!t||String(p.name||"").toLowerCase().includes(t)||String(p.pid||"")===t).sort((a,b)=>(US.bal[b[0]]||0)-(US.bal[a[0]]||0)).slice(0,80).forEach(([u,p])=>{
+      const r=el("tr"); r.style.cursor="pointer"; r.onclick=()=>{ close(); userAdmin(u); };
+      const av=el("div","av"); av.style.cssText="width:28px;height:28px;font-size:15px;display:inline-flex;vertical-align:middle;margin-left:6px"; setAv(av,p.emoji||"🙂",p.photo);
+      const dot=el("span"); const online=Date.now()-(US.seen[u]||0)<150000; dot.style.cssText="display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-left:6px;border:1px solid #9ca3af;background:"+(US.ban[u]?"#ef4444":online?"#22c55e":"#ffffff");
+      r.append(cell(dot, av, document.createTextNode(" "+(p.name||"مستخدم"))), cell(String(p.pid||"")), cell("🪙 "+fmtc(US.bal[u]||0)), cell(p.joined?new Date(p.joined).toLocaleDateString("en-GB"):"بدون تاريخ"));
+      tb.append(r); });
+    L.append(tb); };
   q.oninput=draw; c.append(q,L);
   L.textContent="جارٍ التحميل…"; (async()=>{ await Promise.all(Object.keys(PROFS).map(async u=>{ try{ const w=await db.doc("data/users/"+u+"/wallet").get(); US.bal[u]=w.exists?(w.data().coins||0):0; }catch(e){ US.bal[u]=0; } }));
-    try{ const bs=await db.collection("bans").get(); bs.docs.forEach(d=>{ US.ban[d.id]=1; }); }catch(e){} draw(); })(); }); }
-function sheetAdmin(){ sheet("🛡️ لوحة الأدمن",(c,close)=>{ c.append(el("p","mut","صلاحياتك: قراءة البلاغات وحلّها، وتعديل أسماء المستخدمين وأرقامهم. لا صلاحية لك على النقاط أو المحافظ."));
+    try{ const bs=await db.collection("bans").get(); bs.docs.forEach(d=>{ US.ban[d.id]=1; }); }catch(e){}
+    try{ const ps=await db.collection("presence").get(); ps.docs.forEach(d=>{ US.seen[d.id]=+(d.data().t)||0; }); }catch(e){}
+    draw(); })(); }); }
+function sheetAdmin(){ sheet("🛡️ لوحة الأدمن",(c,close)=>{ c.append(el("p","mut","صلاحياتك: قراءة البلاغات وحلّها، وتعديل أسماء المستخدمين وأرقامهم. في كل الغرف: فتح وإغلاق المايكات، الحظر والطرد، الألعاب والعجلة وجولة الأبطال ولعبة المحبس. لا صلاحية لك على النقاط أو المحافظ."));
   const b1=el("button","btn full","🚩 البلاغات"), b2=el("button","btn full alt","👤 تعديل اسم أو ID مستخدم"); b2.style.marginTop="8px";
   b1.onclick=()=>{ close(); reportsList(); }; b2.onclick=()=>{ close(); adminFindUser(); }; c.append(b1,b2); }); }
 function adminFindUser(){ sheet("👤 تعديل مستخدم",(c,close)=>{ const i=el("input"); i.type="number"; i.placeholder="ID المستخدم"; i.inputMode="numeric"; c.append(i);
@@ -3162,7 +3174,7 @@ function adminUserEdit(u){ const P0=PROFS[u]||{}; sheet("👤 "+(P0.name||"مس�
     r4.onclick=async()=>{ if(!confirm(on?"سحب صلاحية السوبر أدمن من هذا المستخدم؟":"منح هذا المستخدم كامل صلاحيات المالك؟")) return;
       try{ const sn=await db.doc("app/superadmins").get(); const cur=(sn.exists&&sn.data().uids)||[]; const nx=on?cur.filter(x=>x!==u):[...new Set([...cur,u])]; await db.doc("app/superadmins").set({uids:nx}); toast(on?"تم سحب الصلاحية":"تمت إضافة السوبر أدمن ✓"); close(); }catch(e){ toast("تعذر الحفظ"); } };
     c.append(r4); } }); }
-function staffMgr(){ sheet("🛡️ الأدمن",async(c,close)=>{ const L=el("div"); c.append(el("p","mut","الأدمن يقرأ البلاغات ويعدّل الأسماء والـ IDs فقط. الإضافة والإزالة بيدك."), L);
+function staffMgr(){ sheet("🛡️ الأدمن",async(c,close)=>{ const L=el("div"); c.append(el("p","mut","الأدمن يقرأ البلاغات ويعدّل الأسماء والـ IDs، ويملك في كل الغرف: فتح وإغلاق المايكات، الحظر والطرد، الألعاب والعجلة وجولة الأبطال ولعبة المحبس. الإضافة والإزالة بيدك."), L);
   const load=async()=>{ try{ const s=await db.doc("app/staff").get(); return s.exists?(s.data().uids||[]):[]; }catch(e){ return []; } };
   const draw=async()=>{ L.innerHTML=""; const ids=await load(); if(!ids.length) L.append(el("p","mut","لا يوجد أدمن بعد."));
     ids.forEach(x=>{ const P0=PROFS[x]||{}, row=el("div","card room"), t=el("div"); t.style.flex="1"; t.append(el("b",null,P0.name||"مستخدم"),el("div","mut","ID: "+(P0.pid||"")));
@@ -3315,15 +3327,25 @@ function dmOverlay(target){
   const rowOf=(u,name,sub,go)=>{ const pp=PROFS[u]||{}, r=el("div","dmr"), av=el("div","av"); av.style.cssText="width:42px;height:42px;font-size:21px"; setAv(av,pp.emoji||"👤",pp.photo);
     const t=el("div"); t.style.cssText="flex:1;min-width:0"; t.append(el("b",null,pp.name||name||"مستخدم")); if(sub) t.append(el("div","mut",String(sub).slice(0,40))); r.append(frameWrap(av,AF(pp),2),t); r.onclick=go; return r; };
   const showList=(tabK)=>{ stop(); tabK=tabK||"msgs"; head.innerHTML=""; body.innerHTML="";
-    const tabs=el("div","gtabs"); [["msgs","💬 المحادثات"],["friends","👥 الأصدقاء"]].forEach(([k,t])=>{ const b=el("button",tabK===k?"on":"",t); b.onclick=()=>showList(k); tabs.append(b); }); head.append(tabs,el("span","sp"),xb());
+    const tabs=el("div","gtabs"); [["msgs","💬 المحادثات"],["friends","👥 الأصدقاء"],["reqs","📩 الطلبات"]].forEach(([k,t])=>{ const b=el("button",tabK===k?"on":"",t); const bg=el("span","dmtb",""); if(k==="msgs"||k==="reqs"){ bg.dataset.k=k; b.append(bg); } b.onclick=()=>showList(k); tabs.append(b); }); head.append(tabs,el("span","sp"),xb()); dmTabBadges();
     const L=el("div"); body.append(L);
     const draw=()=>{ L.innerHTML="";
+      if(tabK==="reqs"){ const rq=NOT.filter(n=>n.type==="freq");
+        if(!rq.length) L.append(el("p","mut","لا توجد طلبات صداقة حالياً."));
+        rq.forEach(n=>{ const pp=PROFS[n.from]||{}, r=el("div","dmr"), av=el("div","av"); av.style.cssText="width:42px;height:42px;font-size:21px"; setAv(av,pp.emoji||n.emoji||"👤",pp.photo);
+          const t=el("div"); t.style.cssText="flex:1;min-width:0"; t.append(el("b",null,pp.name||n.fromName||"مستخدم"));
+          const ac=el("button","btn","قبول"), rj=el("button","btn alt","رفض");
+          ac.onclick=async()=>{ await acceptFriend(n); showList("reqs"); };
+          rj.onclick=async()=>{ try{ await db.doc("notifs/"+uid+"/items/"+n.id).delete(); }catch(e){} toast("تم رفض الطلب"); showList("reqs"); };
+          r.append(frameWrap(av,AF(pp),2),t,ac,rj); L.append(r); });
+        return; }
       if(tabK==="friends"){ if(!FR.length) L.append(el("p","mut","لا يوجد أصدقاء بعد."));
         FR.forEach(f=>L.append(rowOf(f.uid,f.name,"",()=>showThread({uid:f.uid,name:(PROFS[f.uid]||{}).name||f.name})))); return; }
       if(!st.inbox.length) L.append(el("p","mut","لا توجد محادثات بعد. اضغط على شخص في الغرفة ثم «رسالة خاصة»."));
       st.inbox.forEach(m=>L.append(delThreadBtn(m,rowOf(m.uid,m.name,m.last,()=>showThread({uid:m.uid,name:m.name}))))); };
+    st.tab=tabK; st.redraw=draw;
     if(tabK==="msgs") st.un=db.collection("inbox/"+uid+"/threads").orderBy("t","desc").limit(30).onSnapshot(sn=>{ st.inbox=sn.docs.map(d=>d.data()); draw(); }); else draw(); };
-  const showThread=(t)=>{ stop(); st.uid=t.uid; dmSeen(t.uid); head.innerHTML=""; body.innerHTML="";
+  const showThread=(t)=>{ stop(); st.uid=t.uid; st.tab="thread"; dmSeen(t.uid); head.innerHTML=""; body.innerHTML="";
     const back=el("button","rb","→"); back.onclick=()=>showList("msgs"); const fr=isFriend(t.uid), fb2=el("button","rb",fr?"✓":"➕"); fb2.onclick=()=>{ addFriend({uid:t.uid,name:t.name,emoji:(PROFS[t.uid]||{}).emoji}); }; if(fr) fb2.disabled=true;
     const dl=el("button","rb","🗑"); dl.title="حذف المحادثة"; dl.onclick=async()=>{ if(!confirm("حذف هذه المحادثة من قائمتك؟")) return; try{ await db.doc("inbox/"+uid+"/threads/"+t.uid).delete(); await clearDmHist(t.uid); toast("تم حذف المحادثة"); showList("msgs"); }catch(_){ toast("تعذر الحذف"); } };
     head.append(back,el("b",null,t.name||"مستخدم"),el("span","sp"),fb2,dl,xb());
@@ -3549,8 +3571,18 @@ function presFill(L){ L.innerHTML=""; const arr=room?presIn(room.id):[]; if(!arr
 function presSheet(){ const o=el("div","ov"), c=el("div","card sheet"); c.append(el("b",null,"الموجودون في الغرفة")); const L=el("div"); L.id="pshl"; c.append(L);
   const x=el("button","btn alt full","إغلاق"); x.style.marginTop="8px"; x.onclick=()=>o.remove(); c.append(x); o.append(c); o.onclick=e=>{ if(e.target===o) o.remove(); }; document.body.append(o); presFill(L); }
 function rnWith(r){ const x=el("div","rn"); const n=presIn(r.id).length; const pc=el("span","rcn"+(n?"":" z"),String(n)); pc.dataset.r=r.id; x.append(el("span","rnn",(r.pin?"🔒 ":"")+r.name),pc); return x; }
+// Keep the screen on while the user is inside a room (Screen Wake Lock API; re-taken when the page becomes visible again).
+let wakeLk=null;
+async function wakeOn(){ try{ if(!("wakeLock" in navigator)) return; if(wakeLk&&!wakeLk.released) return; wakeLk=await navigator.wakeLock.request("screen"); wakeLk.addEventListener("release",()=>{ wakeLk=null; }); }catch(_){ wakeLk=null; } }
+function wakeOff(){ try{ if(wakeLk) wakeLk.release(); }catch(_){} wakeLk=null; }
+// The browser cannot tell a power-button press from switching apps, so the lock is re-taken only after a short absence
+// (app switch). A longer absence means the phone was locked on purpose, and the normal screen timeout applies.
+let wakeHiddenAt=0;
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="hidden"){ wakeHiddenAt=Date.now(); return; }
+  if(room&&wakeHiddenAt&&Date.now()-wakeHiddenAt<15000) wakeOn(); });
 function openRoom(r){
-  room=r; presJT=Date.now(); msgs=[]; seats={}; micMuted=false; joinT=Date.now()-1500; watchTop();
+  wakeOn(); room=r; presJT=Date.now(); msgs=[]; seats={}; micMuted=false; joinT=Date.now()-1500; watchTop();
   unsubMsgs=db.collection("rooms/"+r.id+"/msgs").where("t",">=",joinT).orderBy("t","asc").limit(300).onSnapshot(s=>{msgs=s.docs.map(d=>d.data()).filter(m=>m.t>=joinT); drawChat(); try{ s.docChanges().forEach(ch=>{ if(ch.type==="added"){ const m=ch.doc.data(); if(m.type==="gift"&&m.t>=joinT&&Date.now()-m.t<10000) giftPop(m); } }); }catch(_){} });
   unsubSeats=db.collection("rooms/"+r.id+"/seats").onSnapshot(s=>{seats={}; s.docs.forEach(d=>seats[d.id]=d.data()); drawSeats(); rtSync();}); rtStart(r.id);
   unsubRoomDoc=db.doc("rooms/"+r.id).onSnapshot(sn=>{ if(!room||room.id!==r.id) return; if(!sn.exists){ toast("تم حذف الغرفة"); closeRoom(); return; } const v=document.getElementById("mi"), val=v?v.value:"", hadFocus=!!v&&document.activeElement===v; const prevJ=JSON.stringify(room), pr=room; room={...room,...sn.data(),id:r.id}; if(JSON.stringify(room)!==prevJ){ if(/[?&]dbg=1/.test(location.search)){ const ch=Object.keys(room).filter(k=>JSON.stringify(pr[k])!==JSON.stringify(room[k])); toast("🔧 تغيّر في الغرفة: "+ch.join(", ")); } render(); } const n=document.getElementById("mi"); if(n){ n.value=val; if(hadFocus) n.focus(); } if(window.__modDraw) window.__modDraw(); });
@@ -3559,7 +3591,7 @@ function openRoom(r){
 }
 let GAMES_RM=null; // room id kept while the games section is open from inside a room
 function leaveGamesToRoom(){ GAMES_RM=null; tab="home"; try{ if(musAudio&&MUS.on&&!musMuted) musAudio.play().catch(()=>{}); }catch(_){} }
-function closeRoom(){ GAMES_RM=null; replyTo=null; document.querySelectorAll(".mpop,.mpop2,.hbhelp").forEach(x=>x.remove()); Object.keys(TRK_URL).forEach(k=>{ try{ URL.revokeObjectURL(TRK_URL[k]); }catch(_){} delete TRK_URL[k]; }); if(unsubKick){ unsubKick(); unsubKick=null; } presOff(); musStop(); MUS={id:null,t0:0,on:false}; if(unsubMsgs) unsubMsgs(); if(unsubSeats) unsubSeats(); if(unsubRoomDoc) unsubRoomDoc(); rlStop(); rtStop(); dmClose(); room=null; { const gp=document.getElementById("gpops"); if(gp) gp.remove(); } render(); }
+function closeRoom(){ wakeOff(); GAMES_RM=null; replyTo=null; document.querySelectorAll(".mpop,.mpop2,.hbhelp").forEach(x=>x.remove()); Object.keys(TRK_URL).forEach(k=>{ try{ URL.revokeObjectURL(TRK_URL[k]); }catch(_){} delete TRK_URL[k]; }); if(unsubKick){ unsubKick(); unsubKick=null; } presOff(); musStop(); MUS={id:null,t0:0,on:false}; if(unsubMsgs) unsubMsgs(); if(unsubSeats) unsubSeats(); if(unsubRoomDoc) unsubRoomDoc(); rlStop(); rtStop(); dmClose(); room=null; { const gp=document.getElementById("gpops"); if(gp) gp.remove(); } render(); }
 const packsOf=r=>((r&&r.micPacks)||[]).filter(e=>e>Date.now());
 const micN=r=>Math.max(5,5+5*packsOf(r).length-5*((r&&r.hiddenRows)||0));
 function mySeat(){ const N=room?micN(room):99; return Object.keys(seats).find(k=>seats[k].uid===uid&&+k<=N); }
@@ -3916,14 +3948,17 @@ const pendingFrom=u=>NOT.find(n=>n.type==="freq"&&n.from===u);
 async function makeFriends(o){ if(!o||o===uid) return; if(!FRX.includes(o)){ FRX=[...FRX,o]; rebuildFR(); }
   if(madeFr.has(o)) return; madeFr.add(o); try{ await db.doc("friendships/"+[uid,o].sort().join("_")).set({m:[uid,o].sort(),t:Date.now()}); }catch(e){ madeFr.delete(o); } }
 function friendAdd(n){ return makeFriends(n.from); }
+function hbBeat(){ if(!uid||!db) return; db.doc("presence/"+uid).set({uid:uid,t:Date.now()},{merge:true}).catch(()=>{}); }
 function startNotif(){ if(unsubNot||!db||!uid) return; dmLoad();
+  if(!window.__hbBeat){ window.__hbBeat=setInterval(hbBeat,60000); hbBeat(); }
   unsubNot=db.collection("notifs/"+uid+"/items").orderBy("t","desc").limit(40).onSnapshot(sn=>{ NOT=sn.docs.map(d=>Object.assign({id:d.id},d.data()));
     NOT.forEach(n=>{ if(n.type==="facc") friendAdd(n); });
     sn.docChanges().forEach(c=>{ if(c.type!=="added") return; const n=c.doc.data();
       if(n.type==="ginv"){ if(!ginvFirst||Date.now()-n.t<60000) showInvite(Object.assign({id:c.doc.id},n)); return; }   /* invitations: independent of the sender clock */
       if(n.t>=notSince-2000) toast("🔔 "+n.text); });
     ginvFirst=false;
-    notBadge(); if(tab==="dm"&&dmView==="reqs") render(); });
+    notBadge(); if(tab==="dm"&&dmView==="reqs") render();
+    if(dmOv&&dmOv.tab==="reqs"&&dmOv.redraw) dmOv.redraw(); });
   unsubDmN=db.collection("inbox/"+uid+"/threads").orderBy("t","desc").limit(30).onSnapshot(sn=>{ sn.docChanges().forEach(c=>{ if(c.type==="removed") return; const th=c.doc.data();
     if(!th.from||th.from===uid||th.t<notSince) return; if(dm&&dm.uid===th.uid) return; if(dmOv&&dmOv.uid===th.uid) return;
     if(dmUnread[th.uid]===th.t) return; dmUnread[th.uid]=th.t; dmAdd(th.uid); if(!room) toast("💬 "+(th.name||"رسالة")+": "+String(th.last||"").slice(0,40)); notBadge(); }); }); }
@@ -4413,10 +4448,10 @@ let unsubRoomDoc=null;
 function toast(m){ const t=el("div","toast",m); document.body.append(t); setTimeout(()=>t.remove(),2400); }
 function toastV(m){ const t=el("div","toast tvz",m); document.body.append(t); setTimeout(()=>t.remove(),3200); }
 window.alert=toast;
-const isMod=()=>!!room&&(OWNER||room.owner===uid||(room.supers||[]).includes(uid)||(room.admins||[]).includes(uid));
+const isMod=()=>!!room&&(OWNER||!!window.IS_ADMIN||room.owner===uid||(room.supers||[]).includes(uid)||(room.admins||[]).includes(uid));
 const isBoss=()=>!!room&&(OWNER||room.owner===uid||(room.supers||[]).includes(uid));
 const rankOf=u=>!room?0:(u===room.owner?3:(room.supers||[]).includes(u)?2:(room.admins||[]).includes(u)?1:0);
-const myRank=()=>OWNER?3:rankOf(uid);
+const myRank=()=>OWNER?3:Math.max(rankOf(uid),window.IS_ADMIN?1:0);
 function logAct(text){ try{ db.collection("rooms/"+room.id+"/log").add({t:Date.now(),by:prof.name,text}); }catch(e){} }
 async function roomUpdate(patch,log){ await db.doc("rooms/"+room.id).update(patch); if(log) logAct(log); }
 function enterRoom(r){
