@@ -3212,7 +3212,7 @@ async function userAdmin(u){ const P=PROFS[u]||{}; let bal=0, banned=false;
 function userDMs(u){ const P=PROFS[u]||{}; sheet("💬 رسائل "+(P.name||""),(c,close)=>{ const L=el("div"); L.style.cssText="max-height:60vh;overflow:auto"; c.append(L); L.textContent="جاري التحميل…";
   db.collection("inbox/"+u+"/threads").orderBy("t","desc").limit(30).get().then(sn=>{ L.innerHTML=""; if(!sn.docs.length){ L.append(el("p","mut","لا توجد محادثات")); return; }
     sn.docs.forEach(d=>{ const th=d.data(), r=el("div","room"); r.append(el("b",null,th.name||"مستخدم"),el("div","mut",String(th.last||"").slice(0,40))); r.style.cursor="pointer";
-      r.onclick=async()=>{ close(); const cid=[u,th.uid].sort().join("_"); const ms=await db.collection("dms/"+cid+"/msgs").orderBy("t","asc").limit(200).get();
+      r.onclick=async()=>{ close(); const cid=[u,th.uid].sort().join("_"); const ms0=await db.collection("dms/"+cid+"/msgs").orderBy("t","desc").limit(200).get(); const ms={docs:ms0.docs.slice().reverse()};
         sheet((P.name||"")+" ↔ "+(th.name||""),c2=>{ const B=el("div"); B.style.cssText="max-height:60vh;overflow:auto"; ms.docs.forEach(m=>{ const x=m.data(); const who=(x.from===u?(P.name||"هو"):(th.name||"الطرف الآخر"))+": "; if(x.img){ B.append(el("div","mut",who)); B.append(dmBubble(x,cid)); } else B.append(el("div","msg",who+x.text)); }); if(!ms.docs.length) B.append(el("p","mut","لا رسائل")); c2.append(B); }); };
       L.append(r); }); }).catch(()=>{ L.textContent="تعذر التحميل"; }); }); }
 function roomsMgr(){ sheet("🏠 الغرف",(c,close)=>{ const L=el("div"); L.style.cssText="max-height:60vh;overflow:auto";
@@ -3282,7 +3282,7 @@ function dmPickImg(to,name){ const fi=document.createElement("input"); fi.type="
   fi.click(); }
 function openChat(o){
   dm=o; dmMsgs=[]; dmSeen(o.uid);
-  unsubChat=db.collection("dms/"+cidOf(o.uid)+"/msgs").orderBy("t","asc").limit(100).onSnapshot(s=>{ const cutD=((prof.clr||{})[o.uid])||0; dmMsgs=s.docs.map(d=>d.data()).filter(x=>(x.t||0)>cutD); drawDM(); });
+  unsubChat=db.collection("dms/"+cidOf(o.uid)+"/msgs").orderBy("t","desc").limit(100).onSnapshot(s=>{ const cutD=((prof.clr||{})[o.uid])||0; dmMsgs=s.docs.map(d=>Object.assign({_id:d.id},d.data())).reverse().filter(x=>(x.t||0)>cutD); drawDM(); });
   render();
 }
 function renderChat(a){
@@ -3290,8 +3290,8 @@ function renderChat(a){
   const top=el("div","top"); const back=el("button","btn alt bkp","→ رجوع"); back.onclick=()=>{ if(unsubChat) unsubChat(); dm=null; render(); };
   const fb=el("button","rb","➕"); fb.onclick=()=>addFriend({uid:dm.uid,name:dm.name,emoji:(PROFS[dm.uid]||{}).emoji});
   const dl=el("button","rb","🗑"); dl.title="حذف المحادثة";
-  dl.onclick=async()=>{ if(!confirm("حذف هذه المحادثة من الطرفين؟")) return; const to=dm.uid;
-    try{ await db.doc("inbox/"+uid+"/threads/"+to).delete(); try{ await db.doc("inbox/"+to+"/threads/"+uid).delete(); }catch(_){} await clearDmHist(to); toast("تم حذف المحادثة"); if(unsubChat) unsubChat(); dm=null; render(); }catch(_){ toast("تعذر الحذف"); } };
+  dl.onclick=async()=>{ if(!confirm("حذف كل رسائل هذه المحادثة عند الطرفين؟")) return; const to=dm.uid;
+    try{ await dmWipe(to); await dmWipeThreads(to); toast("تم حذف المحادثة"); if(unsubChat) unsubChat(); dm=null; render(); }catch(_){ toast("تعذر الحذف"); } };
   const dP=PROFS[dm.uid]||{}, dwho=el("div","dmwho"), dav=el("div","av"); dav.style.cssText="width:34px;height:34px;font-size:18px;flex:0 0 auto"; setAv(dav,dP.emoji||dm.emoji||"👤",dP.photo||dm.photo||"");
   dwho.style.cssText="display:flex;align-items:center;gap:8px;min-width:0"; dwho.append(dav,el("b",null,dm.name));
   top.append(back,dwho,el("span","sp"),dl,fb); a.append(top);
@@ -3305,10 +3305,20 @@ function renderChat(a){
   send.onclick=go; inp.onkeydown=e=>{if(e.key==="Enter")go()}; const ph=el("button","rb dmpic","📷"); ph.title="إرسال صورة"; ph.onclick=()=>dmPickImg(dm.uid,dm.name);
   row.append(ph,inp,send); cc.append(row); a.append(cc); drawDM();
 }
+// Deleting a conversation removes its messages for both people (the rules let either participant delete them).
+async function dmWipe(other){ const cid=cidOf(other);
+  for(let i=0;i<500;i++){ const s=await db.collection("dms/"+cid+"/msgs").limit(200).get(); if(!s.docs.length) break;
+    for(const d of s.docs){ try{ await db.doc("dms/"+cid+"/msgs/"+d.id).delete(); }catch(_){} } } }
+async function dmWipeThreads(other){ try{ await db.doc("inbox/"+uid+"/threads/"+other).delete(); }catch(_){} try{ await db.doc("inbox/"+other+"/threads/"+uid).delete(); }catch(_){} }
 function drawDM(){
   if(dm&&(dmUnread[dm.uid]||dmCount[dm.uid])) dmSeen(dm.uid);
   const c=document.getElementById("dmchat"); if(!c) return; c.innerHTML="";
-  dmMsgs.forEach(m=>{ const d=dmBubble(m,cidOf(dm.uid)); if(m.from===uid){ d.classList.add("me"); d.style.alignSelf="flex-end"; } c.append(d); });
+  const cidNow=cidOf(dm.uid);
+  dmMsgs.forEach(m=>{ const d=dmBubble(m,cidNow); if(m.from===uid){ d.classList.add("me"); d.style.alignSelf="flex-end"; }
+    // Press and hold a message to delete it for both people.
+    let lp=null; d.addEventListener("pointerdown",()=>{ lp=setTimeout(()=>{ lp=null; if(!m._id) return; if(!confirm("حذف هذه الرسالة عند الطرفين؟")) return; db.doc("dms/"+cidNow+"/msgs/"+m._id).delete().then(()=>toast("تم حذف الرسالة")).catch(()=>toast("تعذر الحذف")); },550); });
+    ["pointerup","pointerleave","pointercancel"].forEach(ev=>d.addEventListener(ev,()=>{ if(lp){ clearTimeout(lp); lp=null; } }));
+    c.append(d); });
   c.scrollTop=c.scrollHeight;
 }
 let dmOv=null;
@@ -3317,7 +3327,7 @@ async function sendDM(to,name,text){ if(!isFriend(to)) return; const now=Date.no
   await db.collection("dms/"+cidOf(to)+"/msgs").add({from:uid,text:text,t:now});
   await db.doc("inbox/"+uid+"/threads/"+to).set({uid:to,name:name,last:text,t:now,from:uid});
   await db.doc("inbox/"+to+"/threads/"+uid).set({uid:uid,name:prof.name,last:text,t:now,from:uid}); }
-function delThreadBtn(m,row){ const w=el("div","dmrw"), x=el("button","rb","🗑"); x.title="حذف المحادثة"; x.onclick=async e=>{ e.stopPropagation(); if(!confirm("حذف هذه المحادثة من قائمتك؟")) return; try{ await db.doc("inbox/"+uid+"/threads/"+m.uid).delete(); await clearDmHist(m.uid); toast("تم حذف المحادثة"); }catch(_){ toast("تعذر الحذف"); } }; w.append(row,x); return w; }
+function delThreadBtn(m,row){ const w=el("div","dmrw"), x=el("button","rb","🗑"); x.title="حذف المحادثة"; x.onclick=async e=>{ e.stopPropagation(); if(!confirm("حذف كل رسائل هذه المحادثة عند الطرفين؟")) return; try{ await dmWipe(m.uid); await dmWipeThreads(m.uid); toast("تم حذف المحادثة"); }catch(_){ toast("تعذر الحذف"); } }; w.append(row,x); return w; }
 function dmOverlay(target){
   dmClose(); const o=el("div","ov dmo"), c=el("div","card sheet dmc"); o.append(c); document.body.append(o);
   const st={o:o,un:null,un2:null,uid:null,inbox:[]}; dmOv=st; o.onclick=e=>{ if(e.target===o) dmClose(); };
@@ -3347,11 +3357,11 @@ function dmOverlay(target){
     if(tabK==="msgs") st.un=db.collection("inbox/"+uid+"/threads").orderBy("t","desc").limit(30).onSnapshot(sn=>{ st.inbox=sn.docs.map(d=>d.data()); draw(); }); else draw(); };
   const showThread=(t)=>{ stop(); st.uid=t.uid; st.tab="thread"; dmSeen(t.uid); head.innerHTML=""; body.innerHTML="";
     const back=el("button","rb","→"); back.onclick=()=>showList("msgs"); const fr=isFriend(t.uid), fb2=el("button","rb",fr?"✓":"➕"); fb2.onclick=()=>{ addFriend({uid:t.uid,name:t.name,emoji:(PROFS[t.uid]||{}).emoji}); }; if(fr) fb2.disabled=true;
-    const dl=el("button","rb","🗑"); dl.title="حذف المحادثة"; dl.onclick=async()=>{ if(!confirm("حذف هذه المحادثة من قائمتك؟")) return; try{ await db.doc("inbox/"+uid+"/threads/"+t.uid).delete(); await clearDmHist(t.uid); toast("تم حذف المحادثة"); showList("msgs"); }catch(_){ toast("تعذر الحذف"); } };
+    const dl=el("button","rb","🗑"); dl.title="حذف المحادثة"; dl.onclick=async()=>{ if(!confirm("حذف كل رسائل هذه المحادثة عند الطرفين؟")) return; try{ await dmWipe(t.uid); await dmWipeThreads(t.uid); toast("تم حذف المحادثة"); showList("msgs"); }catch(_){ toast("تعذر الحذف"); } };
     head.append(back,el("b",null,t.name||"مستخدم"),el("span","sp"),fb2,dl,xb());
     const chat=el("div","dmchat"); const row=el("div","row"), inp=el("input"), send=el("button","btn","إرسال"); inp.placeholder="اكتب رسالة…"; inp.maxLength=500; const ph=el("button","rb dmpic","📷"); ph.title="إرسال صورة"; ph.onclick=()=>dmPickImg(t.uid,t.name); row.append(ph,inp,send); body.append(chat,row);
     let ms=[]; const draw=()=>{ chat.innerHTML=""; ms.forEach(m=>{ const d=dmBubble(m,cidOf(t.uid)); if(m.from===uid){ d.style.alignSelf="flex-end"; d.style.background="var(--pri)"; d.style.color="#fff"; } chat.append(d); }); chat.scrollTop=chat.scrollHeight; };
-    st.un=db.collection("dms/"+cidOf(t.uid)+"/msgs").orderBy("t","asc").limit(100).onSnapshot(sn=>{ const cut=((prof.clr||{})[t.uid])||0; ms=sn.docs.map(d=>d.data()).filter(x=>(x.t||0)>cut); draw(); dmSeen(t.uid); });
+    st.un=db.collection("dms/"+cidOf(t.uid)+"/msgs").orderBy("t","desc").limit(100).onSnapshot(sn=>{ const cut=((prof.clr||{})[t.uid])||0; ms=sn.docs.map(d=>d.data()).reverse().filter(x=>(x.t||0)>cut); draw(); dmSeen(t.uid); });
     const go=async()=>{ const x=inp.value.trim(); if(!x) return; inp.value=""; try{ await sendDM(t.uid,t.name,x); }catch(e){ toast("تعذر الإرسال"); } };
     send.onclick=go; inp.onkeydown=e=>{ if(e.key==="Enter") go(); }; };
   if(target) showThread(target); else showList("msgs");
@@ -3390,7 +3400,7 @@ function newsSheet(){
         await db.doc("news/"+n.id).update({pin:!n.pin}); toast(n.pin?"تم إلغاء التثبيت":"تم تثبيت الخبر ✓"); }catch(e){ toast("تعذر التثبيت"); } }; act.append(pb); }
       const lk=el("button","nbtn"+(has?" on":""),(has?"❤️ ":"🤍 ")+likes.length); lk.onclick=async()=>{ const cur=n.likes||[], nv=cur.includes(uid)?cur.filter(z=>z!==uid):[...cur,uid]; n.likes=nv; draw(); try{ await db.doc("news/"+n.id).update({likes:nv}); }catch(e){} };
       const cm=el("button","nbtn"+(ncOpen===n.id?" on":""),"💬 "+(n.nc||0)); cm.onclick=()=>{ if(ncUn){ ncUn(); ncUn=null; } if(ncOpen===n.id){ ncOpen=null; draw(); return; } ncOpen=n.id; ncDocs=[]; ncDraft="";
-        ncUn=db.collection("news_comments").where("nid","==",n.id).orderBy("t","asc").limit(100).onSnapshot(sn=>{ ncDocs=sn.docs.map(z=>Object.assign({id:z.id},z.data())); draw(); }); draw(); };
+        ncUn=db.collection("news_comments").where("nid","==",n.id).orderBy("t","desc").limit(100).onSnapshot(sn=>{ ncDocs=sn.docs.slice().reverse().map(z=>Object.assign({id:z.id},z.data())); draw(); }); draw(); };
       act.append(lk,cm); if(OWNER){ const dl=el("button","nbtn","🗑️"); dl.onclick=async()=>{ if(!confirm("حذف هذا الخبر؟")) return; try{ await db.doc("news/"+n.id).delete(); }catch(e){ toast("تعذر الحذف"); } }; act.append(dl); } d.append(act);
       if(ncOpen===n.id){ const cb=el("div","ncbox"); if(!ncDocs.length) cb.append(el("div","mut","لا توجد تعليقات بعد."));
         ncDocs.forEach(z=>{ const r=el("div","nccm"), zl=z.likes||[], zh=zl.includes(uid); const body=el("div","nccb"); if(z.rt) body.append(el("div","ncq",(z.rt.n||"")+": "+(z.rt.t||""))); const nm=el("b",null,(z.name||"مستخدم")+": "); body.append(nm, document.createTextNode(z.text||""));
@@ -3586,7 +3596,7 @@ function openRoom(r){
   // Leaving the current room first: its message / seat / room listeners must stop, or they keep feeding this room's screen.
   if(room) closeRoom();
   wakeOn(); room=r; presJT=Date.now(); msgs=[]; seats={}; micMuted=false; joinT=Date.now()-1500; watchTop();
-  unsubMsgs=db.collection("rooms/"+r.id+"/msgs").where("t",">=",joinT).orderBy("t","asc").limit(300).onSnapshot(s=>{msgs=s.docs.map(d=>d.data()).filter(m=>m.t>=joinT); drawChat(); try{ s.docChanges().forEach(ch=>{ if(ch.type==="added"){ const m=ch.doc.data(); if(m.type==="gift"&&m.t>=joinT&&Date.now()-m.t<10000) giftPop(m); } }); }catch(_){} });
+  unsubMsgs=db.collection("rooms/"+r.id+"/msgs").where("t",">=",joinT).orderBy("t","desc").limit(300).onSnapshot(s=>{msgs=s.docs.map(d=>d.data()).reverse().filter(m=>m.t>=joinT); drawChat(); try{ s.docChanges().forEach(ch=>{ if(ch.type==="added"){ const m=ch.doc.data(); if(m.type==="gift"&&m.t>=joinT&&Date.now()-m.t<10000) giftPop(m); } }); }catch(_){} });
   unsubSeats=db.collection("rooms/"+r.id+"/seats").onSnapshot(s=>{seats={}; s.docs.forEach(d=>seats[d.id]=d.data()); drawSeats(); rtSync();}); rtStart(r.id);
   unsubRoomDoc=db.doc("rooms/"+r.id).onSnapshot(sn=>{ if(!room||room.id!==r.id) return; if(!sn.exists){ toast("تم حذف الغرفة"); closeRoom(); return; } const v=document.getElementById("mi"), val=v?v.value:"", hadFocus=!!v&&document.activeElement===v; const prevJ=JSON.stringify(room), pr=room; room={...room,...sn.data(),id:r.id}; if(JSON.stringify(room)!==prevJ){ if(/[?&]dbg=1/.test(location.search)){ const ch=Object.keys(room).filter(k=>JSON.stringify(pr[k])!==JSON.stringify(room[k])); toast("🔧 تغيّر في الغرفة: "+ch.join(", ")); } render(); } const n=document.getElementById("mi"); if(n){ n.value=val; if(hadFocus) n.focus(); } if(window.__modDraw) window.__modDraw(); });
   render(); finalizeTops(r); startPres(); presOn(); startNotif(); rlWatch(); wheelWatch(); setTimeout(()=>{ try{ if(!adoptAssets.f&&!(navigator.connection&&navigator.connection.saveData)) loadAsset("fx.js",()=>(adoptAssets.f?{x:1}:{})); }catch(_){} },6000);
@@ -6312,7 +6322,7 @@ const GCQ=["👍","😂","🔥","😎","😡","👏","حظ سعيد 🍀","لع�
 function gcPlayers(st){ if(!st) return []; if(st.kind==="ludo") return Object.values(st.players||{}); if(st.kind==="xo") return [st.X,st.O].filter(Boolean); return [st.players&&st.players.A,st.players&&st.players.B].filter(Boolean); }
 function gcStop(){ try{ if(GC.un) GC.un(); }catch(e){} GC={key:"",un:null,msgs:[],ids:null,open:false,unread:0,bot:false,cid:""}; if(gameOv) gameOv.querySelectorAll(".gchat,.gchb").forEach(x=>x.remove()); }
 function gcSubscribe(){ if(GC.un) return; GC.cid="g"+gtid; GC.ids=null;
-  try{ GC.un=db.collection("dms/"+GC.cid+"/msgs").orderBy("t","asc").limit(80).onSnapshot(sn=>{ const docs=sn.docs, fresh=[]; GC.msgs=docs.map(d=>d.data());
+  try{ GC.un=db.collection("dms/"+GC.cid+"/msgs").orderBy("t","desc").limit(80).onSnapshot(sn=>{ const docs=sn.docs.slice().reverse(), fresh=[]; GC.msgs=docs.map(d=>d.data());
       if(GC.ids===null) GC.ids=new Set(docs.map(d=>d.id)); else docs.forEach(d=>{ if(!GC.ids.has(d.id)){ GC.ids.add(d.id); const m=d.data(); if(m.from!==uid) fresh.push(m); } });
       if(fresh.length) gcIncoming(fresh[fresh.length-1],fresh.length); if(GC.open) gcRenderList(); }); }catch(e){} }
 document.addEventListener("click",e=>{ const o=e.target.closest&&e.target.closest(".gfx,.cine,.win"); if(o) o.remove(); },true);
