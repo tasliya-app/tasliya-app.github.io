@@ -3,7 +3,7 @@
 <head>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin><link rel="preconnect" href="https://firestore.googleapis.com" crossorigin><link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual">
 <title>تسلية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap">
 <link rel="manifest" href="manifest.webmanifest">
@@ -3542,7 +3542,8 @@ const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"K":String(
 const seatRef=i=>db.doc("rooms/"+room.id+"/seats/"+i);
 let unsubPres=null, presDocs=[], presFirst=true, presHB=null, presJT=0;
 let presSeen={};
-const presLive=()=>presDocs.filter(p=>p.room&&p.t&&Date.now()-p.t<95000);
+// A user counts as present while their presence stamp is fresh. Phones throttle background tabs, so the window is wider than the 30s beat.
+const presLive=()=>presDocs.filter(p=>p.room&&p.t&&Date.now()-p.t<240000);
 const fsErrShown={};
 window.__fsErr=function(path,e){ const c=(e&&e.code)||String(e); const k=String(path).split("/")[0]; if(fsErrShown[k]) return; fsErrShown[k]=1; try{ toast("خطأ بقاعدة البيانات ("+k+"): "+c); }catch(_){} };
 const presIn=rid=>presLive().filter(p=>p.room===rid);
@@ -3552,7 +3553,6 @@ function startPres(){ if(unsubPres||!db) return;
     presDocs.forEach(q=>{ const z=presSeen[q.uid];
       if(!presFirst&&room&&q.room===room.id&&q.uid!==uid&&(!z||z.room!==q.room||z.jt!==q.jt)) entryBanner(q);
       if(!z||z.t!==q.t||z.room!==q.room||z.jt!==q.jt) presSeen[q.uid]={t:q.t,room:q.room,jt:q.jt,seenAt:now}; });
-    Object.keys(presSeen).forEach(k=>{ if(!presDocs.some(d=>d.uid===k)) delete presSeen[k]; });
     presFirst=false; presPaint(); if(room&&RT.rid) rtSync();
     if(!room&&document.getElementById("rlist")){ const ks=rooms.map(r=>r.id+":"+presIn(r.id).length).join("|"); if(ks!==window.__rlKey){ window.__rlKey=ks; try{ drawList(); }catch(e){} } } });
   setInterval(presPaint,15000); }
@@ -3563,7 +3563,8 @@ function presSet(){ if(!room||!uid) return; db.doc("presence/"+uid).set({uid:uid
 function presOn(){ presSet(); clearInterval(presHB); presHB=setInterval(presSet,30000); }
 function presOff(){ clearInterval(presHB); presHB=null; if(uid&&db) db.doc("presence/"+uid).delete().catch(()=>{}); }
 var musHid=false;
-window.addEventListener("pagehide",e=>{ musStop(); if(room&&!e.persisted) presOff(); });
+// Do not delete the presence record on pagehide: phones fire it on simple background switches, which made members look like they left and rejoined. The record simply goes stale and the freshness window drops it.
+window.addEventListener("pagehide",e=>{ musStop(); if(room&&!e.persisted){ clearInterval(presHB); presHB=null; } });
 document.addEventListener("visibilitychange",()=>{ if(document.hidden){ if(MUS.on){ musStop(); musHid=true; } } else { if(room) presOn(); if(musHid&&room&&MUS.on&&!musMuted) musStart(); musHid=false; } });
 function presFill(L){ L.innerHTML=""; const arr=room?presIn(room.id):[]; if(!arr.length){ L.append(el("p","mut","لا أحد الآن")); return; }
   arr.forEach(q=>{ const P=PROFS[q.uid]||{}; const r=el("div","room"); const av=el("div","av"); av.style.cssText="width:40px;height:40px;font-size:20px"; setAv(av,P.emoji||"🙂",P.photo);
@@ -3582,6 +3583,8 @@ document.addEventListener("visibilitychange",()=>{
   if(document.visibilityState==="hidden"){ wakeHiddenAt=Date.now(); return; }
   if(room&&wakeHiddenAt&&Date.now()-wakeHiddenAt<15000) wakeOn(); });
 function openRoom(r){
+  // Leaving the current room first: its message / seat / room listeners must stop, or they keep feeding this room's screen.
+  if(room) closeRoom();
   wakeOn(); room=r; presJT=Date.now(); msgs=[]; seats={}; micMuted=false; joinT=Date.now()-1500; watchTop();
   unsubMsgs=db.collection("rooms/"+r.id+"/msgs").where("t",">=",joinT).orderBy("t","asc").limit(300).onSnapshot(s=>{msgs=s.docs.map(d=>d.data()).filter(m=>m.t>=joinT); drawChat(); try{ s.docChanges().forEach(ch=>{ if(ch.type==="added"){ const m=ch.doc.data(); if(m.type==="gift"&&m.t>=joinT&&Date.now()-m.t<10000) giftPop(m); } }); }catch(_){} });
   unsubSeats=db.collection("rooms/"+r.id+"/seats").onSnapshot(s=>{seats={}; s.docs.forEach(d=>seats[d.id]=d.data()); drawSeats(); rtSync();}); rtStart(r.id);
