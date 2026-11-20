@@ -3563,12 +3563,12 @@ window.__fsErr=function(path,e){ const c=(e&&e.code)||String(e); const k=String(
 const presIn=rid=>presLive().filter(p=>p.room===rid);
 function entryBanner(q){ document.querySelectorAll(".entryb2").forEach(x=>x.remove()); const b=el("div","entryb2"); b.append(chAv(q.uid,q.emoji), el("span",null,(q.name||"مستخدم")+" دخل الغرفة")); document.body.append(b); setTimeout(()=>b.remove(),6000); }
 function startPres(){ if(unsubPres||!db||!uid) return;
-  // One listener for the whole app (lobby counts and room lists need it too). It only reads fresh stamps,
-  // and is re-subscribed each minute so stale stamps drop out of the window.
-  subPres(); setInterval(subPres,60000); setInterval(presPaint,15000); }
+  // One listener for the whole app (lobby counts and room lists need it too). It is opened once; live counts are
+  // filtered by freshness in presLive(), so it never needs re-reading the whole collection.
+  subPres(); setInterval(presPaint,15000); }
 function subPres(){ if(unsubPres) unsubPres();
   presFirst=true; // the first snapshot after (re)subscribing never shows entry banners
-  unsubPres=db.collection("presence").where("t",">",Date.now()-240000).onSnapshot(sn=>{ presDocs=sn.docs.map(d=>d.data()); const now=Date.now();
+  unsubPres=db.collection("presence").where("t",">",Date.now()-3600000).onSnapshot(sn=>{ presDocs=sn.docs.map(d=>d.data()); const now=Date.now();
     presDocs.forEach(q=>{ const z=presSeen[q.uid];
       if(!presFirst&&room&&q.room===room.id&&q.uid!==uid&&(!z||z.room!==q.room||z.jt!==q.jt)) entryBanner(q);
       if(!z||z.t!==q.t||z.room!==q.room||z.jt!==q.jt) presSeen[q.uid]={t:q.t,room:q.room,jt:q.jt,seenAt:now}; });
@@ -3978,7 +3978,7 @@ function dbgClean(){ try{ localStorage.setItem("dbgclean","1"); }catch(_){} }
 function dbgCheck(){ try{ if(!OWNER) return; const clean=localStorage.getItem("dbgclean")==="1"; const beat=+(localStorage.getItem("dbgbeat")||0); localStorage.removeItem("dbgclean"); const a=JSON.parse(localStorage.getItem("dbgq")||"[]");
   if(!clean&&beat&&Date.now()-beat>8000&&a.length){ sheet("⚠️ توقف سابق للتطبيق",(c)=>{ c.append(el("p","mut","آخر الأحداث قبل التوقف (من الأحدث إلى الأقدم):")); const pre=el("pre"); pre.style.cssText="direction:ltr;text-align:left;font-size:11px;white-space:pre-wrap;max-height:50vh;overflow:auto"; pre.textContent=a.slice().reverse().join("\n"); c.append(pre); }); }
   localStorage.removeItem("dbgq"); }catch(_){} }
-function hbBeat(){ if(!uid||!db) return; db.doc("presence/"+uid).set({uid:uid,t:Date.now()},{merge:true}).catch(()=>{}); }
+function hbBeat(){ if(!uid||!db) return; db.doc("presence/"+uid).set({uid:uid,room:(room&&room.id)||null,t:Date.now()},{merge:true}).catch(()=>{}); }
 function startNotif(){ if(unsubNot||!db||!uid) return; dmLoad(); startPres();
   if(!window.__hbBeat){ window.__hbBeat=setInterval(()=>{ if(document.visibilityState==="visible") hbBeat(); },180000); hbBeat(); }
   if(!window.__dbgI){ window.__dbgI=setInterval(dbgBeat,1000); setTimeout(dbgCheck,2500); }
@@ -7092,7 +7092,7 @@ setInterval(chTick,1000);
  if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});
 })();
 </script>
-<script>(function(){ var t=document.getElementById("appsrc"); var m=t&&t.textContent.match(/const SPLASH="([^"]+)"/); var g=document.getElementById("gate"); if(m&&g) g.style.backgroundImage="url("+m[1]+")"; setTimeout(function(){ var b=document.getElementById("gateBox"); if(b) b.style.opacity="1"; },2600); })();</script>
+<script>(function(){ var t=document.getElementById("appsrc"); var m=t&&t.textContent.match(/const SPLASH="([^"]+)"/); var g=document.getElementById("gate"); if(m&&g) g.style.backgroundImage="url("+m[1]+")"; setTimeout(function(){ var b=document.getElementById("gateBox"); if(b) b.style.opacity="1"; },250); })();</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut, deleteUser, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword, linkWithCredential } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
