@@ -3147,7 +3147,7 @@ function usersMgr(){ const US={bal:{},ban:{},seen:{}}; sheet("👤 المستخ�
     Object.entries(PROFS).filter(([u,p])=>!t||String(p.name||"").toLowerCase().includes(t)||String(p.pid||"")===t).sort((a,b)=>(US.bal[b[0]]||0)-(US.bal[a[0]]||0)).slice(0,80).forEach(([u,p])=>{
       const r=el("tr"); r.style.cursor="pointer"; r.onclick=()=>{ close(); userAdmin(u); };
       const av=el("div","av"); av.style.cssText="width:28px;height:28px;font-size:15px;display:inline-flex;vertical-align:middle;margin-left:6px"; setAv(av,p.emoji||"🙂",p.photo);
-      const dot=el("span"); const online=Date.now()-(US.seen[u]||0)<150000; dot.style.cssText="display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-left:6px;border:1px solid #9ca3af;background:"+(US.ban[u]?"#ef4444":online?"#22c55e":"#ffffff");
+      const dot=el("span"); const online=Date.now()-(US.seen[u]||0)<240000; dot.style.cssText="display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-left:6px;border:1px solid #9ca3af;background:"+(US.ban[u]?"#ef4444":online?"#22c55e":"#ffffff");
       r.append(cell(dot, av, document.createTextNode(" "+(p.name||"مستخدم"))), cell(String(p.pid||"")), cell("🪙 "+fmtc(US.bal[u]||0)), cell(p.joined?new Date(p.joined).toLocaleDateString("en-GB"):"بدون تاريخ"));
       tb.append(r); });
     L.append(tb); };
@@ -3559,7 +3559,8 @@ window.__fsErr=function(path,e){ const c=(e&&e.code)||String(e); const k=String(
 const presIn=rid=>presLive().filter(p=>p.room===rid);
 function entryBanner(q){ document.querySelectorAll(".entryb2").forEach(x=>x.remove()); const b=el("div","entryb2"); b.append(chAv(q.uid,q.emoji), el("span",null,(q.name||"مستخدم")+" دخل الغرفة")); document.body.append(b); setTimeout(()=>b.remove(),6000); }
 function startPres(){ if(unsubPres||!db) return;
-  unsubPres=db.collection("presence").onSnapshot(sn=>{ presDocs=sn.docs.map(d=>d.data()); const now=Date.now();
+  // Only this room's members are listened to (a listener on the whole collection re-reads every user's stamp on each beat).
+  unsubPres=db.collection("presence").where("room","==",r.id).onSnapshot(sn=>{ presDocs=sn.docs.map(d=>d.data()); const now=Date.now();
     presDocs.forEach(q=>{ const z=presSeen[q.uid];
       if(!presFirst&&room&&q.room===room.id&&q.uid!==uid&&(!z||z.room!==q.room||z.jt!==q.jt)) entryBanner(q);
       if(!z||z.t!==q.t||z.room!==q.room||z.jt!==q.jt) presSeen[q.uid]={t:q.t,room:q.room,jt:q.jt,seenAt:now}; });
@@ -3570,11 +3571,11 @@ function presPaint(){ document.querySelectorAll(".rcn").forEach(x=>{ const n=pre
   const n=document.getElementById("pcnt"); if(n&&room) n.textContent=String(presIn(room.id).length);
   const sh=document.getElementById("pshl"); if(sh&&room) presFill(sh); if(window.__modDraw) window.__modDraw(); if(window.__banDraw) window.__banDraw(); }
 function presSet(){ if(!room||!uid) return; db.doc("presence/"+uid).set({uid:uid,name:prof.name||"",pid:prof.pid||0,room:room.id,jt:presJT,t:Date.now()}).catch(e=>window.__fsErr("presence",e)); }
-function presOn(){ presSet(); clearInterval(presHB); presHB=setInterval(presSet,30000); }
+function presOn(){ presSet(); clearInterval(presHB); presHB=setInterval(presSet,90000); }
 function presOff(){ clearInterval(presHB); presHB=null; if(uid&&db) db.doc("presence/"+uid).delete().catch(()=>{}); }
 var musHid=false;
 // Do not delete the presence record on pagehide: phones fire it on simple background switches, which made members look like they left and rejoined. The record simply goes stale and the freshness window drops it.
-window.addEventListener("pagehide",e=>{ musStop(); if(room&&!e.persisted){ clearInterval(presHB); presHB=null; } });
+window.addEventListener("pagehide",e=>{ musStop(); dbgClean(); if(room&&!e.persisted){ clearInterval(presHB); presHB=null; } });
 document.addEventListener("visibilitychange",()=>{ if(document.hidden){ if(MUS.on){ musStop(); musHid=true; } } else { if(room) presOn(); if(musHid&&room&&MUS.on&&!musMuted) musStart(); musHid=false; } });
 function presFill(L){ L.innerHTML=""; const arr=room?presIn(room.id):[]; if(!arr.length){ L.append(el("p","mut","لا أحد الآن")); return; }
   arr.forEach(q=>{ const P=PROFS[q.uid]||{}; const r=el("div","room"); const av=el("div","av"); av.style.cssText="width:40px;height:40px;font-size:20px"; setAv(av,P.emoji||"🙂",P.photo);
@@ -3592,12 +3593,14 @@ let wakeHiddenAt=0;
 document.addEventListener("visibilitychange",()=>{
   if(document.visibilityState==="hidden"){ wakeHiddenAt=Date.now(); return; }
   if(room&&wakeHiddenAt&&Date.now()-wakeHiddenAt<15000) wakeOn(); });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") dbgClean(); });
 function openRoom(r){
   // Leaving the current room first: its message / seat / room listeners must stop, or they keep feeding this room's screen.
   if(room) closeRoom();
+  dbgLog("open "+r.id);
   wakeOn(); room=r; presJT=Date.now(); msgs=[]; seats={}; micMuted=false; joinT=Date.now()-1500; watchTop();
-  unsubMsgs=db.collection("rooms/"+r.id+"/msgs").where("t",">=",joinT).orderBy("t","desc").limit(300).onSnapshot(s=>{msgs=s.docs.map(d=>d.data()).reverse().filter(m=>m.t>=joinT); drawChat(); try{ s.docChanges().forEach(ch=>{ if(ch.type==="added"){ const m=ch.doc.data(); if(m.type==="gift"&&m.t>=joinT&&Date.now()-m.t<10000) giftPop(m); } }); }catch(_){} });
-  unsubSeats=db.collection("rooms/"+r.id+"/seats").onSnapshot(s=>{seats={}; s.docs.forEach(d=>seats[d.id]=d.data()); drawSeats(); rtSync();}); rtStart(r.id);
+  unsubMsgs=db.collection("rooms/"+r.id+"/msgs").where("t",">=",joinT).orderBy("t","desc").limit(300).onSnapshot(s=>{dbgLog("msgs "+s.docs.length);msgs=s.docs.map(d=>d.data()).reverse().filter(m=>m.t>=joinT); drawChat(); try{ s.docChanges().forEach(ch=>{ if(ch.type==="added"){ const m=ch.doc.data(); if(m.type==="gift"&&m.t>=joinT&&Date.now()-m.t<10000) giftPop(m); } }); }catch(_){} });
+  unsubSeats=db.collection("rooms/"+r.id+"/seats").onSnapshot(s=>{dbgLog("seats "+s.docs.length);seats={}; s.docs.forEach(d=>seats[d.id]=d.data()); drawSeats(); rtSync();}); rtStart(r.id);
   unsubRoomDoc=db.doc("rooms/"+r.id).onSnapshot(sn=>{ if(!room||room.id!==r.id) return; if(!sn.exists){ toast("تم حذف الغرفة"); closeRoom(); return; } const v=document.getElementById("mi"), val=v?v.value:"", hadFocus=!!v&&document.activeElement===v; const prevJ=JSON.stringify(room), pr=room; room={...room,...sn.data(),id:r.id}; if(JSON.stringify(room)!==prevJ){ if(/[?&]dbg=1/.test(location.search)){ const ch=Object.keys(room).filter(k=>JSON.stringify(pr[k])!==JSON.stringify(room[k])); toast("🔧 تغيّر في الغرفة: "+ch.join(", ")); } render(); } const n=document.getElementById("mi"); if(n){ n.value=val; if(hadFocus) n.focus(); } if(window.__modDraw) window.__modDraw(); });
   render(); finalizeTops(r); startPres(); presOn(); startNotif(); rlWatch(); wheelWatch(); setTimeout(()=>{ try{ if(!adoptAssets.f&&!(navigator.connection&&navigator.connection.saveData)) loadAsset("fx.js",()=>(adoptAssets.f?{x:1}:{})); }catch(_){} },6000);
   if(unsubKick){ unsubKick(); } unsubKick=db.doc("rooms/"+r.id+"/kicks/"+uid).onSnapshot(sn=>{ if(sn.exists&&sn.data().t>=joinT-1000&&room&&room.id===r.id){ toast("تم طردك من الغرفة"); closeRoom(); } });
@@ -3961,9 +3964,17 @@ const pendingFrom=u=>NOT.find(n=>n.type==="freq"&&n.from===u);
 async function makeFriends(o){ if(!o||o===uid) return; if(!FRX.includes(o)){ FRX=[...FRX,o]; rebuildFR(); }
   if(madeFr.has(o)) return; madeFr.add(o); try{ await db.doc("friendships/"+[uid,o].sort().join("_")).set({m:[uid,o].sort(),t:Date.now()}); }catch(e){ madeFr.delete(o); } }
 function friendAdd(n){ return makeFriends(n.from); }
+// Freeze log (owner only): the last room events are kept in localStorage, so after a freeze or crash the owner can see what happened just before it.
+function dbgLog(s){ try{ if(!OWNER) return; const a=JSON.parse(localStorage.getItem("dbgq")||"[]"); a.push(new Date().toLocaleTimeString("en-GB")+" "+String(s).slice(0,120)); if(a.length>40) a.splice(0,a.length-40); localStorage.setItem("dbgq",JSON.stringify(a)); }catch(_){} }
+function dbgBeat(){ try{ if(OWNER&&document.visibilityState==="visible") localStorage.setItem("dbgbeat",String(Date.now())); }catch(_){} }
+function dbgClean(){ try{ localStorage.setItem("dbgclean","1"); }catch(_){} }
+function dbgCheck(){ try{ if(!OWNER) return; const clean=localStorage.getItem("dbgclean")==="1"; const beat=+(localStorage.getItem("dbgbeat")||0); localStorage.removeItem("dbgclean"); const a=JSON.parse(localStorage.getItem("dbgq")||"[]");
+  if(!clean&&beat&&Date.now()-beat>8000&&a.length){ sheet("⚠️ توقف سابق للتطبيق",(c)=>{ c.append(el("p","mut","آخر الأحداث قبل التوقف (من الأحدث إلى الأقدم):")); const pre=el("pre"); pre.style.cssText="direction:ltr;text-align:left;font-size:11px;white-space:pre-wrap;max-height:50vh;overflow:auto"; pre.textContent=a.slice().reverse().join("\n"); c.append(pre); }); }
+  localStorage.removeItem("dbgq"); }catch(_){} }
 function hbBeat(){ if(!uid||!db) return; db.doc("presence/"+uid).set({uid:uid,t:Date.now()},{merge:true}).catch(()=>{}); }
 function startNotif(){ if(unsubNot||!db||!uid) return; dmLoad();
-  if(!window.__hbBeat){ window.__hbBeat=setInterval(hbBeat,60000); hbBeat(); }
+  if(!window.__hbBeat){ window.__hbBeat=setInterval(()=>{ if(document.visibilityState==="visible") hbBeat(); },180000); hbBeat(); }
+  if(!window.__dbgI){ window.__dbgI=setInterval(dbgBeat,1000); setTimeout(dbgCheck,2500); }
   unsubNot=db.collection("notifs/"+uid+"/items").orderBy("t","desc").limit(40).onSnapshot(sn=>{ NOT=sn.docs.map(d=>Object.assign({id:d.id},d.data()));
     NOT.forEach(n=>{ if(n.type==="facc") friendAdd(n); });
     sn.docChanges().forEach(c=>{ if(c.type!=="added") return; const n=c.doc.data();
@@ -4482,7 +4493,7 @@ function sheetPremiumId(){ if(!room) return;
     c.append(el("div","mut","الأرقام المميزة من "+PID_MIN+" إلى "+PID_MAX+" — السعر "+PID_PRICE.toLocaleString("en")+" 🪙. عند الشراء يتغير ID الغرفة تلقائياً. الرقم المباع عليه ❌ ولا يمكن شراؤه مرة أخرى."));
     const g=el("div"); g.style.cssText="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px"; c.append(g);
     let taken={};
-    try{ const snap=await db.collection("pids").get(); snap.forEach(d=>{ taken[d.id]=d.data(); }); }catch(e){ console.error("pids",e); g.append(el("p","mut","تعذر تحميل الأرقام: "+(e.code||e.message||e))); return; }
+    try{ const snap=await db.collection("pids").get(); snap.docs.forEach(d=>{ taken[d.id]=d.data(); }); }catch(e){ console.error("pids",e); g.append(el("p","mut","تعذر تحميل الأرقام: "+(e.code||e.message||e))); return; }
     for(let n=PID_MIN;n<=PID_MAX;n++){
       const sold=!!taken[String(n)], cur=Number(room.num)===n;
       const b=el("button","btn alt", sold?"❌ "+n:(cur?"✓ "+n:String(n)));
