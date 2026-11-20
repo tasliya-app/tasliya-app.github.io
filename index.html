@@ -1905,6 +1905,24 @@ body{line-height:1.6}
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap">
 </head>
 <body>
+<script>
+(function(){
+  function showErr(m){
+    try{
+      var d=document.getElementById("errbox");
+      if(!d){ d=document.createElement("div"); d.id="errbox";
+        d.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;z-index:2147483647;background:#7f1d1d;color:#fff;padding:10px;border-radius:10px;font:12px sans-serif;direction:ltr;text-align:left;word-break:break-word;max-height:40vh;overflow:auto";
+        d.onclick=function(){ d.remove(); };
+        (document.body||document.documentElement).appendChild(d); }
+      d.textContent="Error: "+String(m).slice(0,400)+"  (tap to close)";
+    }catch(_){}
+  }
+  window.addEventListener("error",function(e){ if(e&&e.message) showErr(e.message+(e.lineno?" @"+e.lineno:"")); });
+  window.addEventListener("unhandledrejection",function(e){ var r=e&&e.reason; showErr((r&&(r.message||r))||"promise"); });
+  window.__showErr=showErr;
+})();
+</script>
+
 <div id="splash"><img alt=""></div>
 <div class="wrap" id="app"><p class="mut">جارٍ التحميل…</p></div>
 
@@ -1981,6 +1999,9 @@ async function claimCredits(){
 async function withdrawMain(n){ await setCoins(coins+n); logTx("main",n,null,n); EARN.main=r2((EARN.main||0)+n); try{ await walletRef().update({earn:EARN}); }catch(e){} }
 
 function signup(){
+  try{ signup2(); }catch(e){ window.__showErr&&window.__showErr("signup: "+(e&&e.message||e)); }
+}
+function signup2(){
   const a=$("#app"); a.innerHTML="";
   const c=el("div","card"); c.append(logoImg(),el("div","brand","تسلية"),el("h2",null,"مرحباً بك 👋"),el("p","mut","اختر اسماً وستحصل على ID خاص بك."));
   const inp=el("input"); inp.placeholder="اسمك"; inp.maxLength=20;
@@ -2000,7 +2021,7 @@ function start(){
   try{ db.doc("bans/"+uid).onSnapshot(sn=>{ window.__banned=!!sn.exists; if(window.__banned) showBanned(); else if(!room&&!dm) render(); }); }catch(e){}
   try{ db.doc("app/lvlbase").onSnapshot(s=>{ window.LVLBASE=s.exists?(s.data().base||{}):{}; Object.keys(PLV).forEach(u=>{ delete PLV[u]; plvLoad(u); }); },()=>{}); }catch(e){} try{ db.doc("app/topmods").onSnapshot(s=>{ window.TOPMOD=s.exists?s.data():{hide:{},pin:{}}; if(BOARD) BOARD(); },()=>{}); }catch(e){} try{ db.doc("app/lock").onSnapshot(s=>{ window.LOCK=s.exists?s.data():{on:false}; try{ render(); }catch(e){} },()=>{}); }catch(e){}
   try{ db.doc("app/superadmins").onSnapshot(s=>{ const ids=(s.exists&&s.data().uids)||[]; window.SUPER_IDS=ids; window.IS_SUPER=ids.includes(uid); const ne=!!(window.OWNER_BASE||window.IS_SUPER); if(ne!==OWNER){ OWNER=ne; if(!room&&!dm) render(); } },()=>{}); }catch(e){}
-  db.doc("app/staff").onSnapshot(s=>{ window.IS_ADMIN=!!(s.exists&&(s.data().uids||[]).includes(uid)); }, ()=>{}); loadFriends(); watchTop(); watchNews(); watchCredits(); watchGiftAssets(); watchMusic(); loadThree().catch(()=>{}); if(!unsubProfs) unsubProfs=db.collection("profiles").onSnapshot(sn=>{ PROFS={}; sn.docs.forEach(d=>PROFS[d.id]=d.data()); const me0=PROFS[uid]; if(me0){ prof.topWeeks=me0.topWeeks||[]; checkTopWin(); } if(room) drawChat(); });
+  db.doc("app/staff").onSnapshot(s=>{ window.IS_ADMIN=!!(s.exists&&(s.data().uids||[]).includes(uid)); }, ()=>{}); loadFriends(); watchTop(); watchNews(); watchCredits(); watchGiftAssets(); watchMusic(); if(!unsubProfs) unsubProfs=db.collection("profiles").onSnapshot(sn=>{ PROFS={}; sn.docs.forEach(d=>PROFS[d.id]=d.data()); const me0=PROFS[uid]; if(me0){ prof.topWeeks=me0.topWeeks||[]; checkTopWin(); } if(room) drawChat(); });
   if(!unsubFeed) unsubFeed=db.collection("gifts_feed").orderBy("t","desc").limit(1).onSnapshot(sn=>{
     sn.docChanges().forEach(ch=>{ if(ch.type!=="added") return; const n=ch.doc.data(); if(Date.now()-n.t>20000||!room) return; const gg=findGift(n); if(gg&&gg[7]<1) return; showGiftBanner(n); }); });
   if(!unsubGrant&&!OWNER) unsubGrant=db.doc("grants/"+uid).onSnapshot(g=>{ if(g.exists){ const d=g.data(); claimGrant(d.total||0,d.debit||0,d.by); } });
@@ -2456,7 +2477,8 @@ const icH=(k,cls)=>'<span class="ic'+(cls?' '+cls:'')+'">'+(ICO[k]||'')+'</span>
 
 const HOME_BGM="home_bgm.mp3";
 let homeAud=null;
-function homeMusicStart(){ if(homeAud&&!homeAud.paused) return; try{ if(!homeAud){ homeAud=new Audio(HOME_BGM); homeAud.loop=true; homeAud.volume=.5; } }catch(e){ return; }
+function homeMusicStart(){ if(window.__hmT||(homeAud&&!homeAud.paused)) return; window.__hmT=setTimeout(()=>{ window.__hmT=null; homeMusicPlay(); },3000); }
+function homeMusicPlay(){ if(homeAud&&!homeAud.paused) return; if(document.visibilityState!=="visible") return; try{ if(!homeAud){ homeAud=new Audio(HOME_BGM); homeAud.loop=true; homeAud.volume=.5; } }catch(e){ return; }
   const pl=homeAud.play(); if(pl&&pl.catch) pl.catch(()=>{ const r=()=>{ if(homeAud) homeAud.play().catch(()=>{}); }; document.addEventListener("pointerdown",r,{once:true}); }); }
 function homeMusicStop(){ if(!homeAud) return; try{ homeAud.pause(); }catch(e){} homeAud=null; }
 document.addEventListener("visibilitychange",()=>{ if(document.hidden) homeMusicStop(); });
@@ -3609,7 +3631,7 @@ function openRoom(r){
   unsubMsgs=db.collection("rooms/"+r.id+"/msgs").where("t",">=",joinT).orderBy("t","desc").limit(300).onSnapshot(s=>{dbgLog("msgs "+s.docs.length);msgs=s.docs.map(d=>d.data()).reverse().filter(m=>m.t>=joinT); drawChat(); try{ s.docChanges().forEach(ch=>{ if(ch.type==="added"){ const m=ch.doc.data(); if(m.type==="gift"&&m.t>=joinT&&Date.now()-m.t<10000) giftPop(m); } }); }catch(_){} });
   unsubSeats=db.collection("rooms/"+r.id+"/seats").onSnapshot(s=>{dbgLog("seats "+s.docs.length);seats={}; s.docs.forEach(d=>seats[d.id]=d.data()); drawSeats(); rtSync();}); rtStart(r.id);
   unsubRoomDoc=db.doc("rooms/"+r.id).onSnapshot(sn=>{ if(!room||room.id!==r.id) return; if(!sn.exists){ toast("تم حذف الغرفة"); closeRoom(); return; } const v=document.getElementById("mi"), val=v?v.value:"", hadFocus=!!v&&document.activeElement===v; const prevJ=JSON.stringify(room), pr=room; room={...room,...sn.data(),id:r.id}; if(JSON.stringify(room)!==prevJ){ if(/[?&]dbg=1/.test(location.search)){ const ch=Object.keys(room).filter(k=>JSON.stringify(pr[k])!==JSON.stringify(room[k])); toast("🔧 تغيّر في الغرفة: "+ch.join(", ")); } render(); } const n=document.getElementById("mi"); if(n){ n.value=val; if(hadFocus) n.focus(); } if(window.__modDraw) window.__modDraw(); });
-  render(); finalizeTops(r); startPres(); presOn(); startNotif(); rlWatch(); wheelWatch(); setTimeout(()=>{ try{ if(!adoptAssets.f&&!(navigator.connection&&navigator.connection.saveData)) loadAsset("fx.js",()=>(adoptAssets.f?{x:1}:{})); }catch(_){} },6000);
+  render(); finalizeTops(r); startPres(); presOn(); startNotif(); rlWatch(); wheelWatch(); setTimeout(()=>{ try{ if(!adoptAssets.f&&!(navigator.connection&&navigator.connection.saveData)) loadAsset("fx.js",()=>(adoptAssets.f?{x:1}:{})); }catch(_){} },12000);
   if(unsubKick){ unsubKick(); } unsubKick=db.doc("rooms/"+r.id+"/kicks/"+uid).onSnapshot(sn=>{ if(sn.exists&&sn.data().t>=joinT-1000&&room&&room.id===r.id){ toast("تم طردك من الغرفة"); closeRoom(); } });
 }
 let GAMES_RM=null; // room id kept while the games section is open from inside a room
@@ -7166,7 +7188,7 @@ document.getElementById("gLogin").onclick=async()=>{ err.textContent=""; try{ co
 document.getElementById("gForgot").onclick=async()=>{ err.textContent=""; if(!gE()){ err.textContent="اكتب بريدك أولاً ثم اضغط نسيت كلمة المرور."; return; } try{ await sendPasswordResetEmail(auth,gE()); err.textContent="أُرسل رابط تغيير كلمة المرور إلى بريدك."; }catch(e){ err.textContent=emsg(e); } };
 window.__linkPassword=async(pw)=>{ const u=auth.currentUser; if(!u||!u.email) throw new Error("no-user"); await linkWithCredential(u,EmailAuthProvider.credential(u.email,pw)); window.__needLink=false; };
 window.__chPw=async(oldP,newP)=>{ const u=auth.currentUser; if(!u) throw new Error("no-user"); await reauthenticateWithCredential(u,EmailAuthProvider.credential(u.email,oldP)); await updatePassword(u,newP); };
-onAuthStateChanged(auth,u=>{ window.__needLink=!!(u&&!u.providerData.some(x=>x.providerId==="password")); const pwOnly=u&&u.providerData.some(x=>x.providerId==="password"); if(u&&!booted&&(!pwOnly||u.emailVerified)){ booted=true; gate.remove(); setTimeout(function(){ try{ var L=(document.getElementById("appsrc").textContent.match(/"(lamp|gpanda|glowbfly)_[a-z]+\.(webp|webm|mp3)"/g)||[]); L.reduce(function(pr,x){ return pr.then(function(){ return fetch(x.slice(1,-1)).then(function(r){ return r.blob(); }).catch(function(){}); }); }, Promise.resolve()); }catch(e){} },1500); const s=document.createElement("script"); s.textContent=document.getElementById("appsrc").textContent; document.body.append(s); } });
+onAuthStateChanged(auth,u=>{ window.__needLink=!!(u&&!u.providerData.some(x=>x.providerId==="password")); const pwOnly=u&&u.providerData.some(x=>x.providerId==="password"); if(u&&!booted&&(!pwOnly||u.emailVerified)){ booted=true; gate.remove(); setTimeout(function(){ try{ var L=(document.getElementById("appsrc").textContent.match(/"(lamp|gpanda|glowbfly)_[a-z]+\.(webp|webm|mp3)"/g)||[]); L.reduce(function(pr,x){ return pr.then(function(){ return fetch(x.slice(1,-1)).then(function(r){ return r.blob(); }).catch(function(){}); }); }, Promise.resolve()); }catch(e){} },5000); const s=document.createElement("script"); s.textContent=document.getElementById("appsrc").textContent; document.body.append(s); } });
 </script>
 
 </body>
