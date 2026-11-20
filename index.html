@@ -3560,7 +3560,8 @@ const presIn=rid=>presLive().filter(p=>p.room===rid);
 function entryBanner(q){ document.querySelectorAll(".entryb2").forEach(x=>x.remove()); const b=el("div","entryb2"); b.append(chAv(q.uid,q.emoji), el("span",null,(q.name||"مستخدم")+" دخل الغرفة")); document.body.append(b); setTimeout(()=>b.remove(),6000); }
 function startPres(){ if(unsubPres||!db) return;
   // Only this room's members are listened to (a listener on the whole collection re-reads every user's stamp on each beat).
-  unsubPres=db.collection("presence").where("room","==",r.id).onSnapshot(sn=>{ presDocs=sn.docs.map(d=>d.data()); const now=Date.now();
+  if(!room) return;
+  unsubPres=db.collection("presence").where("room","==",room.id).onSnapshot(sn=>{ presDocs=sn.docs.map(d=>d.data()); const now=Date.now();
     presDocs.forEach(q=>{ const z=presSeen[q.uid];
       if(!presFirst&&room&&q.room===room.id&&q.uid!==uid&&(!z||z.room!==q.room||z.jt!==q.jt)) entryBanner(q);
       if(!z||z.t!==q.t||z.room!==q.room||z.jt!==q.jt) presSeen[q.uid]={t:q.t,room:q.room,jt:q.jt,seenAt:now}; });
