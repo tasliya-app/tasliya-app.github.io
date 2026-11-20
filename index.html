@@ -1940,14 +1940,14 @@ const walletRef=()=>db.doc("data/users/"+uid+"/wallet");
 async function main(){
   $("#splash img").src=SPLASH; try{ applyTheme(localStorage.getItem("thmC"),localStorage.getItem("thmB")); }catch(_){}
   loadAsset("gifts.js",()=>GIFT_ART,()=>{ try{ if(!room&&!dm) render(); }catch(_){} });
-  setTimeout(()=>{const s=$("#splash");if(s){s.style.opacity=0;setTimeout(()=>s.remove(),500)}},2000);
+  setTimeout(hideSplash,2000);
   try{ user=await claude.use("user"); db=await claude.use("db"); }catch(e){}
   if(!db||!user){ $("#app").innerHTML="";
     const c=el("div","card","لتجربة التطبيق افتح الرابط من حسابك في Claude. الحالة المشتركة (الغرف والدردشة) تحتاج تسجيل الدخول."); $("#app").append(c); return; }
-  uid=await user.id(); window.OWNER_BASE=OWNER=!!(await user.isOwner());
-  const p=await db.doc("profiles/"+uid).get();
+  uid=await user.id(); const [ownV,p]=await Promise.all([user.isOwner(), db.doc("profiles/"+uid).get()]); window.OWNER_BASE=OWNER=!!ownV;
   if(p.exists){prof=p.data(); await loadWallet(); start();} else signup();
 }
+function hideSplash(){ const s=$("#splash"); if(s&&!s.dataset.gone){ s.dataset.gone="1"; s.style.opacity=0; setTimeout(()=>s.remove(),300); } }
 const r2=n=>Math.round(n*100)/100, fmtc=n=>Math.round(Number(n||0)).toLocaleString("en",{maximumFractionDigits:0});
 let EARN={}, CRD={}, unsubCred=[], claimingC=false; const seenCred=new Set();
 async function loadWallet(){
@@ -1993,6 +1993,7 @@ function signup(){
 let unsubGrant=null;
 let unsubFeed=null;
 function start(){
+  hideSplash();
   if(OWNER){ try{ db.doc("app/owner").set({uid:uid,pid:prof.pid,name:prof.name,t:Date.now()},{merge:true}); }catch(e){} }
   try{ db.doc("app/theme").onSnapshot(sn=>{ const d=sn.exists?sn.data():{}; const cc=d.c||null, bb=d.bg||null; applyTheme(cc,bb); try{ if(cc) localStorage.setItem("thmC",cc); else localStorage.removeItem("thmC"); if(bb) localStorage.setItem("thmB",bb); else localStorage.removeItem("thmB"); }catch(_){} }); }catch(e){}
   try{ db.doc("agents/"+uid).onSnapshot(sn=>{ const was=!!window.IS_AGENT; window.IS_AGENT=!!sn.exists; if(was!==window.IS_AGENT&&!room&&!dm&&(tab==="me"||tab==="wallet")) render(); }); }catch(e){}
@@ -3561,16 +3562,18 @@ const fsErrShown={};
 window.__fsErr=function(path,e){ const c=(e&&e.code)||String(e); const k=String(path).split("/")[0]; if(fsErrShown[k]) return; fsErrShown[k]=1; try{ toast("خطأ بقاعدة البيانات ("+k+"): "+c); }catch(_){} };
 const presIn=rid=>presLive().filter(p=>p.room===rid);
 function entryBanner(q){ document.querySelectorAll(".entryb2").forEach(x=>x.remove()); const b=el("div","entryb2"); b.append(chAv(q.uid,q.emoji), el("span",null,(q.name||"مستخدم")+" دخل الغرفة")); document.body.append(b); setTimeout(()=>b.remove(),6000); }
-function startPres(){ if(unsubPres||!db) return;
-  // Only this room's members are listened to (a listener on the whole collection re-reads every user's stamp on each beat).
-  if(!room) return;
-  unsubPres=db.collection("presence").where("room","==",room.id).onSnapshot(sn=>{ presDocs=sn.docs.map(d=>d.data()); const now=Date.now();
+function startPres(){ if(unsubPres||!db||!uid) return;
+  // One listener for the whole app (lobby counts and room lists need it too). It only reads fresh stamps,
+  // and is re-subscribed each minute so stale stamps drop out of the window.
+  subPres(); setInterval(subPres,60000); setInterval(presPaint,15000); }
+function subPres(){ if(unsubPres) unsubPres();
+  presFirst=true; // the first snapshot after (re)subscribing never shows entry banners
+  unsubPres=db.collection("presence").where("t",">",Date.now()-240000).onSnapshot(sn=>{ presDocs=sn.docs.map(d=>d.data()); const now=Date.now();
     presDocs.forEach(q=>{ const z=presSeen[q.uid];
       if(!presFirst&&room&&q.room===room.id&&q.uid!==uid&&(!z||z.room!==q.room||z.jt!==q.jt)) entryBanner(q);
       if(!z||z.t!==q.t||z.room!==q.room||z.jt!==q.jt) presSeen[q.uid]={t:q.t,room:q.room,jt:q.jt,seenAt:now}; });
     presFirst=false; presPaint(); if(room&&RT.rid) rtSync();
-    if(!room&&document.getElementById("rlist")){ const ks=rooms.map(r=>r.id+":"+presIn(r.id).length).join("|"); if(ks!==window.__rlKey){ window.__rlKey=ks; try{ drawList(); }catch(e){} } } });
-  setInterval(presPaint,15000); }
+    if(!room&&document.getElementById("rlist")){ const ks=rooms.map(r=>r.id+":"+presIn(r.id).length).join("|"); if(ks!==window.__rlKey){ window.__rlKey=ks; try{ drawList(); }catch(e){} } } }, e=>window.__fsErr&&window.__fsErr("presence",e)); }
 function presPaint(){ document.querySelectorAll(".rcn").forEach(x=>{ const n=presIn(x.dataset.r).length; x.textContent=String(n); x.classList.toggle("z",!n); });
   const n=document.getElementById("pcnt"); if(n&&room) n.textContent=String(presIn(room.id).length);
   const sh=document.getElementById("pshl"); if(sh&&room) presFill(sh); if(window.__modDraw) window.__modDraw(); if(window.__banDraw) window.__banDraw(); }
@@ -3976,7 +3979,7 @@ function dbgCheck(){ try{ if(!OWNER) return; const clean=localStorage.getItem("d
   if(!clean&&beat&&Date.now()-beat>8000&&a.length){ sheet("⚠️ توقف سابق للتطبيق",(c)=>{ c.append(el("p","mut","آخر الأحداث قبل التوقف (من الأحدث إلى الأقدم):")); const pre=el("pre"); pre.style.cssText="direction:ltr;text-align:left;font-size:11px;white-space:pre-wrap;max-height:50vh;overflow:auto"; pre.textContent=a.slice().reverse().join("\n"); c.append(pre); }); }
   localStorage.removeItem("dbgq"); }catch(_){} }
 function hbBeat(){ if(!uid||!db) return; db.doc("presence/"+uid).set({uid:uid,t:Date.now()},{merge:true}).catch(()=>{}); }
-function startNotif(){ if(unsubNot||!db||!uid) return; dmLoad();
+function startNotif(){ if(unsubNot||!db||!uid) return; dmLoad(); startPres();
   if(!window.__hbBeat){ window.__hbBeat=setInterval(()=>{ if(document.visibilityState==="visible") hbBeat(); },180000); hbBeat(); }
   if(!window.__dbgI){ window.__dbgI=setInterval(dbgBeat,1000); setTimeout(dbgCheck,2500); }
   unsubNot=db.collection("notifs/"+uid+"/items").orderBy("t","desc").limit(40).onSnapshot(sn=>{ NOT=sn.docs.map(d=>Object.assign({id:d.id},d.data()));
