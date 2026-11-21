@@ -1920,6 +1920,25 @@ body{line-height:1.6}
   window.addEventListener("error",function(e){ if(e&&e.message) showErr(e.message+(e.lineno?" @"+e.lineno:"")); });
   window.addEventListener("unhandledrejection",function(e){ var r=e&&e.reason; showErr((r&&(r.message||r))||"promise"); });
   window.__showErr=showErr;
+  // Watchdog: after login, if the home/name screen stays empty for ~6 seconds, show a retry message instead of a blank page.
+  var emptyTicks=0;
+  setInterval(function(){
+    try{
+      if(document.getElementById("gate")) { emptyTicks=0; return; }
+      var a=document.getElementById("app"); if(!a) return;
+      var t=(a.textContent||"").replace(/\s+/g,"");
+      var stuck=t.length<3 || t.indexOf("جارٍالتحميل")>=0;
+      if(!stuck){ emptyTicks=0; return; }
+      emptyTicks++;
+      if(emptyTicks>=2 && !document.getElementById("retrybox")){
+        var d=document.createElement("div"); d.id="retrybox";
+        d.style.cssText="padding:30px 18px;text-align:center;color:#1e1b4b;font:16px sans-serif;direction:rtl";
+        d.innerHTML='<p style="margin:0 0 14px">التطبيق لم يكتمل تحميله بعد. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.</p><button style="padding:12px 26px;border-radius:12px;border:0;background:#7c3aed;color:#fff;font-size:16px;font-weight:700">إعادة المحاولة</button>';
+        d.querySelector("button").onclick=function(){ location.reload(); };
+        a.appendChild(d);
+      }
+    }catch(_){}
+  },3000);
 })();
 </script>
 
