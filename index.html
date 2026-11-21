@@ -1920,6 +1920,11 @@ body{line-height:1.6}
   window.addEventListener("error",function(e){ if(e&&e.message) showErr(e.message+(e.lineno?" @"+e.lineno:"")); });
   window.addEventListener("unhandledrejection",function(e){ var r=e&&e.reason; showErr((r&&(r.message||r))||"promise"); });
   window.__showErr=showErr;
+  var __trL=[];
+  window.__tr=function(m){ try{ var t=new Date(); var ts=("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2)+":"+("0"+t.getSeconds()).slice(-2); __trL.push(ts+" "+m); if(__trL.length>12) __trL.shift();
+    var d=document.getElementById("trbox");
+    if(!d){ d=document.createElement("div"); d.id="trbox"; d.style.cssText="position:fixed;left:0;right:0;top:0;z-index:2147483646;background:rgba(0,0,0,.72);color:#9effa6;font:10px/1.35 monospace;padding:4px 6px;direction:ltr;text-align:left;pointer-events:none;white-space:pre-wrap"; (document.body||document.documentElement).appendChild(d); }
+    d.textContent=__trL.join("\n"); }catch(_){} };
   // Watchdog: after login, if the home/name screen stays empty for ~6 seconds, show a retry message instead of a blank page.
   var emptyTicks=0;
   setInterval(function(){
@@ -1979,16 +1984,17 @@ function netFail(){ const a=$("#app"); a.innerHTML=""; const c=el("div","card");
   c.append(el("p",null,"تعذّر الاتصال بقاعدة البيانات الآن."), el("p","mut","تأكد من الإنترنت، أو جرّب شبكة أخرى، ثم أعد المحاولة."));
   const b=el("button","btn full","إعادة المحاولة"); b.onclick=()=>location.reload(); c.append(b); a.append(c); }
 async function main(){
+  window.__tr&&window.__tr("main: start");
   $("#splash img").src=SPLASH; try{ applyTheme(localStorage.getItem("thmC"),localStorage.getItem("thmB")); }catch(_){}
   setTimeout(()=>loadAsset("gifts.js",()=>GIFT_ART,()=>{ try{ if(!room&&!dm) render(); }catch(_){} }),2500);
   setTimeout(hideSplash,2000);
   try{ user=await claude.use("user"); db=await claude.use("db"); }catch(e){}
   if(!db||!user){ $("#app").innerHTML="";
     const c=el("div","card","لتجربة التطبيق افتح الرابط من حسابك في Claude. الحالة المشتركة (الغرف والدردشة) تحتاج تسجيل الدخول."); $("#app").append(c); return; }
-  uid=await user.id();
+  uid=await user.id(); window.__tr&&window.__tr("main: uid ok");
   let ownV, p;
-  try{ [ownV,p]=await withTO(Promise.all([user.isOwner(), db.doc("profiles/"+uid).get()]),9000,"profile"); }catch(e){ netFail(); return; }
-  window.OWNER_BASE=OWNER=!!ownV;
+  try{ [ownV,p]=await withTO(Promise.all([user.isOwner(), db.doc("profiles/"+uid).get()]),9000,"profile"); }catch(e){ window.__tr&&window.__tr("main: "+e.message); netFail(); return; }
+  window.OWNER_BASE=OWNER=!!ownV; window.__tr&&window.__tr("main: profile exists="+p.exists);
   if(p.exists){ prof=p.data(); try{ await withTO(loadWallet(),9000,"wallet"); }catch(e){ netFail(); return; } start(); } else signup();
 }
 function hideSplash(){ const s=$("#splash"); if(s&&!s.dataset.gone){ s.dataset.gone="1"; s.style.opacity=0; setTimeout(()=>s.remove(),300); } }
@@ -2024,7 +2030,7 @@ async function claimCredits(){
 }
 async function withdrawMain(n){ await setCoins(coins+n); logTx("main",n,null,n); EARN.main=r2((EARN.main||0)+n); try{ await walletRef().update({earn:EARN}); }catch(e){} }
 
-function signup(){
+function signup(){ window.__tr&&window.__tr("signup: drawing name screen");
   try{ signup2(); }catch(e){ window.__showErr&&window.__showErr("signup: "+(e&&e.message||e)); }
 }
 function signup2(){
@@ -2039,7 +2045,7 @@ function signup2(){
 }
 let unsubGrant=null;
 let unsubFeed=null;
-function start(){
+function start(){ window.__tr&&window.__tr("start: home");
   hideSplash();
   if(OWNER){ try{ db.doc("app/owner").set({uid:uid,pid:prof.pid,name:prof.name,t:Date.now()},{merge:true}); }catch(e){} }
   try{ db.doc("app/theme").onSnapshot(sn=>{ const d=sn.exists?sn.data():{}; const cc=d.c||null, bb=d.bg||null; applyTheme(cc,bb); try{ if(cc) localStorage.setItem("thmC",cc); else localStorage.removeItem("thmC"); if(bb) localStorage.setItem("thmB",bb); else localStorage.removeItem("thmB"); }catch(_){} }); }catch(e){}
@@ -7214,7 +7220,7 @@ document.getElementById("gLogin").onclick=async()=>{ err.textContent=""; try{ co
 document.getElementById("gForgot").onclick=async()=>{ err.textContent=""; if(!gE()){ err.textContent="اكتب بريدك أولاً ثم اضغط نسيت كلمة المرور."; return; } try{ await sendPasswordResetEmail(auth,gE()); err.textContent="أُرسل رابط تغيير كلمة المرور إلى بريدك."; }catch(e){ err.textContent=emsg(e); } };
 window.__linkPassword=async(pw)=>{ const u=auth.currentUser; if(!u||!u.email) throw new Error("no-user"); await linkWithCredential(u,EmailAuthProvider.credential(u.email,pw)); window.__needLink=false; };
 window.__chPw=async(oldP,newP)=>{ const u=auth.currentUser; if(!u) throw new Error("no-user"); await reauthenticateWithCredential(u,EmailAuthProvider.credential(u.email,oldP)); await updatePassword(u,newP); };
-onAuthStateChanged(auth,u=>{ window.__needLink=!!(u&&!u.providerData.some(x=>x.providerId==="password")); const pwOnly=u&&u.providerData.some(x=>x.providerId==="password"); if(u&&!booted&&(!pwOnly||u.emailVerified)){ booted=true; gate.remove(); setTimeout(function(){ try{ var L=(document.getElementById("appsrc").textContent.match(/"(lamp|gpanda|glowbfly)_[a-z]+\.(webp|webm|mp3)"/g)||[]); L.reduce(function(pr,x){ return pr.then(function(){ return fetch(x.slice(1,-1)).then(function(r){ return r.blob(); }).catch(function(){}); }); }, Promise.resolve()); }catch(e){} },5000); const s=document.createElement("script"); s.textContent=document.getElementById("appsrc").textContent; document.body.append(s); } });
+onAuthStateChanged(auth,u=>{ try{ window.__tr&&window.__tr("auth: "+(u?"signed in":"signed out")+" booted="+booted); }catch(_){} window.__needLink=!!(u&&!u.providerData.some(x=>x.providerId==="password")); const pwOnly=u&&u.providerData.some(x=>x.providerId==="password"); if(u&&!booted&&(!pwOnly||u.emailVerified)){ booted=true; window.__tr&&window.__tr("gate removed, loading app"); gate.remove(); setTimeout(function(){ try{ var L=(document.getElementById("appsrc").textContent.match(/"(lamp|gpanda|glowbfly)_[a-z]+\.(webp|webm|mp3)"/g)||[]); L.reduce(function(pr,x){ return pr.then(function(){ return fetch(x.slice(1,-1)).then(function(r){ return r.blob(); }).catch(function(){}); }); }, Promise.resolve()); }catch(e){} },5000); const s=document.createElement("script"); s.textContent=document.getElementById("appsrc").textContent; document.body.append(s); } });
 </script>
 
 </body>
