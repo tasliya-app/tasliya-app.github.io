@@ -1923,8 +1923,8 @@ body{line-height:1.6}
   var __trL=[];
   window.__tr=function(m){ try{ var t=new Date(); var ts=("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2)+":"+("0"+t.getSeconds()).slice(-2); __trL.push(ts+" "+m); if(__trL.length>12) __trL.shift();
     var d=document.getElementById("trbox");
-    if(!d){ d=document.createElement("div"); d.id="trbox"; d.style.cssText="position:fixed;left:0;right:0;top:0;z-index:2147483646;background:rgba(0,0,0,.72);color:#9effa6;font:10px/1.35 monospace;padding:4px 6px;direction:ltr;text-align:left;pointer-events:none;white-space:pre-wrap"; (document.body||document.documentElement).appendChild(d); }
-    d.textContent=__trL.join("\n"); }catch(_){} };
+    if(!d && /[?&]debug=1/.test(location.search)){ d=document.createElement("div"); d.id="trbox"; d.style.cssText="position:fixed;left:0;right:0;top:0;z-index:2147483646;background:rgba(0,0,0,.72);color:#9effa6;font:10px/1.35 monospace;padding:4px 6px;direction:ltr;text-align:left;pointer-events:none;white-space:pre-wrap"; (document.body||document.documentElement).appendChild(d); }
+    if(d) d.textContent=__trL.join("\n"); }catch(_){} };
   // Watchdog: after login, if the home/name screen stays empty for ~6 seconds, show a retry message instead of a blank page.
   var emptyTicks=0;
   setInterval(function(){
