@@ -1974,6 +1974,10 @@ const $=s=>document.querySelector(s);
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const walletRef=()=>db.doc("data/users/"+uid+"/wallet");
 
+function withTO(pr,ms,what){ return Promise.race([pr, new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout:"+what)),ms))]); }
+function netFail(){ const a=$("#app"); a.innerHTML=""; const c=el("div","card"); c.style.cssText="text-align:center;margin-top:10vh";
+  c.append(el("p",null,"تعذّر الاتصال بقاعدة البيانات الآن."), el("p","mut","تأكد من الإنترنت، أو جرّب شبكة أخرى، ثم أعد المحاولة."));
+  const b=el("button","btn full","إعادة المحاولة"); b.onclick=()=>location.reload(); c.append(b); a.append(c); }
 async function main(){
   $("#splash img").src=SPLASH; try{ applyTheme(localStorage.getItem("thmC"),localStorage.getItem("thmB")); }catch(_){}
   setTimeout(()=>loadAsset("gifts.js",()=>GIFT_ART,()=>{ try{ if(!room&&!dm) render(); }catch(_){} }),2500);
@@ -1981,8 +1985,11 @@ async function main(){
   try{ user=await claude.use("user"); db=await claude.use("db"); }catch(e){}
   if(!db||!user){ $("#app").innerHTML="";
     const c=el("div","card","لتجربة التطبيق افتح الرابط من حسابك في Claude. الحالة المشتركة (الغرف والدردشة) تحتاج تسجيل الدخول."); $("#app").append(c); return; }
-  uid=await user.id(); const [ownV,p]=await Promise.all([user.isOwner(), db.doc("profiles/"+uid).get()]); window.OWNER_BASE=OWNER=!!ownV;
-  if(p.exists){prof=p.data(); await loadWallet(); start();} else signup();
+  uid=await user.id();
+  let ownV, p;
+  try{ [ownV,p]=await withTO(Promise.all([user.isOwner(), db.doc("profiles/"+uid).get()]),9000,"profile"); }catch(e){ netFail(); return; }
+  window.OWNER_BASE=OWNER=!!ownV;
+  if(p.exists){ prof=p.data(); try{ await withTO(loadWallet(),9000,"wallet"); }catch(e){ netFail(); return; } start(); } else signup();
 }
 function hideSplash(){ const s=$("#splash"); if(s&&!s.dataset.gone){ s.dataset.gone="1"; s.style.opacity=0; setTimeout(()=>s.remove(),300); } }
 const r2=n=>Math.round(n*100)/100, fmtc=n=>Math.round(Number(n||0)).toLocaleString("en",{maximumFractionDigits:0});
@@ -2027,7 +2034,7 @@ function signup2(){
   const b=el("button","btn full","ابدأ"); 
   b.onclick=async()=>{ const name=inp.value.trim(); if(!name) return;
     prof={name,pid:OWNER?1:1000000+Math.floor(Math.random()*9000000),emoji:EMOJIS[Math.floor(Math.random()*EMOJIS.length)],joined:Date.now()};
-    await db.doc("profiles/"+uid).set(prof); await loadWallet(); start(); };
+    try{ await withTO(db.doc("profiles/"+uid).set(prof),9000,"save"); await withTO(loadWallet(),9000,"wallet"); }catch(e){ try{ toast("تعذر الحفظ، تحقق من الإنترنت ثم حاول مرة أخرى"); }catch(_){} b.disabled=false; return; } start(); };
   c.append(inp,b); a.append(c);
 }
 let unsubGrant=null;
