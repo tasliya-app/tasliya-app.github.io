@@ -4470,7 +4470,7 @@ function drawChatNow(){
 }
 let topRows=[], topList=[], topRank={}, unsubTop=null, joinT=0, BOARD=null, twWk=null, unsubTW=null, twMine={}, bumpQ=Promise.resolve();
 const wkKey=()=>String(satMid().getTime());
-const wkAgo=k=>{ const x=satMid(); x.setDate(x.getDate()-7*k); return String(x.getTime()); };
+const wkAgo=k=>String(satMid().getTime()-7*k*864e5);
 function watchTop(){ if(!db) return; const wk=wkKey(); if(unsubTW&&twWk===wk) return; if(unsubTW){ unsubTW(); unsubTW=null; } twWk=wk; topRows=[];
   unsubTW=db.collection("topw").where("wk","==",wk).limit(500).onSnapshot(sn=>{ topRows=sn.docs.map(d=>d.data()); if(room) drawChat(); if(BOARD) BOARD(); }); }
 setInterval(()=>{ if(db&&unsubTW&&twWk!==wkKey()) watchTop(); },60000);
@@ -4484,10 +4484,12 @@ function bumpTop(amt,mt){ bumpQ=bumpQ.then(async()=>{ const wk=wkKey(), id="topw
   for(let i=0;i<3&&!ok;i++){ try{ await db.doc(id).set(data); ok=true; }catch(e){ await new Promise(r=>setTimeout(r,1500*(i+1))); } }
   if(!ok) delete twMine[wk]; // write failed: forget the cached total so the next gift re-reads the real one
 }).catch(()=>{}); return bumpQ; }
-function satMid(d){ d=d||new Date(); const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+1)%7)); return x; }
+// Week start = Saturday 00:00 in Baghdad time, the same instant for every device. (It used the device's own timezone, so a
+// viewer in another country computed a different week key and did not see the other players' totals.)
+function satMid(d){ const t=(d||new Date()).getTime()+3*3600000; const x=new Date(t); const back=(x.getUTCDay()+1)%7; return new Date(Date.UTC(x.getUTCFullYear(),x.getUTCMonth(),x.getUTCDate())-back*864e5-3*3600000); }
 function weekStart(){ return satMid().getTime()+60000; }
-function weekEnd(){ const x=satMid(); x.setDate(x.getDate()+7); return x.getTime(); }
-function periodOf(k){ const e=new Date(weekEnd()); e.setDate(e.getDate()-7*k); const st=new Date(e); st.setDate(st.getDate()-7); return {s:st.getTime()+60000,e:e.getTime()}; }
+function weekEnd(){ return satMid().getTime()+7*864e5; }
+function periodOf(k){ const e=weekEnd()-7*k*864e5; const st=e-7*864e5; return {s:st+60000,e:e}; }
 function calcTopRange(rows,ws,we){ const agg={};
   rows.forEach(m=>{ if(m.type!=="gift"||m.t<ws||m.t>=we) return; const k=m.uid||m.name; (agg[k]=agg[k]||{uid:m.uid,name:m.name,emoji:m.emoji||"👤",tot:0}).tot+=m.amt||0; });
   return Object.values(agg).sort((a,b)=>b.tot-a.tot).slice(0,10); }
