@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.tasliya_app.twa",
+        "sha256_cert_fingerprints": ["A2:56:7A:09:75:F0:7F:C8:9C:24:FB:D6:A1:2B:61:E0:90:0C:B9:24:AD:CE:DB:30:60:55:CE:70:37:7C:36:BC"]
+      }
+    }]
