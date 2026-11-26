@@ -32,7 +32,7 @@ input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);ba
 .room{display:flex;gap:12px;align-items:center;cursor:pointer}
 .av{width:44px;height:44px;border-radius:50%;background:var(--pri);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
 .mut{color:var(--mut);font-size:13px}
-.nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:4;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 .nav button{flex:1;background:none;border:0;color:var(--mut);padding:12px;font-weight:700}
 .nav button.on{color:var(--pri)}
 .seats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center}
@@ -2310,43 +2310,38 @@ const _coin=(id,cx,cy,r,rot)=>'<g'+(rot?' transform="rotate('+rot+' '+cx+' '+cy+
 const ART={};
 /* ---------- GAMES: board + dice + pawns ---------- */
 ART.games='<svg viewBox="0 0 160 124" xmlns="http://www.w3.org/2000/svg"><defs>'
-+'<linearGradient id="g2y" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45c"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>'
-+'<linearGradient id="g2p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a6ff"/><stop offset="1" stop-color="#6d28d9"/></linearGradient>'
-+'<linearGradient id="g2t" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34437f"/><stop offset="1" stop-color="#0f1733"/></linearGradient>'
-+'<linearGradient id="g2w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe5f0"/></linearGradient>'
-+'<linearGradient id="g2b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c98a4b"/><stop offset="1" stop-color="#8a4f22"/></linearGradient>'
-+'<radialGradient id="g2d" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd6e4"/></radialGradient>'
++'<linearGradient id="q4y" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45c"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>'
++'<linearGradient id="q4p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a6ff"/><stop offset="1" stop-color="#6d28d9"/></linearGradient>'
++'<linearGradient id="q4t" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34437f"/><stop offset="1" stop-color="#0f1733"/></linearGradient>'
++'<linearGradient id="q4w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe5f0"/></linearGradient>'
++'<linearGradient id="q4b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c98a4b"/><stop offset="1" stop-color="#8a4f22"/></linearGradient>'
++'<radialGradient id="q4d" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd6e4"/></radialGradient>'
 +'</defs>'
-+'<ellipse cx="80" cy="118" rx="60" ry="5" fill="#000" opacity=".3"/>'
-// ludo board (top-left)
-+'<rect x="4" y="4" width="50" height="50" rx="8" fill="#fff8e8" stroke="#8a6a3a" stroke-width="1.6"/>'
-+'<rect x="8" y="8" width="18" height="18" rx="3" fill="#ef4444"/><rect x="34" y="8" width="18" height="18" rx="3" fill="#22c55e"/>'
-+'<rect x="8" y="34" width="18" height="18" rx="3" fill="#3b82f6"/><rect x="34" y="34" width="18" height="18" rx="3" fill="#facc15"/>'
-+'<path d="M29 26L37 34L29 42L21 34Z M21 26L29 18L37 26L29 34Z" fill="#fff" stroke="#8a6a3a" stroke-width=".8" opacity=".95"/>'
-// xo (top-right)
-+'<rect x="106" y="4" width="50" height="50" rx="8" fill="url(#g2t)" stroke="#9db0e6" stroke-opacity=".55" stroke-width="1.4"/>'
-+'<path d="M113 13L129 29M129 13L113 29" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"/>'
-+'<circle cx="146" cy="40" r="6.5" fill="none" stroke="#fb7185" stroke-width="3.6"/>'
-+'<path d="M113 35L124 46" stroke="#fb7185" stroke-width="3" stroke-linecap="round" opacity="0"/>'
-// dice (top center)
-+'<rect x="64" y="2" width="28" height="28" rx="6" fill="url(#g2d)" stroke="#fff" stroke-width="1"/>'
-+'<g fill="#1f2937"><circle cx="70" cy="8" r="2.4"/><circle cx="86" cy="8" r="2.4"/><circle cx="70" cy="24" r="2.4"/><circle cx="86" cy="24" r="2.4"/><circle cx="78" cy="16" r="2.4"/></g>'
-// domino (left side)
-+'<g transform="rotate(-14 22 84)"><rect x="4" y="70" width="34" height="18" rx="3.5" fill="url(#g2w)" stroke="#8a93a6" stroke-width="1.2"/>'
-+'<line x1="21" y1="70" x2="21" y2="88" stroke="#8a93a6" stroke-width="1.2"/>'
-+'<g fill="#1f2937"><circle cx="11" cy="76" r="2"/><circle cx="15" cy="82" r="2"/><circle cx="11" cy="82" r="2" opacity="0"/><circle cx="26" cy="76" r="2"/><circle cx="30" cy="82" r="2"/><circle cx="26" cy="82" r="2" opacity="0"/></g></g>'
-// carrom board (right side)
-+'<g transform="rotate(8 138 84)"><rect x="118" y="66" width="38" height="38" rx="4" fill="url(#g2b)" stroke="#5b3416" stroke-width="1.4"/>'
-+'<rect x="122" y="70" width="30" height="30" rx="2" fill="none" stroke="#f3d9a4" stroke-width="1" opacity=".8"/>'
-+'<g fill="#111"><circle cx="119" cy="67" r="3.2"/><circle cx="155" cy="67" r="3.2"/><circle cx="119" cy="103" r="3.2"/><circle cx="155" cy="103" r="3.2"/></g>'
-+'<circle cx="137" cy="85" r="5.5" fill="#ef4444" stroke="#7f1d1d" stroke-width="1"/></g>'
-// controller (smaller, bottom center)
-+'<g transform="translate(80 88) scale(.74) translate(-80 -74)">'
-+'<path d="M30 64Q30 52 46 52H80V92Q66 102 50 96Q28 86 30 64Z" fill="url(#g2y)" stroke="#b45309" stroke-width="1.6"/>'
-+'<path d="M80 52H114Q130 52 130 64Q132 86 110 96Q94 102 80 92Z" fill="url(#g2p)" stroke="#4c1d95" stroke-width="1.6"/>'
++'<ellipse cx="80" cy="117" rx="60" ry="4.5" fill="#000" opacity=".3"/>'
+// row 1: ludo | dice | xo  (centers y=28)
++'<rect x="8" y="8" width="40" height="40" rx="8" fill="#fff8e8" stroke="#8a6a3a" stroke-width="1.5"/>'
++'<rect x="12" y="12" width="14" height="14" rx="3" fill="#ef4444"/><rect x="34" y="12" width="10" height="14" rx="3" fill="#22c55e"/>'
++'<rect x="12" y="30" width="14" height="10" rx="3" fill="#3b82f6"/><rect x="30" y="30" width="14" height="10" rx="3" fill="#facc15"/>'
++'<path d="M26 22L30 26L26 30L22 26Z" fill="#fff" stroke="#8a6a3a" stroke-width=".7"/>'
++'<rect x="65" y="13" width="30" height="30" rx="6" fill="url(#q4d)" stroke="#fff" stroke-width="1"/>'
++'<g fill="#1f2937"><circle cx="71" cy="19" r="2.5"/><circle cx="89" cy="19" r="2.5"/><circle cx="71" cy="28" r="2.5"/><circle cx="89" cy="28" r="2.5"/><circle cx="71" cy="37" r="2.5"/><circle cx="89" cy="37" r="2.5"/><circle cx="80" cy="28" r="2.5"/></g>'
++'<rect x="112" y="8" width="40" height="40" rx="8" fill="url(#q4t)" stroke="#9db0e6" stroke-opacity=".55" stroke-width="1.4"/>'
++'<path d="M120 16L132 28M132 16L120 28" stroke="#3b82f6" stroke-width="3.6" stroke-linecap="round"/>'
++'<circle cx="144" cy="36" r="5.2" fill="none" stroke="#fb7185" stroke-width="3.2"/>'
+// row 2: domino | controller | carrom  (centers y=86)
++'<rect x="8" y="76" width="40" height="20" rx="4" fill="url(#q4w)" stroke="#8a93a6" stroke-width="1.2"/>'
++'<line x1="28" y1="76" x2="28" y2="96" stroke="#8a93a6" stroke-width="1.2"/>'
++'<g fill="#1f2937"><circle cx="16" cy="83" r="2.2"/><circle cx="22" cy="90" r="2.2"/><circle cx="16" cy="90" r="2.2" opacity="0"/><circle cx="34" cy="83" r="2.2"/><circle cx="40" cy="90" r="2.2"/></g>'
++'<g transform="translate(80 88) scale(.5) translate(-80 -74)">'
++'<path d="M30 64Q30 52 46 52H80V92Q66 102 50 96Q28 86 30 64Z" fill="url(#q4y)" stroke="#b45309" stroke-width="1.8"/>'
++'<path d="M80 52H114Q130 52 130 64Q132 86 110 96Q94 102 80 92Z" fill="url(#q4p)" stroke="#4c1d95" stroke-width="1.8"/>'
 +'<path d="M46 66H54V74H62V82H54V90H46V82H38V74H46Z" fill="#fff"/>'
 +'<g fill="#fff"><circle cx="110" cy="66" r="5"/><circle cx="122" cy="74" r="5"/><circle cx="110" cy="82" r="5"/><circle cx="98" cy="74" r="5"/></g>'
 +'</g>'
++'<rect x="112" y="66" width="40" height="40" rx="5" fill="url(#q4b)" stroke="#5b3416" stroke-width="1.4"/>'
++'<rect x="117" y="71" width="30" height="30" rx="2" fill="none" stroke="#f3d9a4" stroke-width="1" opacity=".8"/>'
++'<g fill="#111"><circle cx="114" cy="68" r="3"/><circle cx="150" cy="68" r="3"/><circle cx="114" cy="104" r="3"/><circle cx="150" cy="104" r="3"/></g>'
++'<circle cx="132" cy="86" r="5.5" fill="#ef4444" stroke="#7f1d1d" stroke-width="1"/>'
 +'</svg>';
 
 /* ---------- WALLET: treasure chest + gold ---------- */
@@ -2368,8 +2363,8 @@ ART.wallet='<svg viewBox="0 0 160 124" xmlns="http://www.w3.org/2000/svg"><defs>
 +'</g>'
 +'<circle cx="122" cy="46" r="17" fill="#b45309"/><circle cx="122" cy="45" r="15" fill="url(#n3c)" stroke="#92400e" stroke-width="1.2"/>'
 +'<text x="122" y="52" text-anchor="middle" font-size="17" font-weight="900" fill="#fff" font-family="Arial,sans-serif" stroke="#b45309" stroke-width=".6">$</text>'
-+'<circle cx="34" cy="28" r="13" fill="#b45309"/><circle cx="34" cy="27" r="11.5" fill="url(#n3c)" stroke="#92400e" stroke-width="1"/>'
-+'<text x="34" y="33" text-anchor="middle" font-size="14" font-weight="900" fill="#fff" font-family="Arial,sans-serif" stroke="#b45309" stroke-width=".5">$</text>'
+
+
 +'<circle cx="136" cy="98" r="11" fill="#b45309"/><circle cx="136" cy="97" r="9.5" fill="url(#n3c)" stroke="#92400e" stroke-width="1"/>'
 +'</svg>';
 
@@ -2412,7 +2407,7 @@ ART.rooms='<svg viewBox="0 0 160 124" xmlns="http://www.w3.org/2000/svg"><defs>'
 +'<ellipse cx="46" cy="78" rx="22" ry="23" fill="url(#m4f)"/>'
 +'<path d="M22 76C19 50 33 38 50 40C63 41 73 51 70 72C68 63 63 57 55 55C47 60 36 60 29 57C25 63 23 69 22 76Z" fill="url(#m4h)"/>'
 +'<path d="M32 46C40 41 52 42 60 48" stroke="#fff" stroke-opacity=".22" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
-+'<path d="M32 70Q37 67 42 70" stroke="#2b1a10" stroke-width="1.6" fill="none" stroke-linecap="round"/>'
++'<path d="M32 70Q37 67 42 70M50 70Q55 67 60 70" stroke="#2b1a10" stroke-width="2" fill="none" stroke-linecap="round"/>'
 +'<ellipse cx="38" cy="80" rx="2.9" ry="3.6" fill="#1f1410"/><circle cx="39" cy="78.6" r="1" fill="#fff"/>'
 +'<path d="M50 81Q55 76.5 60 81" stroke="#1f1410" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
 +'<path d="M40 91Q47 97.5 54 91" stroke="#b8330f" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
@@ -2427,7 +2422,7 @@ ART.rooms='<svg viewBox="0 0 160 124" xmlns="http://www.w3.org/2000/svg"><defs>'
 +'<path d="M106 62C112 58 122 58 128 64" stroke="#fff" stroke-opacity=".2" stroke-width="2" fill="none" stroke-linecap="round"/>'
 +'<ellipse cx="109" cy="86" rx="2.9" ry="3.6" fill="#1f1410"/><ellipse cx="123" cy="86" rx="2.9" ry="3.6" fill="#1f1410"/>'
 +'<circle cx="110" cy="84.6" r="1" fill="#fff"/><circle cx="124" cy="84.6" r="1" fill="#fff"/>'
-+'<path d="M105 82.5L103.5 80.8M127 82.5L128.5 80.8" stroke="#1f1410" stroke-width="1.1" stroke-linecap="round"/>'
++'<path d="M104 79.5Q109 77.5 114 79.5M118 79.5Q123 77.5 128 79.5" stroke="#2b1a10" stroke-width="1.3" fill="none" stroke-linecap="round"/>'
 +'<path d="M111 96Q116 100 121 96" stroke="#b8330f" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
 +'<circle cx="104" cy="94" r="3" fill="#ff7a8a" opacity=".55"/><circle cx="128" cy="94" r="3" fill="#ff7a8a" opacity=".55"/>'
 +'<g transform="translate(131 67)"><circle r="2" fill="#fff"/><circle cx="-3.2" cy="0" r="3" fill="#7cc4ff"/><circle cx="3.2" cy="0" r="3" fill="#7cc4ff"/><circle cy="-3.2" r="3" fill="#a5d8ff"/><circle cy="3.2" r="3" fill="#a5d8ff"/></g>'
@@ -3448,7 +3443,7 @@ function renderChat(a){
 async function dmWipe(other){ const cid=cidOf(other);
   for(let i=0;i<500;i++){ const s=await db.collection("dms/"+cid+"/msgs").limit(200).get(); if(!s.docs.length) break;
     for(const d of s.docs){ try{ await db.doc("dms/"+cid+"/msgs/"+d.id).delete(); }catch(_){} } } }
-async function dmWipeThreads(other){ try{ await db.doc("inbox/"+uid+"/threads/"+other).delete(); }catch(_){} try{ await db.doc("inbox/"+other+"/threads/"+uid).delete(); }catch(_){} }
+async function dmWipeThreads(other){ try{ await db.doc("inbox/"+uid+"/threads/"+other).delete(); }catch(_){} try{ await db.doc("inbox/"+other+"/threads/"+uid).delete(); }catch(_){} dmSeen(other); }
 function drawDM(){
   if(dm&&(dmUnread[dm.uid]||dmCount[dm.uid])) dmSeen(dm.uid);
   const c=document.getElementById("dmchat"); if(!c) return; c.innerHTML="";
@@ -4133,7 +4128,7 @@ function startNotif(){ if(unsubNot||!db||!uid) return; dmLoad(); startPres();
     ginvFirst=false;
     notBadge(); if(tab==="dm"&&dmView==="reqs") render();
     if(dmOv&&dmOv.tab==="reqs"&&dmOv.redraw) dmOv.redraw(); });
-  unsubDmN=db.collection("inbox/"+uid+"/threads").orderBy("t","desc").limit(30).onSnapshot(sn=>{ sn.docChanges().forEach(c=>{ if(c.type==="removed") return; const th=c.doc.data();
+  unsubDmN=db.collection("inbox/"+uid+"/threads").orderBy("t","desc").limit(30).onSnapshot(sn=>{ sn.docChanges().forEach(c=>{ if(c.type==="removed"){ const ru=c.doc.id; if(dmCount[ru]||dmUnread[ru]){ delete dmUnread[ru]; if(dmCount[ru]){ delete dmCount[ru]; dmSave(); } notBadge(); } return; } const th=c.doc.data();
     if(!th.from||th.from===uid||th.t<notSince) return; if(dm&&dm.uid===th.uid) return; if(dmOv&&dmOv.uid===th.uid) return;
     if(dmUnread[th.uid]===th.t) return; dmUnread[th.uid]=th.t; dmAdd(th.uid); if(!room) toast("💬 "+(th.name||"رسالة")+": "+String(th.last||"").slice(0,40)); notBadge(); }); }); }
 async function addFriend(f){ if(!f||f.uid===uid) return; if(isFriend(f.uid)) return toast("هو صديقك بالفعل ✓");
