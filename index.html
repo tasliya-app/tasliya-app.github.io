@@ -1919,6 +1919,26 @@ body{line-height:1.6}
 .admx .admln{display:block;color:#1e1b4b;font-size:15px;font-weight:700;padding:7px 2px;border-bottom:1px solid #e5e7eb;line-height:1.7}
 .admx .btn{color:#1e1b4b!important;background:#fff!important;border:2px solid #b45309!important;text-shadow:none!important;box-shadow:none!important;font-size:16px;font-weight:800}
 .admx>b{color:#1e1b4b;font-size:18px}
+
+/* ===== جولة الأبطال: تنسيق حماسي (نفس الحجم والسلوك) ===== */
+.chbar.live.chb2{background:linear-gradient(180deg,#1e1038 0%,#0b0a22 100%)!important;border:2px solid #facc15!important;border-radius:22px!important;box-shadow:0 0 0 1px #fde68a66,0 0 22px #facc1566,0 10px 26px #000a!important;color:#fff!important;padding:10px 12px!important}
+.chbar.live.chb2 .chmid .chvs{font-size:30px!important;font-weight:900!important;background:linear-gradient(180deg,#fff7ad 0%,#facc15 45%,#b45309 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;text-shadow:none!important;filter:drop-shadow(0 2px 2px #000a) drop-shadow(0 0 8px #facc1599)!important}
+.chbar.live.chb2 .cht{color:#fde047!important;font-size:20px!important;font-weight:900!important;font-variant-numeric:tabular-nums;text-shadow:0 0 8px #facc15aa,0 2px 3px #000!important}
+.chbar.live.chb2 .chmid{background:linear-gradient(180deg,#2a1a00,#0b0a22)!important;border:2px solid #facc15!important;border-radius:14px!important;padding:2px 10px!important;box-shadow:0 0 12px #facc1555!important}
+.chbar.live.chb2 .chname{background:rgba(255,255,255,.14)!important;border:1px solid #ffffff44!important;border-radius:12px!important;padding:2px 6px!important;font-size:13px!important;font-weight:900!important;color:#fff!important;text-shadow:0 1px 2px #000!important;max-width:150px!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important}
+.chbar.live.chb2 .chname span{color:#fff!important;text-shadow:0 1px 2px #000!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;max-width:none!important}
+.chbar.live.chb2 .chav{width:36px!important;height:36px!important;flex:0 0 36px!important}
+.chbar.live.chb2 .chav{border:3px solid #facc15!important;box-shadow:0 0 0 2px #0b0a22,0 0 12px #facc15cc!important;background:#0b0a22!important}
+.chbar.live.chb2 .chside.l .chav{border-color:#f472b6!important;box-shadow:0 0 0 2px #0b0a22,0 0 12px #f472b6cc!important}
+.chbar.live.chb2 .chside.r .chav{border-color:#38bdf8!important;box-shadow:0 0 0 2px #0b0a22,0 0 12px #38bdf8cc!important}
+.chbar.live.chb2 .chscore{font-size:22px!important;font-weight:900!important;color:#fde047!important;text-shadow:0 0 8px #facc15aa,0 2px 4px #000!important;background:#000a!important;border-radius:12px!important;padding:2px 14px!important;border:2px solid #ffffff44!important}
+.chbar.live.chb2 .chside.l .chscore{border-color:#f472b6!important;box-shadow:0 0 10px #f472b666!important}
+.chbar.live.chb2 .chside.r .chscore{border-color:#38bdf8!important;box-shadow:0 0 10px #38bdf866!important}
+.chbar.live.chb2 .chside.lead .chscore{box-shadow:0 0 16px #facc15!important;border-color:#facc15!important}
+.chbar.live.chb2 .chbt{background:#0b0a22!important;border:2px solid #facc15aa!important;box-shadow:inset 0 2px 6px #000c,0 0 10px #facc1544!important;height:34px!important}
+.chbar.live.chb2 .chfa{background:linear-gradient(90deg,#9d174d,#ec4899 60%,#f472b6)!important}
+.chbar.live.chb2 .chfb{background:linear-gradient(270deg,#1e3a8a,#2563eb 60%,#38bdf8)!important}
+.chbar.live.chb2 .chhype{color:#fde68a!important;font-size:13px!important;font-weight:900!important;text-align:center;text-shadow:0 1px 2px #000!important}
 </style>
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap">
 </head>
@@ -2598,7 +2618,7 @@ function renderWalletPage(a){
 }
 const CNT_MS=24*3600*1000, CNT_REWARD=10;
 function cntFmt(ms){ const s=Math.floor(Math.max(0,ms)/1000), h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return [h,m,x].map(v=>String(v).padStart(2,"0")).join(":"); }
-const CNT_PRICE=15000000, CNT_DAYS=600, CNT_DAY_REWARD=5000, CNT_FREE_REWARD=20, CNT_FREE_MS=CNT_MS;
+const CNT_PRICE=15000000, CNT_DAYS=600, CNT_DAY_REWARD=5000, CNT_FREE_REWARD=5, CNT_FREE_MS=CNT_MS;
 function cntInfo(l,v){ const x=el("div","cinf"); x.append(el("small",null,l), el("b",null,v)); return x; }
 async function cntPauseNow(){ if(!prof||prof.cntPause) return; const now=Date.now(), pd=prof.cntPaid||null;
   const days=(pd&&pd.until>now)?pd.until-now:0;
@@ -7200,7 +7220,7 @@ function chRender(b,cc,v){
   r.sa.classList.toggle("lead",lead==="a"); r.sb.classList.toggle("lead",lead==="b");
   r.tm.textContent=t; r.sa._sc.textContent=String(A); r.sb._sc.textContent=String(B);
   if(chA) chBump(r.sa._sc); if(chB) chBump(r.sb._sc);
-  r.fa.style.width=pA+"%"; r.fb.style.width=(100-pA)+"%"; r.fire.style.left=pA+"%";
+  r.fa.style.width=pA+"%"; r.fb.style.width=(100-pA)+"%"; r.fire.style.left=Math.min(92,Math.max(8,pA))+"%";
   r.la.textContent=A?String(A):""; r.lb.textContent=B?String(B):"";
   if(!tot) r.hype.textContent="🔥 ابدأوا الدعم الآن!";
   else if(A===B) r.hype.textContent="⚔️ تعادل! من سيتقدّم الآن؟";
